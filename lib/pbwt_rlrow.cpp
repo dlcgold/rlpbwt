@@ -11,3 +11,7 @@ pbwt_rlrow::pbwt_rlrow(int p, int permP, int nextPerm) : p(p),
 pbwt_rlrow::~pbwt_rlrow() {
 
 }
+
+int pbwt_rlrow::lf_mapping(unsigned int i) {
+    return perm_p + i - p;
+}

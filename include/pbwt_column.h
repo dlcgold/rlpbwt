@@ -12,7 +12,7 @@ class pbwt_column {
 public:
     bool zero_first;
     std::vector<pbwt_rlrow> rows;
-
+    pbwt_column();
     pbwt_column(bool zeroFirst, const std::vector<pbwt_rlrow> &rows);
     virtual ~pbwt_column();
 

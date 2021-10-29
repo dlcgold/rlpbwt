@@ -14,6 +14,7 @@ public:
 
     pbwt_rlrow(int p, int permP, int nextPerm);
     virtual ~pbwt_rlrow();
+    int lf_mapping(unsigned int);
 };
 
 

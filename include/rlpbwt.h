@@ -12,7 +12,8 @@ class rlpbwt {
 public:
     std::vector<pbwt_column> cols;
 
-    rlpbwt(const std::vector<pbwt_column> &cols);
+    rlpbwt(char* filename);
+    std::string search_row(unsigned int);
     virtual ~rlpbwt();
 };
 
