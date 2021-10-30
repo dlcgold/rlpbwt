@@ -7,14 +7,15 @@
 #include "../include/utils.h"
 
 
-void update(std::string column, std::vector<int> &pref, std::vector<int> &div) {
+void update(std::string column, std::vector<unsigned int> &pref,
+            std::vector<unsigned int> &div) {
     unsigned int height = pref.size();
-    std::vector<int> new_pref(height);
-    std::vector<int> new_div(height);
-    int count0 = 0;
-    int lcs = INT_MAX;
+    std::vector<unsigned int> new_pref(height);
+    std::vector<unsigned int> new_div(height);
+    unsigned int count0 = 0;
+    unsigned int lcs = INT_MAX;
 
-    for (int i = 0; i < height; i++) {
+    for (unsigned int i = 0; i < height; i++) {
         lcs = std::min(lcs, div[i]);
         if (column[pref[i]] == '0') {
             new_pref[count0] = pref[i];
@@ -27,7 +28,7 @@ void update(std::string column, std::vector<int> &pref, std::vector<int> &div) {
     int count1 = 0;
     lcs = INT_MAX;
 
-    for (int i = 0; i < height; i++) {
+    for (unsigned int i = 0; i < height; i++) {
         lcs = std::min(lcs, div[i]);
         if (column[pref[i]] == '1') {
             new_pref[count0 + count1] = pref[i];
@@ -44,14 +45,14 @@ void update(std::string column, std::vector<int> &pref, std::vector<int> &div) {
 }
 
 pbwt_column
-build_column(std::string column, std::vector<int> pref, std::vector<int> div) {
-    int count0 = 0;
-    int count1 = 0;
-    int threshold;
-    int lcs;
+build_column(std::string column, std::vector<unsigned int> pref) {
+    unsigned int count0 = 0;
+    unsigned int count1 = 0;
+    //int threshold;
+    // int lcs;
     unsigned int height = pref.size();
     bool start = true;
-    for (int i = 0; i < height; i++) {
+    for (unsigned int i = 0; i < height; i++) {
         if (i == 0 && column[pref[i]] == '1') {
             start = false;
         }
@@ -61,22 +62,15 @@ build_column(std::string column, std::vector<int> pref, std::vector<int> div) {
     }
 
     std::vector<pbwt_rlrow> rows;
-    int p_tmp = 0;
-    int perm_tmp = 0;
-    int run0 = 0;
-    int run1 = 0;
-    for (int i = 0; i < height; i++) {
+    unsigned int p_tmp = 0;
+    unsigned int perm_tmp = 0;
+    for (unsigned int i = 0; i < height; i++) {
         if (column[pref[i]] == '1') {
             count1++;
         }
 
         if ((i == 0) || (column[pref[i]] != column[pref[i - 1]])) {
             p_tmp = i;
-            if (column[pref[i]] == '0') {
-                run0++;
-            } else {
-                run1++;
-            }
             if (column[pref[i]] == '0') {
                 perm_tmp = i - count1;
             } else {
@@ -87,18 +81,13 @@ build_column(std::string column, std::vector<int> pref, std::vector<int> div) {
             rows.emplace_back(p_tmp, perm_tmp, 0);
         }
     }
-    /*for(int i = 0; i < rows.size(); i++){
-        if(!start && ){
-            rows[i].next_perm=run0+
-        }
-    }*/
     return pbwt_column(start, rows);
 }
 
-void build_next_perm(std::vector<pbwt_column> &cols, int index) {
-    for (int i = 0; i < cols[index - 1].rows.size(); i++) {
+void build_next_perm(std::vector<pbwt_column> &cols, unsigned int index) {
+    for (unsigned int i = 0; i < cols[index - 1].rows.size(); i++) {
         bool found = false;
-        for (int j = 0; j < cols[index].rows.size() - 1; j++) {
+        for (unsigned int j = 0; j < cols[index].rows.size() - 1; j++) {
             if (cols[index].rows[j].p <= cols[index - 1].rows[i].perm_p &&
                 cols[index - 1].rows[i].perm_p < cols[index].rows[j + 1].p) {
                 cols[index - 1].rows[i].next_perm = j;
@@ -112,4 +101,20 @@ void build_next_perm(std::vector<pbwt_column> &cols, int index) {
         }
     }
 
+}
+
+char get_next_char(bool zero_first, unsigned int pos) {
+    if (zero_first) {
+        if (pos % 2 == 0) {
+            return '0';
+        } else {
+            return '1';
+        }
+    } else {
+        if (pos % 2 == 0) {
+            return '1';
+        } else {
+            return '0';
+        }
+    }
 }

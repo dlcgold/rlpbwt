@@ -2,6 +2,9 @@
 #include "include/rlpbwt.h"
 
 int main(int argc, char** argv) {
+    if(argc != 2){
+        throw "Not file";
+    }
     rlpbwt rlpbwt(argv[1]);
     int count = 0;
     for(auto e: rlpbwt.cols){
@@ -13,5 +16,8 @@ int main(int argc, char** argv) {
         count++;
     }
     std::cout << rlpbwt.search_row(9);
-
+    /*for(int i = 0; i < 20; i++){
+        std::cout << rlpbwt.search_row(i);
+        std::cout << "\n";
+    }*/
 }

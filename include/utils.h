@@ -10,7 +10,9 @@
 #include <climits>
 #include "pbwt_column.h"
 
-void update(std::string, std::vector<int>&, std::vector<int>&);
-pbwt_column build_column(std::string, std::vector<int>, std::vector<int>);
-void build_next_perm(std::vector<pbwt_column>&, int);
+void update(std::string, std::vector<unsigned int>&, std::vector<unsigned int>&);
+pbwt_column build_column(std::string, std::vector<unsigned int>);
+void build_next_perm(std::vector<pbwt_column>&, unsigned int);
+char get_next_char(bool, unsigned int);
+
 #endif //RLPBWT_UTILS_H

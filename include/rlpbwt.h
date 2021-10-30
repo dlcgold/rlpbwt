@@ -11,6 +11,8 @@
 class rlpbwt {
 public:
     std::vector<pbwt_column> cols;
+    unsigned int heigth;
+    unsigned int width;
 
     rlpbwt(char* filename);
     std::string search_row(unsigned int);

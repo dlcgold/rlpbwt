@@ -8,13 +8,13 @@
 
 class pbwt_rlrow {
 public:
-    int p;
-    int perm_p;
-    int next_perm;
+    unsigned int p;
+    unsigned int perm_p;
+    unsigned int next_perm;
 
-    pbwt_rlrow(int p, int permP, int nextPerm);
+    pbwt_rlrow(unsigned int p, unsigned int permP, unsigned int nextPerm);
     virtual ~pbwt_rlrow();
-    int lf_mapping(unsigned int);
+    int lf_mapping(unsigned int) const;
 };
 
 

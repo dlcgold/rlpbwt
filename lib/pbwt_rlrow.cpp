@@ -4,14 +4,12 @@
 
 #include "../include/pbwt_rlrow.h"
 
-pbwt_rlrow::pbwt_rlrow(int p, int permP, int nextPerm) : p(p),
+pbwt_rlrow::pbwt_rlrow(unsigned int p, unsigned int permP, unsigned int nextPerm) : p(p),
                                                          perm_p(permP),
                                                          next_perm(nextPerm) {}
 
-pbwt_rlrow::~pbwt_rlrow() {
+pbwt_rlrow::~pbwt_rlrow() = default;
 
-}
-
-int pbwt_rlrow::lf_mapping(unsigned int i) {
+int pbwt_rlrow::lf_mapping(unsigned int i) const {
     return perm_p + i - p;
 }
