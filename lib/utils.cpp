@@ -52,7 +52,7 @@ build_column(std::string column, std::vector<int> pref, std::vector<int> div) {
     unsigned int height = pref.size();
     bool start = true;
     for (int i = 0; i < height; i++) {
-        if (i == 0 && column[i] == '1') {
+        if (i == 0 && column[pref[i]] == '1') {
             start = false;
         }
         if (column[i] == '0') {
@@ -63,7 +63,6 @@ build_column(std::string column, std::vector<int> pref, std::vector<int> div) {
     std::vector<pbwt_rlrow> rows;
     int p_tmp = 0;
     int perm_tmp = 0;
-    int next_perm_tmp = 0;
     int run0 = 0;
     int run1 = 0;
     for (int i = 0; i < height; i++) {
@@ -72,7 +71,6 @@ build_column(std::string column, std::vector<int> pref, std::vector<int> div) {
         }
 
         if ((i == 0) || (column[pref[i]] != column[pref[i - 1]])) {
-            //fprintf(filePtr, "\t%i\t%i", i, column[pref[i]]);
             p_tmp = i;
             if (column[pref[i]] == '0') {
                 run0++;
@@ -80,26 +78,13 @@ build_column(std::string column, std::vector<int> pref, std::vector<int> div) {
                 run1++;
             }
             if (column[pref[i]] == '0') {
-                //fprintf(filePtr, "\t%i", i - count1);
                 perm_tmp = i - count1;
             } else {
-                //fprintf(filePtr, "\t%i", count0 + count1 - 1);
                 perm_tmp = count0 + count1 - 1;
             }
-            //next_perm_tmp = pref[i];
-            //fprintf(filePtr, "\t%i", pref[i]);
-            threshold = i;
-            lcs = div[i];
         }
-
-        if (div[i] < lcs) {
-            threshold = i;
-            lcs = div[i];
-        }
-
         if ((i == height - 1) || (column[pref[i]] != column[pref[i + 1]])) {
-            //fprintf(filePtr, "\t%i\t%i\n", pref[i], threshold);
-            rows.emplace_back(p_tmp, perm_tmp, next_perm_tmp);
+            rows.emplace_back(p_tmp, perm_tmp, 0);
         }
     }
     /*for(int i = 0; i < rows.size(); i++){
@@ -112,11 +97,19 @@ build_column(std::string column, std::vector<int> pref, std::vector<int> div) {
 
 void build_next_perm(std::vector<pbwt_column> &cols, int index) {
     for (int i = 0; i < cols[index - 1].rows.size(); i++) {
+        bool found = false;
         for (int j = 0; j < cols[index].rows.size() - 1; j++) {
-            if (cols[index].rows[j].p < cols[index - 1].rows[i].perm_p &&
-                cols[index - 1].rows[i].perm_p <= cols[index].rows[j + 1].p) {
-                cols[index - 1].rows[i].next_perm = j + 1;
+            if (cols[index].rows[j].p <= cols[index - 1].rows[i].perm_p &&
+                cols[index - 1].rows[i].perm_p < cols[index].rows[j + 1].p) {
+                cols[index - 1].rows[i].next_perm = j;
+                found = true;
+                break;
             }
         }
+        if (!found) {
+            cols[index - 1].rows[i].next_perm =
+                    cols[index].rows.size() - 1;
+        }
     }
+
 }

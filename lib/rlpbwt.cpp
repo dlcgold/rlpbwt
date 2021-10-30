@@ -36,7 +36,7 @@ rlpbwt::rlpbwt(char *filename) {
                          column.end());
             auto col = build_column(column, pref, div);
             cols[count] = col;
-            if (count != 0){
+            if (count != 0) {
                 build_next_perm(cols, count);
             }
             update(column, pref, div);
@@ -55,55 +55,111 @@ std::string rlpbwt::search_row(unsigned int row_index) {
     int start = 0;
     int pos = 0;
     std::string row = "";
+    bool found_first = false;
     for (int i = 0; i < this->cols[0].rows.size() - 1; i++) {
-        if (this->cols[0].rows[i].p < row_index &&
-            row_index <= this->cols[0].rows[i + 1].p) {
-            start = this->cols[0].rows[i + 1].perm_p;
-            pos = i + 1;
+        if (this->cols[0].rows[i].p <= row_index &&
+            row_index < this->cols[0].rows[i + 1].p) {
+            pos = i;
             if (this->cols[0].zero_first) {
-                if (i + 1 % 2 == 0) {
+                if (pos % 2 == 0) {
                     row.push_back('0');
                 } else {
                     row.push_back('1');
                 }
             } else {
-                if (i + 1 % 2 == 0) {
+                if (pos % 2 == 0) {
                     row.push_back('1');
                 } else {
                     row.push_back('0');
                 }
             }
+            found_first = true;
             break;
         }
     }
+    if (!found_first) {
+        pos = this->cols[0].rows.size() - 1;
+        if (this->cols[0].zero_first) {
+            if (pos % 2 == 0) {
+                row.push_back('0');
+            } else {
+                row.push_back('1');
+            }
+        } else {
+            if (pos % 2 == 0) {
+                row.push_back('1');
+            } else {
+                row.push_back('0');
+            }
+        }
+    }
+    start = this->cols[0].rows[pos].next_perm;
     int end = this->cols[0].rows[pos].lf_mapping(row_index);
-    std::cout << "start: " << start << " " << "end: " << end << "\n";
-
     for (int i = 1; i < this->cols.size(); i++) {
-        std::cout << "start: " << start << " " << "end: " << end << "\n";
-        for (int j = start; j < this->cols[i].rows.size() - 1; j++) {
-            if ((this->cols[i].rows[j].p < end &&
-                 end <= this->cols[i].rows[j + 1].p) ||
-                j == this->cols[i].rows.size() - 1) {
+        //std::cout << "pos: " << i-1 << " start: " << start << " " << "end: " << end << "\n";
+        if (start == cols[i].rows.size() - 1) {
+            //std::cout << "startend "<< i << " " << start << "\n";
+            if (this->cols[i].zero_first) {
+                if (start % 2 == 0) {
+                    row.push_back('0');
+                } else {
+                    row.push_back('1');
+                }
+            } else {
+                if (start % 2 == 0) {
+                    row.push_back('1');
+                } else {
+                    row.push_back('0');
+                }
+            }
+            end = this->cols[i].rows[start].lf_mapping(end);
+            start = this->cols[i].rows[start].next_perm;
+        } else {
+            bool found = false;
+            for (int j = start; j < cols[i].rows.size() - 1; j++) {
+                if (cols[i].rows[j].p <= end && end < cols[i].rows[j + 1].p) {
+                    //std::cout << "inside "<< i << " " << j << "\n";
+                    if (this->cols[i].zero_first) {
+                        if (j % 2 == 0) {
+                            row.push_back('0');
+                        } else {
+                            row.push_back('1');
+                        }
+                    } else {
+                        if (j % 2 == 0) {
+                            row.push_back('1');
+                        } else {
+                            row.push_back('0');
+                        }
+                    }
+                    found = true;
+                    end = this->cols[i].rows[j].lf_mapping(end);
+                    start = this->cols[i].rows[j].next_perm;
+                    break;
+                }
+            }
+            if (!found) {
+                int endrow = this->cols[i].rows.size() - 1;
+                //std::cout <<"end " << i << " " << endrow << "\n";
                 if (this->cols[i].zero_first) {
-                    if (j + 1 % 2 == 0) {
+                    if (endrow % 2 == 0) {
                         row.push_back('0');
                     } else {
                         row.push_back('1');
                     }
                 } else {
-                    if (j + 1 % 2 == 0) {
+                    if (endrow % 2 == 0) {
                         row.push_back('1');
                     } else {
                         row.push_back('0');
                     }
                 }
-                end = this->cols[i].rows[start].lf_mapping(end);
-                start = this->cols[i].rows[j + 1].perm_p;
-
-                break;
+                end = this->cols[i].rows[endrow].lf_mapping(end);
+                start = this->cols[i].rows[endrow].next_perm;
             }
         }
+        //std::cout << "i: " << i << " " << row << "\n";
     }
+
     return row;
 }

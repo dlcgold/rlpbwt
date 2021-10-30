@@ -12,6 +12,6 @@ int main(int argc, char** argv) {
         std::cout << "------------------\n";
         count++;
     }
-    //std::cout << rlpbwt.search_row(9);
+    std::cout << rlpbwt.search_row(9);
 
 }
