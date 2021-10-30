@@ -14,7 +14,7 @@ public:
     unsigned int heigth;
     unsigned int width;
 
-    rlpbwt(char* filename);
+    explicit rlpbwt(char* filename);
     std::string search_row(unsigned int);
     virtual ~rlpbwt();
 };

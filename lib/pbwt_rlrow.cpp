@@ -10,6 +10,6 @@ pbwt_rlrow::pbwt_rlrow(unsigned int p, unsigned int permP, unsigned int nextPerm
 
 pbwt_rlrow::~pbwt_rlrow() = default;
 
-int pbwt_rlrow::lf_mapping(unsigned int i) const {
+unsigned int pbwt_rlrow::lf_mapping(unsigned int i) const {
     return perm_p + i - p;
 }

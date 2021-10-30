@@ -48,8 +48,6 @@ pbwt_column
 build_column(std::string column, std::vector<unsigned int> pref) {
     unsigned int count0 = 0;
     unsigned int count1 = 0;
-    //int threshold;
-    // int lcs;
     unsigned int height = pref.size();
     bool start = true;
     for (unsigned int i = 0; i < height; i++) {

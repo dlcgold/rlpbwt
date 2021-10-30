@@ -9,6 +9,7 @@
 #include "../include/pbwt_column.h"
 #include "../include/pbwt_rlrow.h"
 #include "../include/utils.h"
+#include "../include/exceptions.h"
 
 rlpbwt::rlpbwt(char *filename) {
     std::ifstream input_matrix(filename);
@@ -46,11 +47,11 @@ rlpbwt::rlpbwt(char *filename) {
         this->width = width;
         this->heigth = height;
     } else {
-        throw "File not found";
+        throw FileNotFoundException{};
     }
 }
 
-rlpbwt::~rlpbwt() {}
+rlpbwt::~rlpbwt() = default;
 
 std::string rlpbwt::search_row(unsigned int row_index) {
     unsigned int start = 0;
@@ -68,9 +69,9 @@ std::string rlpbwt::search_row(unsigned int row_index) {
     }
     if (!found_first) {
         pos = this->cols[0].rows.size() - 1;
-
         row.push_back(get_next_char(this->cols[0].zero_first, pos));
     }
+
     start = this->cols[0].rows[pos].next_perm;
     unsigned int end = this->cols[0].rows[pos].lf_mapping(row_index);
     for (unsigned int i = 1; i < this->cols.size(); i++) {
@@ -90,7 +91,7 @@ std::string rlpbwt::search_row(unsigned int row_index) {
                 }
             }
             if (!found) {
-                int endrow = this->cols[i].rows.size() - 1;
+                unsigned int endrow = this->cols[i].rows.size() - 1;
                 row.push_back(get_next_char(this->cols[i].zero_first, endrow));
                 end = this->cols[i].rows[endrow].lf_mapping(end);
                 start = this->cols[i].rows[endrow].next_perm;
