@@ -1,4 +1,3 @@
-#include <iostream>
 #include "include/rlpbwt.h"
 #include "include/pbwt_rlrow.h"
 #include "include/exceptions.h"
