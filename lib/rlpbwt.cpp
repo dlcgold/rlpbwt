@@ -44,6 +44,7 @@ rlpbwt::rlpbwt(const char *filename) {
         this->cols = tmp_cols;
         this->width = tmp_width;
         this->heigth = tmp_height;
+        input_matrix.close();
     } else {
         throw FileNotFoundException{};
     }
