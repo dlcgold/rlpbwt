@@ -11,7 +11,7 @@
 #include "../include/utils.h"
 #include "../include/exceptions.h"
 
-rlpbwt::rlpbwt(char *filename) {
+rlpbwt::rlpbwt(const char *filename) {
     std::ifstream input_matrix(filename);
     if (input_matrix.is_open()) {
         std::string column;

@@ -7,7 +7,7 @@
 #include "../include/utils.h"
 
 
-void update(std::string column, std::vector<unsigned int> &pref,
+void update(std::string &column, std::vector<unsigned int> &pref,
             std::vector<unsigned int> &div) {
 
     unsigned int height = pref.size();
@@ -45,8 +45,8 @@ void update(std::string column, std::vector<unsigned int> &pref,
 }
 
 pbwt_column
-build_column(std::string column, std::vector<unsigned int> pref,
-             std::vector<unsigned int> div) {
+build_column(std::string &column, std::vector<unsigned int> &pref,
+             std::vector<unsigned int> &div) {
     unsigned int height = pref.size();
     unsigned int count0 = 0;
     unsigned int count1 = 0;
@@ -97,7 +97,7 @@ void build_next_perm(pbwt_column &prev, pbwt_column &curr) {
         bool found = false;
         for (unsigned int j = 0; j < curr.rows.size() - 1; j++) {
             if (curr.rows[j].p <= prev.rows[i].perm_p &&
-                    prev.rows[i].perm_p < curr.rows[j + 1].p) {
+                prev.rows[i].perm_p < curr.rows[j + 1].p) {
                 prev.rows[i].next_perm = j;
                 found = true;
                 break;

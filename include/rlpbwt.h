@@ -34,7 +34,7 @@ public:
      * @param filename path of the file with the panel, every row of the file is
      * one column of the panel
      */
-    explicit rlpbwt(char *filename);
+    explicit rlpbwt(const char *filename);
 
     /**
      * @brief fucntion to extract a row of the original panel from the

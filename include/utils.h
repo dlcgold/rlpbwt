@@ -18,7 +18,7 @@
  * @param div divergence array for previous column
  */
 void
-update(std::string column, std::vector<unsigned int> &pref,
+update(std::string &column, std::vector<unsigned int> &pref,
        std::vector<unsigned int> &div);
 
 /**
@@ -30,8 +30,8 @@ update(std::string column, std::vector<unsigned int> &pref,
  * @return the struct for the run-length encoded PBWT column
  */
 pbwt_column
-build_column(std::string column, std::vector<unsigned int> pref,
-             std::vector<unsigned int> div);
+build_column(std::string &column, std::vector<unsigned int> &pref,
+             std::vector<unsigned int> &div);
 
 /**
  * @brief fucntion to obtain the next_perm values for the ith run-length encoded

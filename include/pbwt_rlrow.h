@@ -65,6 +65,16 @@ public:
      * @brief ostream overload to print the struct for a row with the 4 values
      */
     friend std::ostream &operator<<(std::ostream &os, const pbwt_rlrow &rlrow);
+
+    /**
+     * @brief Equality operator for a row of a run-length encoded PBWT column
+     */
+    bool operator==(const pbwt_rlrow &rhs) const;
+
+    /**
+     * @brief Inequality operator for a row of a run-length encoded PBWT column
+     */
+    bool operator!=(const pbwt_rlrow &rhs) const;
 };
 
 
