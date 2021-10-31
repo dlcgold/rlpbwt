@@ -1,0 +1,96 @@
+\hypertarget{classpbwt__rlrow}{}\doxysection{pbwt\+\_\+rlrow Class Reference}
+\label{classpbwt__rlrow}\index{pbwt\_rlrow@{pbwt\_rlrow}}
+
+
+class to rappresent every row of a column in run-\/length encoded PBWT matrix  
+
+
+
+
+{\ttfamily \#include $<$pbwt\+\_\+rlrow.\+h$>$}
+
+\doxysubsection*{Public Member Functions}
+\begin{DoxyCompactItemize}
+\item 
+\mbox{\hyperlink{classpbwt__rlrow_ac45ec6f6fa37053c5db283508a8cad68}{pbwt\+\_\+rlrow}} (unsigned int \mbox{\hyperlink{classpbwt__rlrow_a2894d7159183f39d636eb555ff8882d2}{p}}, unsigned int \mbox{\hyperlink{classpbwt__rlrow_ae25c0515964d52fd9212ded49b6aa728}{perm\+\_\+p}}, unsigned int \mbox{\hyperlink{classpbwt__rlrow_ac416b77226eb53f0995a1b2f57d882d7}{next\+\_\+perm}}, unsigned int \mbox{\hyperlink{classpbwt__rlrow_a300c35df6d8965980ba9d497d1392a41}{threshold}})
+\begin{DoxyCompactList}\small\item\em constructor of the quadruple for every row \end{DoxyCompactList}\item 
+\mbox{\Hypertarget{classpbwt__rlrow_a266f3ba2e53b69f1cb8968f8e2a2f78f}\label{classpbwt__rlrow_a266f3ba2e53b69f1cb8968f8e2a2f78f}} 
+virtual \mbox{\hyperlink{classpbwt__rlrow_a266f3ba2e53b69f1cb8968f8e2a2f78f}{$\sim$pbwt\+\_\+rlrow}} ()
+\begin{DoxyCompactList}\small\item\em default destructor \end{DoxyCompactList}\item 
+unsigned int \mbox{\hyperlink{classpbwt__rlrow_af778657a16bbe65e18a686315d08f17b}{lf\+\_\+mapping}} (unsigned int i) const
+\begin{DoxyCompactList}\small\item\em function to find the row for the run containing the bit obtained with previous permutations \end{DoxyCompactList}\end{DoxyCompactItemize}
+\doxysubsection*{Public Attributes}
+\begin{DoxyCompactItemize}
+\item 
+\mbox{\Hypertarget{classpbwt__rlrow_a2894d7159183f39d636eb555ff8882d2}\label{classpbwt__rlrow_a2894d7159183f39d636eb555ff8882d2}} 
+unsigned int \mbox{\hyperlink{classpbwt__rlrow_a2894d7159183f39d636eb555ff8882d2}{p}}
+\begin{DoxyCompactList}\small\item\em position of i-\/th run in the j-\/th column of the PBWT column \end{DoxyCompactList}\item 
+\mbox{\Hypertarget{classpbwt__rlrow_ae25c0515964d52fd9212ded49b6aa728}\label{classpbwt__rlrow_ae25c0515964d52fd9212ded49b6aa728}} 
+unsigned int \mbox{\hyperlink{classpbwt__rlrow_ae25c0515964d52fd9212ded49b6aa728}{perm\+\_\+p}}
+\begin{DoxyCompactList}\small\item\em permutation pi\+\_\+j(p) \end{DoxyCompactList}\item 
+\mbox{\Hypertarget{classpbwt__rlrow_ac416b77226eb53f0995a1b2f57d882d7}\label{classpbwt__rlrow_ac416b77226eb53f0995a1b2f57d882d7}} 
+unsigned int \mbox{\hyperlink{classpbwt__rlrow_ac416b77226eb53f0995a1b2f57d882d7}{next\+\_\+perm}}
+\begin{DoxyCompactList}\small\item\em index of the run containing pi\+\_\+j(p) in j+1th column of the PBWT column \end{DoxyCompactList}\item 
+\mbox{\Hypertarget{classpbwt__rlrow_a300c35df6d8965980ba9d497d1392a41}\label{classpbwt__rlrow_a300c35df6d8965980ba9d497d1392a41}} 
+unsigned int \mbox{\hyperlink{classpbwt__rlrow_a300c35df6d8965980ba9d497d1392a41}{threshold}}
+\begin{DoxyCompactList}\small\item\em threshold of the run \end{DoxyCompactList}\end{DoxyCompactItemize}
+\doxysubsection*{Friends}
+\begin{DoxyCompactItemize}
+\item 
+\mbox{\Hypertarget{classpbwt__rlrow_a0e3a0b1d80b268162b9edee71434f56f}\label{classpbwt__rlrow_a0e3a0b1d80b268162b9edee71434f56f}} 
+std\+::ostream \& \mbox{\hyperlink{classpbwt__rlrow_a0e3a0b1d80b268162b9edee71434f56f}{operator$<$$<$}} (std\+::ostream \&os, const \mbox{\hyperlink{classpbwt__rlrow}{pbwt\+\_\+rlrow}} \&rlrow)
+\begin{DoxyCompactList}\small\item\em ostream overload to print the struct for a row with the 4 values \end{DoxyCompactList}\end{DoxyCompactItemize}
+
+
+\doxysubsection{Detailed Description}
+class to rappresent every row of a column in run-\/length encoded PBWT matrix 
+
+\doxysubsection{Constructor \& Destructor Documentation}
+\mbox{\Hypertarget{classpbwt__rlrow_ac45ec6f6fa37053c5db283508a8cad68}\label{classpbwt__rlrow_ac45ec6f6fa37053c5db283508a8cad68}} 
+\index{pbwt\_rlrow@{pbwt\_rlrow}!pbwt\_rlrow@{pbwt\_rlrow}}
+\index{pbwt\_rlrow@{pbwt\_rlrow}!pbwt\_rlrow@{pbwt\_rlrow}}
+\doxysubsubsection{\texorpdfstring{pbwt\_rlrow()}{pbwt\_rlrow()}}
+{\footnotesize\ttfamily pbwt\+\_\+rlrow\+::pbwt\+\_\+rlrow (\begin{DoxyParamCaption}\item[{unsigned int}]{p,  }\item[{unsigned int}]{perm\+\_\+p,  }\item[{unsigned int}]{next\+\_\+perm,  }\item[{unsigned int}]{threshold }\end{DoxyParamCaption})}
+
+
+
+constructor of the quadruple for every row 
+
+
+\begin{DoxyParams}{Parameters}
+{\em p} & position of i-\/th run in the j-\/th column of the PBWT column \\
+\hline
+{\em perm\+\_\+p} & permutation pi\+\_\+j(p) \\
+\hline
+{\em next\+\_\+perm} & index of the run containing pi\+\_\+j(p) in j+1th column of the PBWT column \\
+\hline
+{\em threshold} & threshold of the run \\
+\hline
+\end{DoxyParams}
+
+
+\doxysubsection{Member Function Documentation}
+\mbox{\Hypertarget{classpbwt__rlrow_af778657a16bbe65e18a686315d08f17b}\label{classpbwt__rlrow_af778657a16bbe65e18a686315d08f17b}} 
+\index{pbwt\_rlrow@{pbwt\_rlrow}!lf\_mapping@{lf\_mapping}}
+\index{lf\_mapping@{lf\_mapping}!pbwt\_rlrow@{pbwt\_rlrow}}
+\doxysubsubsection{\texorpdfstring{lf\_mapping()}{lf\_mapping()}}
+{\footnotesize\ttfamily unsigned int pbwt\+\_\+rlrow\+::lf\+\_\+mapping (\begin{DoxyParamCaption}\item[{unsigned int}]{i }\end{DoxyParamCaption}) const}
+
+
+
+function to find the row for the run containing the bit obtained with previous permutations 
+
+
+\begin{DoxyParams}{Parameters}
+{\em i} & result of the previous permutation\+: i, p\+\_\+1(i), p\+\_\+2(p\+\_\+1(i))... \\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+the row for the run containing the bit obtained with previous permutations 
+\end{DoxyReturn}
+
+
+The documentation for this class was generated from the following files\+:\begin{DoxyCompactItemize}
+\item 
+include/pbwt\+\_\+rlrow.\+h\item 
+lib/pbwt\+\_\+rlrow.\+cpp\end{DoxyCompactItemize}
