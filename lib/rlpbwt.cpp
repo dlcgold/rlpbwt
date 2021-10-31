@@ -35,10 +35,10 @@ rlpbwt::rlpbwt(char *filename) {
         while (getline(input_matrix, column)) {
             column.erase(std::remove(column.begin(), column.end(), ' '),
                          column.end());
-            auto col = build_column(column, pref);
+            auto col = build_column(column, pref, div);
             cols[count] = col;
             if (count != 0) {
-                build_next_perm(cols, count);
+                build_next_perm(cols[count-1], cols[count]);
             }
             update(column, pref, div);
             count++;

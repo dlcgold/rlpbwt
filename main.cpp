@@ -8,12 +8,9 @@ int main(int argc, char **argv) {
     }
     rlpbwt rlpbwt(argv[1]);
     int count = 0;
-    for (const auto& e: rlpbwt.cols) {
-        std::cout << "Table " << count << " start with 0? " << e.zero_first
-                  << "\n";
-        for (const auto& r: e.rows) {
-            std::cout << r.p << " " << r.perm_p << " " << r.next_perm << "\n";
-        }
+    for (const auto &e: rlpbwt.cols) {
+        std::cout << "Table " << count << ":\n";
+        std::cout << e;
         std::cout << "------------------\n";
         count++;
     }
