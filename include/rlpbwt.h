@@ -6,7 +6,7 @@
 #define RLPBWT_RLPBWT_H
 
 #include <vector>
-#include "pbwt_column.h"
+#include "rlpbwt_column.h"
 
 /**
  * @brief class to rappresent the run-length encoded PBWT matrix
@@ -17,7 +17,7 @@ public:
      * @brief vector with all the structs for every column in run-length encoded
      * PBWT matrix
      */
-    std::vector<pbwt_column> cols;
+    std::vector<rlpbwt_column> cols;
 
     /**
      * @brief heigth of the original panel

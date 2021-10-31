@@ -2,8 +2,8 @@
 // Created by dlcgold on 28/10/21.
 //
 
-#ifndef RLPBWT_PBWT_RLROW_H
-#define RLPBWT_PBWT_RLROW_H
+#ifndef RLPBWT_RLPBWT_RLROW_H
+#define RLPBWT_RLPBWT_RLROW_H
 
 #include <ostream>
 
@@ -11,7 +11,7 @@
  * @brief class to rappresent every row of a column in run-length encoded
  * PBWT matrix
  */
-class pbwt_rlrow {
+class rlpbwt_rlrow {
 public:
     /**
      * @brief position of i-th run in the j-th column of the PBWT column
@@ -43,13 +43,13 @@ public:
      * the PBWT column
      * @param threshold threshold of the run
      */
-    pbwt_rlrow(unsigned int p, unsigned int perm_p, unsigned int next_perm,
+    rlpbwt_rlrow(unsigned int p, unsigned int perm_p, unsigned int next_perm,
                unsigned int threshold);
 
     /**
      * @brief default destructor
      */
-    virtual ~pbwt_rlrow();
+    virtual ~rlpbwt_rlrow();
 
     /**
      * @brief function to find the row for the run containing the bit
@@ -64,18 +64,18 @@ public:
     /**
      * @brief ostream overload to print the struct for a row with the 4 values
      */
-    friend std::ostream &operator<<(std::ostream &os, const pbwt_rlrow &rlrow);
+    friend std::ostream &operator<<(std::ostream &os, const rlpbwt_rlrow &rlrow);
 
     /**
      * @brief Equality operator for a row of a run-length encoded PBWT column
      */
-    bool operator==(const pbwt_rlrow &rhs) const;
+    bool operator==(const rlpbwt_rlrow &rhs) const;
 
     /**
      * @brief Inequality operator for a row of a run-length encoded PBWT column
      */
-    bool operator!=(const pbwt_rlrow &rhs) const;
+    bool operator!=(const rlpbwt_rlrow &rhs) const;
 };
 
 
-#endif //RLPBWT_PBWT_RLROW_H
+#endif //RLPBWT_RLPBWT_RLROW_H

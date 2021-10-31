@@ -6,8 +6,6 @@
 #include <string>
 #include <algorithm>
 #include "../include/rlpbwt.h"
-#include "../include/pbwt_column.h"
-#include "../include/pbwt_rlrow.h"
 #include "../include/utils.h"
 #include "../include/exceptions.h"
 
@@ -18,16 +16,16 @@ rlpbwt::rlpbwt(const char *filename) {
         getline(input_matrix, column);
         column.erase(std::remove(column.begin(), column.end(), ' '),
                      column.end());
-        const unsigned int height = column.size();
-        unsigned int width = std::count(
+        const unsigned int tmp_height = column.size();
+        unsigned int tmp_width = std::count(
                 std::istreambuf_iterator<char>(input_matrix),
                 std::istreambuf_iterator<char>(), '\n') + 1;
-        std::vector<pbwt_column> cols(width);
+        std::vector<rlpbwt_column> tmp_cols(tmp_width);
         input_matrix.clear();
         input_matrix.seekg(0, std::ios::beg);
-        std::vector<unsigned int> pref(height);
-        std::vector<unsigned int> div(height);
-        for (unsigned int i = 0; i < height; i++) {
+        std::vector<unsigned int> pref(tmp_height);
+        std::vector<unsigned int> div(tmp_height);
+        for (unsigned int i = 0; i < tmp_height; i++) {
             pref[i] = i;
             div[i] = 0;
         }
@@ -36,16 +34,16 @@ rlpbwt::rlpbwt(const char *filename) {
             column.erase(std::remove(column.begin(), column.end(), ' '),
                          column.end());
             auto col = build_column(column, pref, div);
-            cols[count] = col;
+            tmp_cols[count] = col;
             if (count != 0) {
-                build_next_perm(cols[count-1], cols[count]);
+                build_next_perm(tmp_cols[count - 1], tmp_cols[count]);
             }
             update(column, pref, div);
             count++;
         }
-        this->cols = cols;
-        this->width = width;
-        this->heigth = height;
+        this->cols = tmp_cols;
+        this->width = tmp_width;
+        this->heigth = tmp_height;
     } else {
         throw FileNotFoundException{};
     }
@@ -54,7 +52,7 @@ rlpbwt::rlpbwt(const char *filename) {
 rlpbwt::~rlpbwt() = default;
 
 std::string rlpbwt::search_row(unsigned int row_index) {
-    unsigned int start = 0;
+    unsigned int start;
     unsigned int pos = 0;
     std::string row;
     bool found_first = false;

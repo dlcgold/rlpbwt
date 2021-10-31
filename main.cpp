@@ -1,5 +1,5 @@
 #include "include/rlpbwt.h"
-#include "include/pbwt_rlrow.h"
+#include "include/rlpbwt_rlrow.h"
 #include "include/exceptions.h"
 #include "gtest/gtest.h"
 
@@ -13,9 +13,9 @@ TEST (BuildRlpbwtTest, TestSize) {
 
 TEST (BuildRlpbwtTest, TestColumnFour) {
     rlpbwt rlpbwt("../input/matrix3.txt");
-    auto row1 = pbwt_rlrow(0, 0, 0, 0);
-    auto row2 = pbwt_rlrow(11, 17, 5, 11);
-    auto row3 = pbwt_rlrow(14, 11, 5, 19);
+    auto row1 = rlpbwt_rlrow(0, 0, 0, 0);
+    auto row2 = rlpbwt_rlrow(11, 17, 5, 11);
+    auto row3 = rlpbwt_rlrow(14, 11, 5, 19);
     EXPECT_TRUE(rlpbwt.cols[4].zero_first);
     EXPECT_EQ (row1, rlpbwt.cols[4].rows[0]);
     EXPECT_EQ (row2, rlpbwt.cols[4].rows[1]);

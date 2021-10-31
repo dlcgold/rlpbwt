@@ -8,7 +8,7 @@
 #include <string>
 #include <vector>
 #include <climits>
-#include "pbwt_column.h"
+#include "rlpbwt_column.h"
 
 /**
  * @brief function to get pref and div arrays at column i+1 from the values in
@@ -29,7 +29,7 @@ update(std::string &column, std::vector<unsigned int> &pref,
  * @param div current divergence array
  * @return the struct for the run-length encoded PBWT column
  */
-pbwt_column
+rlpbwt_column
 build_column(std::string &column, std::vector<unsigned int> &pref,
              std::vector<unsigned int> &div);
 
@@ -39,7 +39,7 @@ build_column(std::string &column, std::vector<unsigned int> &pref,
  * @param prev ith run-length encoded PBWT column, the prevoius one
  * @param curr i+1th run-length encoded PBWT column, the current one
  */
-void build_next_perm(pbwt_column &prev, pbwt_column &curr);
+void build_next_perm(rlpbwt_column &prev, rlpbwt_column &curr);
 
 /**
  * @brief function to get the char (in bialleic case with 0 and 1) at certain

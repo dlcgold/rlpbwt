@@ -44,7 +44,7 @@ void update(std::string &column, std::vector<unsigned int> &pref,
     pref = new_pref;
 }
 
-pbwt_column
+rlpbwt_column
 build_column(std::string &column, std::vector<unsigned int> &pref,
              std::vector<unsigned int> &div) {
     unsigned int height = pref.size();
@@ -62,7 +62,7 @@ build_column(std::string &column, std::vector<unsigned int> &pref,
         }
     }
 
-    std::vector<pbwt_rlrow> rows;
+    std::vector<rlpbwt_rlrow> rows;
     unsigned int p_tmp = 0;
     unsigned int perm_tmp = 0;
     for (unsigned int i = 0; i < height; i++) {
@@ -92,19 +92,19 @@ build_column(std::string &column, std::vector<unsigned int> &pref,
     return {start, rows};
 }
 
-void build_next_perm(pbwt_column &prev, pbwt_column &curr) {
-    for (unsigned int i = 0; i < prev.rows.size(); i++) {
+void build_next_perm(rlpbwt_column &prev, rlpbwt_column &curr) {
+    for (auto & row : prev.rows) {
         bool found = false;
         for (unsigned int j = 0; j < curr.rows.size() - 1; j++) {
-            if (curr.rows[j].p <= prev.rows[i].perm_p &&
-                prev.rows[i].perm_p < curr.rows[j + 1].p) {
-                prev.rows[i].next_perm = j;
+            if (curr.rows[j].p <= row.perm_p &&
+                row.perm_p < curr.rows[j + 1].p) {
+                row.next_perm = j;
                 found = true;
                 break;
             }
         }
         if (!found) {
-            prev.rows[i].next_perm =
+            row.next_perm =
                     curr.rows.size() - 1;
         }
     }
