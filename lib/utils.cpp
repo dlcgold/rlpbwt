@@ -53,6 +53,7 @@ build_column(std::string &column, std::vector<unsigned int> &pref,
     unsigned int threshold = 0;
     unsigned int lcs = 0;
     bool start = true;
+
     for (unsigned int i = 0; i < height; i++) {
         if (i == 0 && column[pref[i]] == '1') {
             start = false;
@@ -93,7 +94,7 @@ build_column(std::string &column, std::vector<unsigned int> &pref,
 }
 
 void build_next_perm(rlpbwt_column &prev, rlpbwt_column &curr) {
-    for (auto & row : prev.rows) {
+    for (auto &row: prev.rows) {
         bool found = false;
         for (unsigned int j = 0; j < curr.rows.size() - 1; j++) {
             if (curr.rows[j].p <= row.perm_p &&
@@ -104,21 +105,20 @@ void build_next_perm(rlpbwt_column &prev, rlpbwt_column &curr) {
             }
         }
         if (!found) {
-            row.next_perm =
-                    curr.rows.size() - 1;
+            row.next_perm = curr.rows.size() - 1;
         }
     }
 }
 
-char get_next_char(bool zero_first, unsigned int run) {
+char get_next_char(bool zero_first, unsigned int index_run) {
     if (zero_first) {
-        if (run % 2 == 0) {
+        if (index_run % 2 == 0) {
             return '0';
         } else {
             return '1';
         }
     } else {
-        if (run % 2 == 0) {
+        if (index_run % 2 == 0) {
             return '1';
         } else {
             return '0';
