@@ -6,6 +6,9 @@
 #define RLPBWT_RLPBWT_H
 
 #include <vector>
+#include <string>
+#include <iostream>
+#include <climits>
 #include "rlpbwt_column.h"
 
 /**
@@ -37,7 +40,7 @@ public:
     explicit rlpbwt(const char *filename);
 
     /**
-     * @brief fucntion to extract a row of the original panel from the
+     * @brief function to extract a row of the original panel from the
      * run-length encoded PBWT matrix
      * @param i index of the query row
      * @return the queried row in a std::string
@@ -48,6 +51,40 @@ public:
      * @brief default destructor
      */
     virtual ~rlpbwt();
+
+private:
+
+    /**
+     * @brief fucntion to obtain the next_perm values for the ith run-length
+     * encoded PBWT column from the i+1th one
+     * @param prev ith run-length encoded PBWT column, the prevoius one
+     * @param curr i+1th run-length encoded PBWT column, the current one
+     */
+    static void build_next_perm(rlpbwt_column &prev, rlpbwt_column &curr);
+
+    /**
+     * @brief function to obtain the struct for the run-length encoded PBWT
+     * column, except for next_perm values
+     * @param column current column
+     * @param pref current prefix array
+     * @param div current divergence array
+     * @return the struct for the run-length encoded PBWT column
+     */
+    static rlpbwt_column
+    build_column(std::string &column, std::vector<unsigned int> &pref,
+                 std::vector<unsigned int> &div);
+
+
+    /**
+     * @brief function to get pref and div arrays at column i+1 from the values
+     * in column i
+     * @param column current column
+     * @param pref prefix array for previous column
+     * @param div divergence array for previous column
+     */
+    static void
+    update(std::string &column, std::vector<unsigned int> &pref,
+           std::vector<unsigned int> &div);
 };
 
 
