@@ -202,3 +202,20 @@ void rlpbwt::update(std::string &column, std::vector<unsigned int> &pref,
     div = new_div;
     pref = new_pref;
 }
+
+std::vector<rlpbwt_match> rlpbwt::external_match(const std::string &query) {
+    if(query.size() != this->width){
+        throw NotEqualLengthException{};
+    }
+    std::vector<unsigned int> f_arr(this->width + 1);
+    std::vector<unsigned int> g_arr(this->width + 1);
+    std::vector<unsigned int> e_arr(this->width + 1);
+
+    return std::vector<rlpbwt_match>();
+}
+
+std::vector<unsigned int>
+rlpbwt::update_external(unsigned int index, unsigned int e, unsigned int f,
+                        unsigned int g, const std::string &query) {
+
+}

@@ -27,6 +27,22 @@ TEST (QueryRlpbwtTest, TestRowNine) {
     EXPECT_EQ ("100001000011", rlpbwt.search_row(9));
 }
 
+TEST (BuildRlpbwtTestSimple, TestBuild) {
+    rlpbwt rlpbwt("../input/matrix_simple.txt");
+    //std::cout << rlpbwt.heigth << " " << rlpbwt.width;
+    //int count = 0;
+    for(auto c: rlpbwt.cols){
+        //std::cout << "column: " << count << ", start with 0? " << c.zero_first << "\n";
+        for(auto r: c.rows){
+            std::cout << r << "\n";
+        }
+        //count ++;
+        std::cout << "--------------\n";
+    }
+    EXPECT_EQ (7, rlpbwt.heigth);
+    EXPECT_EQ (20, rlpbwt.width);
+}
+
 int main(int argc, char **argv) {
     /*rlpbwt rlpbwt("../input/matrix3.txt");
     int count = 0;

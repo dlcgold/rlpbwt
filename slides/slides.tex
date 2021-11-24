@@ -1,0 +1,255 @@
+%\documentclass[handout]{beamer}
+\documentclass{beamer}
+\mode<presentation>
+{
+  \usetheme{Warsaw}
+  % \setbeamercovered{transparent}
+  \useoutertheme{infolines}
+
+}
+
+\usepackage[italian]{babel}
+\usepackage[utf8]{inputenc}
+\usepackage{wrapfig}
+\usepackage[T1]{fontenc}
+\usepackage{float}
+\usepackage{multicol}
+\usepackage{blindtext}
+\usepackage{mwe}
+
+\definecolor{nord1}{RGB}{46, 52, 64} 
+\definecolor{nord2}{RGB}{76, 105, 141} 
+\definecolor{nord3}{RGB}{94, 129, 172}
+\definecolor{nord4}{RGB}{129, 161, 193} 
+\definecolor{nord5}{RGB}{136, 192, 208}  
+\definecolor{nord6}{RGB}{163, 190, 140}
+\definecolor{nord7}{RGB}{191, 97, 106}
+
+\setbeamercolor{palette primary}{bg=nord2,fg=white}
+\setbeamercolor{palette secondary}{bg=nord3,fg=white}
+\setbeamercolor{palette tertiary}{bg=nord4,fg=white}
+
+\setbeamercolor{block title}{bg=nord2,fg=white}
+
+\setbeamercolor{itemize item}{fg=nord3}
+\setbeamercolor{itemize subitem}{fg=nord4}
+\setbeamercolor{itemize subsubitem}{fg=nord5}
+
+\setbeamertemplate{itemize item}[square]
+\setbeamertemplate{itemize subitem}[circle]
+\setbeamertemplate{itemize subsubitem}[triangle]
+
+\usecolortheme[named=nord2]{structure}
+
+\title[] {RLPBWT}
+
+% \subtitle
+% {Presentation Subtitle} % (optional)
+
+\author[] {Davide Cozzi}
+
+
+\institute[] {Dipartimento di Informatica, Sistemistica e Comunicazione
+  (DISCo)\\
+  Università degli Studi di Milano Bicocca}
+
+\date[] {}
+
+\subject{Presentation}
+\pgfdeclareimage[height=0.5cm]{university-logo}{img/logo_unimib.pdf}
+\logo{\pgfuseimage{university-logo}}
+
+\AtBeginSection[]
+{
+  \begin{frame}<beamer>{Outline}
+    \tableofcontents[currentsection, currentsubsection]
+  \end{frame}
+}
+
+
+% If you wish to uncover everything in a step-wise fashion, uncomment
+% the following command: 
+
+%\beamerdefaultoverlayspecification{<+->}
+
+
+\begin{document}
+
+\begin{frame}
+  \titlepage
+\end{frame}
+
+\begin{frame}{Outline}
+  \setcounter{tocdepth}{1}
+  \tableofcontents
+\end{frame}
+
+\section{RLPBWT}
+\begin{frame}{Some definitions}
+
+\end{frame}
+\section{Example}
+\begin{frame}{The Panel}
+  \begin{block}{Panel}
+    \begin{table}[H]
+      \centering
+      \tiny
+      \begin{tabular}{c|c|c|c|c|c|c|c|c|c|c|c|c|c|c|c|c|c|c|c}
+        \hline
+        0 & 1 & 2 & 3 & 4 & 5 & 6 & 7 & 8 & 9 & 10 & 11 & 12 & 13 & 14 & 15 & 16
+        & 17 & 18 & 19\\
+        \hline
+        \hline
+        
+        1 & 1 & 0 & 1 & 0 & 0 & 1 & 1 & 1 & 1 & 1 & 0 & 0 & 1 & 0 & 0 & 1 & 0
+             & 0 & 1\\
+        0 & 1 & 0 & 0 & 0 & 0 & 1 & 1 & 1 & 1 & 1 & 0 & 0 & 1 & 1 & 1 & 0 & 0
+             & 1 & 0\\
+        0 & 0 & 0 & 1 & 0 & 0 & 0 & 0 & 0 & 1 & 1 & 1 & 1 & 0 & 0 & 0 & 1 & 0
+             & 1 & 0\\
+        1 & 0 & 0 & 1 & 1 & 0 & 1 & 0 & 1 & 0 & 0 & 0 & 1 & 1 & 1 & 0 & 0 & 0
+             & 1 & 0\\
+        0 & 1 & 1 & 0 & 1 & 1 & 1 & 1 & 1 & 0 & 0 & 1 & 0 & 0 & 1 & 1 & 1 & 1
+             & 0 & 0\\
+        1 & 1 & 0 & 0 & 1 & 0 & 1 & 0 & 1 & 0 & 1 & 0 & 1 & 0 & 0 & 0 & 1 & 1
+             & 1 & 1\\
+        0 & 0 & 0 & 1 & 0 & 1 & 1 & 1 & 1 & 1 & 1 & 1 & 0 & 0 & 1 & 0 & 0 & 0
+             & 1 & 1\\
+        \hline
+      \end{tabular}
+    \end{table}
+  \end{block}
+  \begin{block}{PBWT Matrix}
+    \begin{table}[H]
+      \centering
+      \tiny
+      \begin{tabular}{c|c|c|c|c|c|c|c|c|c|c|c|c|c|c|c|c|c|c|c}
+        \hline
+        0 & 1 & 2 & 3 & 4 & 5 & 6 & 7 & 8 & 9 & 10 & 11 & 12 & 13 & 14 & 15 & 16
+        & 17 & 18 & 19\\
+        \hline
+        \hline
+        1 & 1 & 0 & 1 & 0 & 0 & 1 & 0 & 0 & 1 & 1 & 0 & 1 & 1 & 1 & 0 & 1 & 0
+             & 1 & 1 \\
+        0 & 0 & 0 & 1 & 1 & 0 & 0 & 1 & 1 & 0 & 0 & 1 & 1 & 1 & 1 & 0 & 1 & 0
+             & 1 & 0 \\
+        0 & 1 & 0 & 1 & 1 & 1 & 1 & 1 & 1 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 1 & 0
+             & 1 & 1 \\
+        1 & 0 & 0 & 0 & 0 & 0 & 1 & 0 & 1 & 1 & 1 & 1 & 0 & 0 & 0 & 1 & 0 & 1
+             & 1 & 0 \\
+        0 & 1 & 1 & 1 & 0 & 0 & 1 & 0 & 1 & 1 & 1 & 0 & 0 & 1 & 1 & 0 & 0 & 0
+             & 0 & 0 \\
+        1 & 0 & 0 & 0 & 1 & 1 & 1 & 1 & 1 & 1 & 1 & 0 & 1 & 0 & 0 & 1 & 1 & 0
+             & 1 & 0 \\
+        0 & 1 & 0 & 0 & 0 & 0 & 1 & 1 & 1 & 0 & 1 & 1 & 0 & 0 & 1 & 0 & 0 & 1
+             & 0 & 1 \\
+        \hline
+      \end{tabular}
+    \end{table}
+  \end{block}
+\end{frame}
+\begin{frame}{Prefix and Divergence Arrays}
+  \begin{block}{Prefix Arrays}
+    \begin{table}[H]
+      \tiny
+      \begin{tabular}{c|c|c|c|c|c|c|c|c|c|c|c|c|c|c|c|c|c|c|c}
+        \hline
+        0 & 1 & 2 & 3 & 4 & 5 & 6 & 7 & 8 & 9 & 10 & 11 & 12 & 13 & 14 & 15 & 16
+        & 17 & 18 & 19\\
+        \hline
+        \hline
+        0 & 1 & 2 & 2 & 1 & 1 & 1 & 2 & 2 & 2 & 5 & 3 & 3 & 1 & 4 & 5 & 5 & 6
+             & 6 & 0\\  
+        1 & 2 & 6 & 6 & 5 & 2 & 2 & 1 & 5 & 5 & 3 & 4 & 5 & 0 & 6 & 2 & 2 & 3
+             & 3 & 4\\  
+        2 & 4 & 3 & 3 & 4 & 6 & 0 & 0 & 3 & 3 & 4 & 5 & 1 & 4 & 5 & 0 & 0 & 1
+             & 1 & 6\\  
+        3 & 6 & 1 & 1 & 2 & 0 & 5 & 5 & 1 & 1 & 2 & 2 & 0 & 6 & 2 & 4 & 6 & 5
+             & 2 & 3\\  
+        4 & 0 & 4 & 0 & 6 & 5 & 3 & 3 & 0 & 0 & 1 & 1 & 4 & 3 & 1 & 6 & 3 & 2
+             & 0 & 1\\  
+        5 & 3 & 0 & 5 & 3 & 4 & 6 & 6 & 6 & 6 & 0 & 0 & 2 & 5 & 0 & 1 & 4 & 0
+             & 5 & 2\\
+        6 & 5 & 5 & 4 & 0 & 3 & 4 & 4 & 4 & 4 & 6 & 6 & 6 & 2 & 3 & 3 & 1 & 4
+             & 4 & 5\\
+        \hline
+      \end{tabular}
+    \end{table}
+  \end{block}
+  \begin{block}{LCP Arrays: current \textit{k} minus the original Durbin's
+      divergence arrays}  
+    \begin{table}[H]
+      \tiny
+      \begin{tabular}{c|c|c|c|c|c|c|c|c|c|c|c|c|c|c|c|c|c|c|c}
+        \hline
+        0 & 1 & 2 & 3 & 4 & 5 & 6 & 7 & 8 & 9 & 10 & 11 & 12 & 13 & 14 & 15 & 16
+        & 17 & 18 & 19\\
+        \hline
+        \hline
+        0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0
+             & 0 & 0 \\
+        0 & 1 & 2 & 3 & 3 & 1 & 2 & 0 & 1 & 0 & 6 & 3 & 1 & 9 & 3 & 3 & 4 & 3
+             & 4 & 1 \\
+        0 & 1 & 1 & 2 & 1 & 5 & 4 & 3 & 4 & 5 & 2 & 0 & 2 & 1 & 1 & 1 & 2 & 1
+             & 2 & 0 \\
+        0 & 1 & 0 & 1 & 0 & 3 & 1 & 2 & 0 & 1 & 0 & 1 & 8 & 2 & 2 & 0 & 1 & 0
+             & 1 & 5 \\
+        0 & 0 & 2 & 2 & 4 & 0 & 2 & 3 & 4 & 5 & 1 & 2 & 0 & 0 & 0 & 4 & 2 & 5
+             & 4 & 3 \\
+        0 & 1 & 1 & 3 & 3 & 2 & 0 & 1 & 2 & 3 & 6 & 7 & 1 & 2 & 10 & 1 & 0 & 3
+             & 0 & 2 \\
+        0 & 1 & 2 & 0 & 2 & 1 & 1 & 2 & 3 & 4 & 4 & 5 & 3 & 1 & 1 & 2 & 2 & 1
+             & 2 & 1\\
+      \end{tabular}
+    \end{table}
+  \end{block}
+\end{frame}
+
+\begin{frame}{Run-Length PBWT}
+  \begin{block}{Some tables: \textit{p, perm, next perm, threshold}}
+      {\footnotesize{\[
+      \begin{matrix}
+        p & pe & np & th\\
+        \hline
+        0 & 4 & 4 & 0\\
+        1 & 0 & 0 & 1\\
+        3 & 5 & 5 & 3\\
+        4 & 2 & 2 & 4\\
+        5 & 6 & 6 & 5\\
+        6 & 3 & 3 & 6
+      \end{matrix}\Longrightarrow \begin{matrix}
+        p & pe & np & th\\
+        \hline
+        0 & 3 & 0 & 0\\
+        1 & 0 & 0 & 1\\
+        2 & 4 & 1 & 2\\
+        3 & 1 & 0 & 3\\
+        4 & 5 & 2 & 4\\
+        5 & 2 & 0 & 5\\
+        6 & 6 & 2 & 6
+      \end{matrix}\Longrightarrow \begin{matrix}
+        p & pe & np & th\\
+        \hline
+        0 & 0 & 0 & 0\\
+        4 & 6 & 3 & 4\\
+        5 & 4 & 2 & 5
+      \end{matrix}\Longrightarrow \begin{matrix}
+        p & pe & np & th\\
+        \hline
+        0 & 3 & 2 & 0\\
+        3 & 0 & 0 & 3\\
+        4 & 6 & 4 & 4\\
+        5 & 1 & 1 & 6
+      \end{matrix}\Rightarrow\ldots\]}}
+\end{block}
+\end{frame}
+
+% \begin{frame}[allowframebreaks]{References} 
+%     \nocite{*}
+%     \bibliographystyle{unsrt}
+%     \bibliography{ref}
+% \end{frame}
+
+\end{document}
+
+

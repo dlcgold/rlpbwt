@@ -9,7 +9,9 @@
 #include <string>
 #include <iostream>
 #include <climits>
+#include <cassert>
 #include "rlpbwt_column.h"
+#include "rlpbwt_match.h"
 
 /**
  * @brief class to rappresent the run-length encoded PBWT matrix
@@ -46,6 +48,9 @@ public:
      * @return the queried row in a std::string
      */
     std::string search_row(unsigned int i);
+
+    std::vector<rlpbwt_match> external_match(const std::string &query);
+
 
     /**
      * @brief default destructor
@@ -85,6 +90,9 @@ private:
     static void
     update(std::string &column, std::vector<unsigned int> &pref,
            std::vector<unsigned int> &div);
+
+    std::vector<unsigned int> update_external(unsigned int index, unsigned int e, unsigned int f,
+                         unsigned int g, const std::string& query);
 };
 
 

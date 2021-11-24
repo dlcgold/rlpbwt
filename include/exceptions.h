@@ -16,4 +16,13 @@ class FileNotFoundException: public std::exception {
   }
 };
 
+/**
+ * @brief exception file not found
+ */
+class NotEqualLengthException: public std::exception {
+    const char* what() const noexcept override {
+        return "Query has not the same length of panel";
+    }
+};
+
 #endif //RLPBWT_EXCEPTIONS_H
