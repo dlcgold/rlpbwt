@@ -53,7 +53,7 @@ rlpbwt::rlpbwt(const char *filename) {
 
 rlpbwt::~rlpbwt() = default;
 
-std::string rlpbwt::search_row(unsigned int row_index) {
+std::string rlpbwt::search_row(unsigned int row_index, bool verbose) {
     unsigned int start;
     unsigned int pos = 0;
     std::string row;
@@ -74,11 +74,16 @@ std::string rlpbwt::search_row(unsigned int row_index) {
 
     start = this->cols[0].rows[pos].next_perm;
     unsigned int end = this->cols[0].rows[pos].lf_mapping(row_index);
+
     for (unsigned int i = 1; i < this->cols.size(); i++) {
         if (start == cols[i].rows.size() - 1) {
             row.push_back(get_next_char(this->cols[i].zero_first, start));
             end = this->cols[i].rows[start].lf_mapping(end);
             start = this->cols[i].rows[start].next_perm;
+            if (verbose) {
+                std::cout << "column " << i << ": " << start << ", " << end
+                          << "\n";
+            }
         } else {
             bool found = false;
             for (unsigned int j = start; j < cols[i].rows.size() - 1; j++) {
@@ -87,6 +92,10 @@ std::string rlpbwt::search_row(unsigned int row_index) {
                     found = true;
                     end = this->cols[i].rows[j].lf_mapping(end);
                     start = this->cols[i].rows[j].next_perm;
+                    if (verbose) {
+                        std::cout << "column " << i << ": " << start << ", " << end
+                                  << "\n";
+                    }
                     break;
                 }
             }
@@ -95,7 +104,12 @@ std::string rlpbwt::search_row(unsigned int row_index) {
                 row.push_back(get_next_char(this->cols[i].zero_first, endrow));
                 end = this->cols[i].rows[endrow].lf_mapping(end);
                 start = this->cols[i].rows[endrow].next_perm;
+                if (verbose) {
+                    std::cout << "column " << i << ": " << start << ", " << end
+                              << "\n";
+                }
             }
+
         }
     }
     return row;
@@ -204,7 +218,7 @@ void rlpbwt::update(std::string &column, std::vector<unsigned int> &pref,
 }
 
 std::vector<rlpbwt_match> rlpbwt::external_match(const std::string &query) {
-    if(query.size() != this->width){
+    if (query.size() != this->width) {
         throw NotEqualLengthException{};
     }
     std::vector<unsigned int> f_arr(this->width + 1);

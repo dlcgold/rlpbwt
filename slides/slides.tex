@@ -1,4 +1,4 @@
-%\documentclass[handout]{beamer}
+% \documentclass[handout]{beamer}
 \documentclass{beamer}
 \mode<presentation>
 {
@@ -24,6 +24,8 @@
 \definecolor{nord5}{RGB}{136, 192, 208}  
 \definecolor{nord6}{RGB}{163, 190, 140}
 \definecolor{nord7}{RGB}{191, 97, 106}
+\definecolor{nordred}{RGB}{191, 97, 106}
+\definecolor{nordgreen}{RGB}{135, 157, 116}
 
 \setbeamercolor{palette primary}{bg=nord2,fg=white}
 \setbeamercolor{palette secondary}{bg=nord3,fg=white}
@@ -70,7 +72,7 @@
 % If you wish to uncover everything in a step-wise fashion, uncomment
 % the following command: 
 
-%\beamerdefaultoverlayspecification{<+->}
+% \beamerdefaultoverlayspecification{<+->}
 
 
 \begin{document}
@@ -86,7 +88,64 @@
 
 \section{RLPBWT}
 \begin{frame}{Some definitions}
-
+  \begin{block}{The permutation, panel $M$, $n\times m$}
+    In \textit{RLPBWT} we have a permutation $\pi_j$, $\forall\,\, 1\leq j\leq
+    m$ that stably sorts the bits of the $j$-th column of the PBWT.\\
+    This permutation can be stored in space
+    proportional to the number of runs in the $j$-th column of the PBWT
+  \end{block}
+  \pause
+  \begin{block}{}
+    The positions in the columns of the PBWT of the bits in the $i$-th row of
+    $M$ are:
+    \pause
+    \[i, \pi_1(i), \pi_2(\pi_1(i)),\ldots, \pi_{m-1}(\cdots(
+      \pi_2(\pi_1(i)))\cdots)\] 
+  \end{block}
+  \begin{block}{}
+    Extracting the bits of the $i$-th row of $M$ reduces to iteratively applying
+    the $\pi_{m-1}$ permutations, corresponding to iteratively apply LF in a
+    standard BWT 
+  \end{block}
+\end{frame}
+\begin{frame}{The compressed data structure}
+  \begin{block}{The tables}
+    \begin{itemize}
+      \item a set of $m$ tables in which the $m$-th table stores only the
+      positions of the run-heads in the $m$-th column and a bool to check the
+      first symbol: 0 or 1
+      \item the $i$-th row of the $j$-th table stores a quadruple
+    \end{itemize}    
+  \end{block}
+  \pause
+  \begin{block}{The quadruple}
+    \begin{enumerate}
+      \item the position $p$ of the $i$-th run-head in the $j$-th column of the
+      PBWT 
+      \item the permutation $\pi_j(p)$
+      \item the index of the run containing bit $\pi_j(p)$ in the $(j + 1)$-st
+      column of the PBWT
+      \item the threshold, that's the index of the minimum \textit{LCP value}
+      (current column minus divergence array value) in the run
+    \end{enumerate}
+  \end{block}
+\end{frame}
+\begin{frame}{Row extraction}
+  \begin{block}{First step}
+    We start by finding the row of the first table that starts with the position
+    $p$ of the head of the run containing bit $i$ in first column of the PBWT,
+    computing: 
+    \pause
+    \[\pi_1(i)=\pi_1(p)+i-p\]
+    \pause
+    looking up the row for the run containing bit $\pi_1(p)$ in the the second
+    table and scanning down the table until we find the row for the run
+    containing bit $\pi_1(i)$ 
+  \end{block}
+  \begin{block}{Next step}
+    We continue repeating this procedure for each column
+  \end{block}
+  
 \end{frame}
 \section{Example}
 \begin{frame}{The Panel}
@@ -205,49 +264,194 @@
   \end{block}
 \end{frame}
 
-\begin{frame}{Run-Length PBWT}
+\begin{frame}{Run-Length PBWT I}
   \begin{block}{Some tables: \textit{p, perm, next perm, threshold}}
-      {\footnotesize{\[
-      \begin{matrix}
-        p & pe & np & th\\
-        \hline
-        0 & 4 & 4 & 0\\
-        1 & 0 & 0 & 1\\
-        3 & 5 & 5 & 3\\
-        4 & 2 & 2 & 4\\
-        5 & 6 & 6 & 5\\
-        6 & 3 & 3 & 6
-      \end{matrix}\Longrightarrow \begin{matrix}
-        p & pe & np & th\\
-        \hline
-        0 & 3 & 0 & 0\\
-        1 & 0 & 0 & 1\\
-        2 & 4 & 1 & 2\\
-        3 & 1 & 0 & 3\\
-        4 & 5 & 2 & 4\\
-        5 & 2 & 0 & 5\\
-        6 & 6 & 2 & 6
-      \end{matrix}\Longrightarrow \begin{matrix}
-        p & pe & np & th\\
-        \hline
-        0 & 0 & 0 & 0\\
-        4 & 6 & 3 & 4\\
-        5 & 4 & 2 & 5
-      \end{matrix}\Longrightarrow \begin{matrix}
-        p & pe & np & th\\
-        \hline
-        0 & 3 & 2 & 0\\
-        3 & 0 & 0 & 3\\
-        4 & 6 & 4 & 4\\
-        5 & 1 & 1 & 6
-      \end{matrix}\Rightarrow\ldots\]}}
-\end{block}
+    {\footnotesize{\[
+          \begin{matrix}
+            0 & 4 & 4 & 0\\
+            1 & 0 & 0 & 1\\
+            3 & 5 & 5 & 3\\
+            \color{nordgreen} 4 &\color{nordgreen} 2 &\color{nordgreen} 2
+            &\color{nordgreen} 4\\ 
+            5 & 6 & 6 & 5\\
+            6 & 3 & 3 & 6
+          \end{matrix}
+          \Longrightarrow
+          \begin{matrix}
+            0 & 3 & 0 & 0\\
+            1 & 0 & 0 & 1\\
+            \color{nordgreen} 2 &  \color{nordgreen} 4 &  \color{nordgreen} 1 &
+            \color{nordgreen} 2\\
+            3 & 1 & 0 & 3\\
+            4 & 5 & 2 & 4\\
+            5 & 2 & 0 & 5\\
+            6 & 6 & 2 & 6
+          \end{matrix}
+          \Longrightarrow
+          \begin{matrix}
+            0 & 0 & 0 & 0\\
+            \color{nordgreen} 4 & \color{nordgreen} 6 & \color{nordgreen} 3 &
+            \color{nordgreen} 4\\
+            5 & 4 &  2 & 5
+          \end{matrix}
+          \Longrightarrow
+          \begin{matrix}
+            0 & 3 & 2 & 0\\
+            3 & 0 & 0 & 3\\
+            4 & 6 & 4 & 4\\
+            \color{nordgreen} 5 & \color{nordgreen} 1 & \color{nordgreen} 1 &
+            \color{nordgreen} 6
+          \end{matrix}
+          \Longrightarrow
+          \begin{matrix}
+            0 & 0 & 0 & 0\\
+            \color{nordgreen} 1 &  \color{nordgreen} 4 &  \color{nordgreen} 2 &
+            \color{nordgreen} 2\\
+            3 & 1 & 0 & 3\\
+            5 & 6 & 4 & 5\\
+            6 & 3 & 2 & 6
+          \end{matrix}\]}}
+  \end{block}
+  \begin{block}{}
+    {\footnotesize{\[
+          \begin{matrix}
+            0 & 0 & 0 & 0\\
+            2 & 5 & 2 & 2\\
+            \color{nordred} 3 & \color{nordred} 2 & \color{nordred} 2 &
+            \color{nordred} 4\\
+            \color{nordgreen} 5 &  \color{nordgreen} 6 &   \color{nordgreen}2 &
+            \color{nordgreen} 5\\
+            6 & 4 & 2 & 6
+          \end{matrix}
+          \Longrightarrow
+          \begin{matrix}
+            0 & 1 & 1 & 0\\
+            1 & 0 & 0 & 1\\
+            \color{nordgreen} 2 & \color{nordgreen} 2 & \color{nordgreen} 1 &
+            \color{nordgreen} 5
+          \end{matrix}
+          \Longrightarrow
+          \begin{matrix}
+            0 & 0 & 0 & 0\\
+            \color{nordred} 1 &  \color{nordred} 3 &  \color{nordred} 1 &
+            \color{nordred} 1\\ 
+            3 & 1 & 1 & 3\\
+            \color{nordgreen} 5 & \color{nordgreen} 5 & \color{nordgreen} 1 &
+            \color{nordgreen} 5
+          \end{matrix}
+          \Longrightarrow
+          \begin{matrix}
+            0 & 0 & 0 & 0\\
+            \color{nordgreen} 1 & \color{nordgreen} 1 & \color{nordgreen} 1 &
+            \color{nordgreen} 3
+          \end{matrix}
+          \Longrightarrow
+          \begin{matrix}
+            0 & 3 & 2 & 0\\
+            \color{nordred} 1 &  \color{nordred} 0 &  \color{nordred} 0 &
+            \color{nordred} 1\\ 
+            3 & 4 & 2 & 3\\
+            \color{nordgreen} 6 & \color{nordgreen} 2 & \color{nordgreen} 1 &
+            \color{nordgreen} 6           
+          \end{matrix}\]}}
+  \end{block}
 \end{frame}
-
+\begin{frame}{Run-Length PBWT II}
+  \begin{block}{}
+    {\footnotesize{\[
+          \begin{matrix}
+            0 & 2 & 2 & 0\\
+            \color{nordgreen} 1 & \color{nordgreen} 0 & \color{nordgreen} 0 &
+            \color{nordgreen} 2\\
+            3 & 3 & 3 & 3
+          \end{matrix}
+          \Longrightarrow
+          \begin{matrix}
+            \color{nordred} 0 & \color{nordred} 0 & \color{nordred} 0 &
+            \color{nordred} 0\\
+            \color{nordgreen} 1 & \color{nordgreen} 4 & \color{nordgreen} 1 &
+            \color{nordgreen} 1\\
+            2 & 1 & 0 & 2\\
+            3 & 5 & 2 & 3\\
+            4 & 2 & 1 & 4\\
+            6 & 6 & 3 & 6
+          \end{matrix}
+          \Longrightarrow
+          \begin{matrix}
+            0 & 4 & 2 & 0\\
+            \color{nordgreen} 2 & \color{nordgreen} 0 & \color{nordgreen} 0 &
+            \color{nordgreen} 4\\
+            5 & 6 & 3 & 5\\
+            6 & 3 & 1 & 6
+          \end{matrix}
+          \Longrightarrow
+          \begin{matrix}
+            \color{nordred} 0 & \color{nordred} 4 & \color{nordred} 2 &
+            \color{nordred} 0\\
+            \color{nordgreen} 2 & \color{nordgreen} 0 & \color{nordgreen} 0 &
+            \color{nordgreen}2\\ 
+            4 & 6 & 4 & 4\\
+            5 & 2 & 1 & 6
+          \end{matrix}
+          \Longrightarrow
+          \begin{matrix}
+            \color{nordgreen} 0 & \color{nordgreen} 3 & \color{nordgreen} 1 &
+            \color{nordgreen} 0\\ 
+            2 & 0 & 0 & 2\\
+            4 & 5 & 3 & 4\\
+            5 & 2 & 0 & 5\\
+            6 & 6 & 4 & 6
+          \end{matrix}\]}}
+  \end{block}
+  \begin{block}{}
+    {\footnotesize{\[
+          \begin{matrix}
+            0 & 0 & 0 & 0\\
+            \color{nordgreen} 3 & \color{nordgreen} 5 & \color{nordgreen} 2 &
+            \color{nordgreen} 3\\
+            4 & 3 & 1 & 4\\
+            5 & 6 & 3 & 5\\
+            6 & 4 & 1 & 6
+          \end{matrix}
+          \Longrightarrow
+          \begin{matrix}
+            0 & 3 & 1 & 0\\
+            3 & 0 & 0 & 3\\
+            \color{nordgreen}5 & \color{nordgreen} 6 & \color{nordgreen} 3 &
+            \color{nordgreen} 5\\ 
+            6 & 2 & 0 & 6
+          \end{matrix}
+          \Longrightarrow
+          \begin{matrix}
+            0 & 0 & 0 & 0\\
+            3 & 5 & 2 & 3\\
+            4 & 3 & 0 & 5\\
+            \color{nordgreen} 6 & \color{nordgreen} 6 & \color{nordgreen} 3 &
+            \color{nordgreen} 6
+          \end{matrix}
+          \Longrightarrow
+          \begin{matrix}  
+            0 & 2 & 2 & 0\\
+            4 & 0 & 0 & 4\\
+            5 & 6 & 4 & 5\\
+            \color{nordgreen} 6 & \color{nordgreen} 1 & \color{nordgreen} 1 &
+            \color{nordgreen} 6
+          \end{matrix}
+          \Longrightarrow
+          \begin{matrix}  
+            0 & 4 & 0 & 0\\
+            \color{nordgreen} 1 & \color{nordgreen} 0 & \color{nordgreen} 0 &
+            \color{nordgreen} 1\\
+            2 & 5 & 0 & 2\\
+            3 & 1 & 0 & 5\\
+            6 & 6 & 0 & 6
+          \end{matrix}\]}}
+  \end{block}
+\end{frame}
 % \begin{frame}[allowframebreaks]{References} 
-%     \nocite{*}
-%     \bibliographystyle{unsrt}
-%     \bibliography{ref}
+%   \nocite{*}
+%   \bibliographystyle{unsrt}
+%   \bibliography{ref}
 % \end{frame}
 
 \end{document}

@@ -45,9 +45,10 @@ public:
      * @brief function to extract a row of the original panel from the
      * run-length encoded PBWT matrix
      * @param i index of the query row
+     * @param verbose bool for extra print
      * @return the queried row in a std::string
      */
-    std::string search_row(unsigned int i);
+    std::string search_row(unsigned int i, bool verbose);
 
     std::vector<rlpbwt_match> external_match(const std::string &query);
 
