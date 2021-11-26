@@ -1,4 +1,4 @@
-This is XeTeX, Version 3.141592653-2.6-0.999993 (TeX Live 2021) (preloaded format=xelatex 2021.11.3)  26 NOV 2021 20:28
+This is XeTeX, Version 3.141592653-2.6-0.999993 (TeX Live 2021) (preloaded format=xelatex 2021.11.3)  26 NOV 2021 20:33
 entering extended mode
  \write18 enabled.
  %&-line parsing enabled.
@@ -1274,6 +1274,28 @@ File: img/logo_unimib.pdf Graphic file (type pdf)
  [16
 
 ]
+Missing character: There is no 1 ("31) in font nullfont!
+Missing character: There is no 3 ("33) in font nullfont!
+Missing character: There is no 8 ("38) in font nullfont!
+Missing character: There is no 2 ("32) in font nullfont!
+File: img/logo_unimib.pdf Graphic file (type pdf)
+<use img/logo_unimib.pdf>
+ [17
+
+]
+LaTeX Font Info:    Font shape `T1/lmss/m/it' in size <10> not available
+(Font)              Font shape `T1/lmss/m/sl' tried instead on input line 478.
+LaTeX Font Info:    Font shape `T1/lmss/m/it' in size <7> not available
+(Font)              Font shape `T1/lmss/m/sl' tried instead on input line 478.
+Missing character: There is no 1 ("31) in font nullfont!
+Missing character: There is no 4 ("34) in font nullfont!
+Missing character: There is no 3 ("33) in font nullfont!
+Missing character: There is no 2 ("32) in font nullfont!
+File: img/logo_unimib.pdf Graphic file (type pdf)
+<use img/logo_unimib.pdf>
+ [18
+
+]
 \tf@nav=\write6
 \openout6 = `slides.nav'.
 
@@ -1283,17 +1305,18 @@ File: img/logo_unimib.pdf Graphic file (type pdf)
 \tf@snm=\write8
 \openout8 = `slides.snm'.
 
- (./slides.aux)
+
+(./slides.aux)
 Package rerunfilecheck Info: File `slides.out' has not changed.
 (rerunfilecheck)             Checksum: D41D8CD98F00B204E9800998ECF8427E;0.
  ) 
 Here is how much of TeX's memory you used:
- 22594 strings out of 476788
- 422696 string characters out of 5822420
+ 22647 strings out of 476788
+ 424229 string characters out of 5822420
  961381 words of memory out of 6000000
- 42196 multiletter control sequences out of 15000+600000
- 444399 words of font info for 70 fonts, out of 8000000 for 9000
+ 42249 multiletter control sequences out of 15000+600000
+ 457208 words of font info for 81 fonts, out of 8000000 for 9000
  1348 hyphenation exceptions out of 8191
  128i,15n,126p,434b,870s stack positions out of 5000i,500n,10000p,200000b,80000s
 
-Output written on slides.pdf (16 pages).
+Output written on slides.pdf (18 pages).
