@@ -11,6 +11,7 @@
 #include "../include/exceptions.h"
 
 rlpbwt::rlpbwt(const char *filename) {
+    bool verbose = false;
     std::ifstream input_matrix(filename);
     if (input_matrix.is_open()) {
         std::string column;
@@ -32,6 +33,17 @@ rlpbwt::rlpbwt(const char *filename) {
         }
         unsigned int count = 0;
         while (getline(input_matrix, column)) {
+            if(verbose){
+                std::cout << "\ncolumn " << count << "\n";
+                for (auto e: pref) {
+                    std::cout << e << " ";
+                }
+                std::cout << "\n";
+                for (auto e: div) {
+                    std::cout << e << " ";
+                }
+                std::cout << "\n";
+            }
             column.erase(std::remove(column.begin(), column.end(), ' '),
                          column.end());
             auto col = rlpbwt::build_column(column, pref, div);
@@ -39,7 +51,8 @@ rlpbwt::rlpbwt(const char *filename) {
             if (count != 0) {
                 rlpbwt::build_next_perm(tmp_cols[count - 1], tmp_cols[count]);
             }
-            rlpbwt::update(column, pref, div);
+            rlpbwt::update(column, pref, div, count);
+            //rlpbwt::update(column, pref, div);
             count++;
         }
         this->cols = tmp_cols;
@@ -93,7 +106,8 @@ std::string rlpbwt::search_row(unsigned int row_index, bool verbose) {
                     end = this->cols[i].rows[j].lf_mapping(end);
                     start = this->cols[i].rows[j].next_perm;
                     if (verbose) {
-                        std::cout << "column " << i << ": " << start << ", " << end
+                        std::cout << "column " << i << ": " << start << ", "
+                                  << end
                                   << "\n";
                     }
                     break;
@@ -182,6 +196,56 @@ rlpbwt::build_column(std::string &column, std::vector<unsigned int> &pref,
 }
 
 void rlpbwt::update(std::string &column, std::vector<unsigned int> &pref,
+                        std::vector<unsigned int> &div, unsigned int k) {
+    unsigned int height = pref.size();
+    std::vector<unsigned int> new_pref(height);
+    std::vector<unsigned int> new_div(height);
+    unsigned int u = 0;
+    unsigned int v = 0;
+    unsigned int p = k + 1;
+    unsigned int q = k + 1;
+    std::vector<unsigned int> a(height);
+    std::vector<unsigned int> b(height);
+    std::vector<unsigned int> d(height);
+    std::vector<unsigned int> e(height);
+    for (unsigned int i = 0; i < height; i++) {
+        if (div[i] > p) {
+            p = div[i];
+        }
+        if (div[i] > q) {
+            q = div[i];
+        }
+        if (column[pref[i]] == '0') {
+            a[u] = pref[i];
+            d[u] = p;
+            u++;
+            p = 0;
+        } else {
+            b[v] = pref[i];
+            e[v] = q;
+            v++;
+            q = 0;
+        }
+    }
+    unsigned int offset = 0;
+    for (unsigned int l = 0; l < u; l++) {
+        new_pref[offset] = a[l];
+        new_div[offset] = k - d[l];
+        offset++;
+    }
+    for (unsigned int l = 0; l < v; l++) {
+        new_pref[offset] = b[l];
+        new_div[offset] = k - e[l];
+        offset++;
+    }
+    new_div[0] = 0;
+    new_div[u] = 0;
+    div = new_div;
+    pref = new_pref;
+
+}
+
+/*void rlpbwt::update(std::string &column, std::vector<unsigned int> &pref,
                     std::vector<unsigned int> &div) {
     unsigned int height = pref.size();
     std::vector<unsigned int> new_pref(height);
@@ -215,7 +279,7 @@ void rlpbwt::update(std::string &column, std::vector<unsigned int> &pref,
     new_div[count0] = 0;
     div = new_div;
     pref = new_pref;
-}
+}*/
 
 std::vector<rlpbwt_match> rlpbwt::external_match(const std::string &query) {
     if (query.size() != this->width) {

@@ -90,7 +90,11 @@ private:
      */
     static void
     update(std::string &column, std::vector<unsigned int> &pref,
-           std::vector<unsigned int> &div);
+           std::vector<unsigned int> &div, unsigned int k);
+
+    /*static void
+    update(std::string &column, std::vector<unsigned int> &pref,
+           std::vector<unsigned int> &div);*/
 
     std::vector<unsigned int> update_external(unsigned int index, unsigned int e, unsigned int f,
                          unsigned int g, const std::string& query);

@@ -451,28 +451,28 @@
 \begin{frame}{Match with external haplotype I}
   \begin{block}{First case, bits matches at column $j$-th}
     \begin{itemize}
-        \item we are looking at $d$-th bit of the $k$-th run, that come from the
-        $i$-th row of the panel 
-        \item if this bit match the next bit of the pattern we can go to column
-        $j+1$ and we figure out which bit to look at in that column 
-        \item the next bit we look at is still from row $i$-th
+      \item we are looking at $d$-th bit of the $k$-th run, that come from the
+      $i$-th row of the panel 
+      \item if this bit match the next bit of the pattern we can go to column
+      $j+1$ and we figure out which bit to look at in that column 
+      \item the next bit we look at is still from row $i$-th
     \end{itemize}
   \end{block}
 \end{frame}
-\begin{frame}{Match with external haplotype I}
+\begin{frame}{Match with external haplotype II}
   \begin{block}{Second case, bits doesn't matches at column $j$-th}
     \begin{itemize}
-        \item we are looking at $d$-th bit of the $k$-th run and that bit
-        doesn't match the next bit in the pattern 
-        \item we look at the threshold for the $k$-th run:
-        \begin{itemize}
-            \item if $d$ is at most the threshold (check this "at most") than we
-            move to the last bit of the ($k-1$)-st run in the $j$-th column and
-            then we proceed as in \textit{case 1}  
-            \item if $d$ is greater than the threshold than we move to the first
-            bit of the ($k-1$)-st run in the $j$-th column and then we proceed
-            as in \textit{case 1}  
-        \end{itemize}
+      \item we are looking at $d$-th bit of the $k$-th run and that bit
+      doesn't match the next bit in the pattern 
+      \item we look at the threshold for the $k$-th run:
+      \begin{itemize}
+        \item if $d$ is at most the threshold (check this "at most") than we
+        move to the last bit of the ($k-1$)-st run in the $j$-th column and
+        then we proceed as in \textit{case 1}  
+        \item if $d$ is greater than the threshold than we move to the first
+        bit of the ($k-1$)-st run in the $j$-th column and then we proceed
+        as in \textit{case 1}  
+      \end{itemize}
     \end{itemize}
   \end{block}
 \end{frame}
