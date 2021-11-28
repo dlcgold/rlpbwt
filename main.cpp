@@ -3,9 +3,7 @@
 #include "include/exceptions.h"
 #include "gtest/gtest.h"
 
-TEST (BuildRlpbwtTest, TestSizeZero) {
-    rlpbwt rlpbwt("../input/input.txt");
-}
+
 
 TEST (BuildRlpbwtTest, TestSize) {
     rlpbwt rlpbwt("../input/matrix3.txt");
@@ -47,6 +45,20 @@ TEST (BuildRlpbwtTestSimple, TestBuild) {
         }
     }
     EXPECT_EQ (7, rlpbwt.heigth);
+    EXPECT_EQ (20, rlpbwt.width);
+    EXPECT_EQ("11010011111001001001", rlpbwt.search_row(0, false));
+    EXPECT_EQ("01000011111001110010", rlpbwt.search_row(1, false));
+    EXPECT_EQ("00010000011110001010", rlpbwt.search_row(2, false));
+    EXPECT_EQ("10011010100011100010", rlpbwt.search_row(3, false));
+    EXPECT_EQ("01101111100100111100", rlpbwt.search_row(4, true));
+    EXPECT_EQ("11001010101010001111", rlpbwt.search_row(5, false));
+    EXPECT_EQ("00010111111100100011", rlpbwt.search_row(6, false));
+    rlpbwt.external_match("00101111111001000111");
+}
+
+TEST (BuildRlpbwtTestSimple, TestSizeZero) {
+    rlpbwt rlpbwt("../input/simple_matrix_zero.txt");
+    EXPECT_EQ (7, rlpbwt.heigth);
     EXPECT_EQ (22, rlpbwt.width);
     EXPECT_EQ("1101001111100100100010", rlpbwt.search_row(0, false));
     EXPECT_EQ("0100001111100111000100", rlpbwt.search_row(1, false));
@@ -56,6 +68,7 @@ TEST (BuildRlpbwtTestSimple, TestBuild) {
     EXPECT_EQ("1100101010101000110110", rlpbwt.search_row(5, false));
     EXPECT_EQ("0001011111110010000110", rlpbwt.search_row(6, false));
 }
+
 
 int main(int argc, char **argv) {
     /*rlpbwt rlpbwt("../input/matrix3.txt");

@@ -33,7 +33,7 @@ rlpbwt::rlpbwt(const char *filename) {
         }
         unsigned int count = 0;
         while (getline(input_matrix, column)) {
-            if(verbose){
+            if (verbose) {
                 std::cout << "\ncolumn " << count << "\n";
                 for (auto e: pref) {
                     std::cout << e << " ";
@@ -51,8 +51,8 @@ rlpbwt::rlpbwt(const char *filename) {
             if (count != 0) {
                 rlpbwt::build_next_perm(tmp_cols[count - 1], tmp_cols[count]);
             }
-            rlpbwt::update(column, pref, div, count);
-            //rlpbwt::update(column, pref, div);
+            //rlpbwt::update_old(column, pref, div, count);
+            rlpbwt::update(column, pref, div);
             count++;
         }
         this->cols = tmp_cols;
@@ -195,8 +195,8 @@ rlpbwt::build_column(std::string &column, std::vector<unsigned int> &pref,
     return {start, rows};
 }
 
-void rlpbwt::update(std::string &column, std::vector<unsigned int> &pref,
-                        std::vector<unsigned int> &div, unsigned int k) {
+void rlpbwt::update_old(std::string &column, std::vector<unsigned int> &pref,
+                    std::vector<unsigned int> &div, unsigned int k) {
     unsigned int height = pref.size();
     std::vector<unsigned int> new_pref(height);
     std::vector<unsigned int> new_div(height);
@@ -245,13 +245,13 @@ void rlpbwt::update(std::string &column, std::vector<unsigned int> &pref,
 
 }
 
-/*void rlpbwt::update(std::string &column, std::vector<unsigned int> &pref,
+void rlpbwt::update(std::string &column, std::vector<unsigned int> &pref,
                     std::vector<unsigned int> &div) {
     unsigned int height = pref.size();
     std::vector<unsigned int> new_pref(height);
     std::vector<unsigned int> new_div(height);
     unsigned int count0 = 0;
-    unsigned int lcs = INT_MAX;
+    unsigned int lcs = -1;
 
     for (unsigned int i = 0; i < height; i++) {
         lcs = std::min(lcs, div[i]);
@@ -264,7 +264,7 @@ void rlpbwt::update(std::string &column, std::vector<unsigned int> &pref,
     }
 
     int count1 = 0;
-    lcs = INT_MAX;
+    lcs = -1;
 
     for (unsigned int i = 0; i < height; i++) {
         lcs = std::min(lcs, div[i]);
@@ -279,15 +279,37 @@ void rlpbwt::update(std::string &column, std::vector<unsigned int> &pref,
     new_div[count0] = 0;
     div = new_div;
     pref = new_pref;
-}*/
+}
 
 std::vector<rlpbwt_match> rlpbwt::external_match(const std::string &query) {
     if (query.size() != this->width) {
         throw NotEqualLengthException{};
     }
-    std::vector<unsigned int> f_arr(this->width + 1);
-    std::vector<unsigned int> g_arr(this->width + 1);
-    std::vector<unsigned int> e_arr(this->width + 1);
+    std::cout << query << "\n";
+    unsigned int r_tmp = 0;
+    unsigned int e_tmp = 0;
+    if (query[1] == '0') {
+        if(this->cols[0].zero_first) {
+            r_tmp = 0;
+        }else{
+            r_tmp = 1;
+        }
+    } else {
+        if(this->cols[1].zero_first) {
+            r_tmp = 1;
+        }else{
+            r_tmp = 0;
+        }
+    }
+    std::cout << "r_tmp " << r_tmp << "\n";
+    for (unsigned int i = 2; i < query.size(); i++) {
+        auto symbol = query[i];
+        if (get_next_char(this->cols[i].zero_first, r_tmp) == symbol) {
+
+        } else {
+
+        }
+    }
 
     return std::vector<rlpbwt_match>();
 }

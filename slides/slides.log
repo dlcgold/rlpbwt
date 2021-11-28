@@ -1,4 +1,4 @@
-This is XeTeX, Version 3.141592653-2.6-0.999993 (TeX Live 2021) (preloaded format=xelatex 2021.11.3)  26 NOV 2021 20:39
+This is XeTeX, Version 3.141592653-2.6-0.999993 (TeX Live 2021) (preloaded format=xelatex 2021.11.3)  28 NOV 2021 11:24
 entering extended mode
  \write18 enabled.
  %&-line parsing enabled.
@@ -1249,7 +1249,7 @@ File: img/logo_unimib.pdf Graphic file (type pdf)
 
 ]
 LaTeX Font Info:    Font shape `T1/lmss/m/it' in size <9> not available
-(Font)              Font shape `T1/lmss/m/sl' tried instead on input line 358.
+(Font)              Font shape `T1/lmss/m/sl' tried instead on input line 359.
 Missing character: There is no 1 ("31) in font nullfont!
 Missing character: There is no 1 ("31) in font nullfont!
 Missing character: There is no 9 ("39) in font nullfont!
@@ -1257,9 +1257,13 @@ Missing character: There is no 1 ("31) in font nullfont!
 Missing character: There is no 2 ("32) in font nullfont!
 Missing character: There is no 4 ("34) in font nullfont!
 Missing character: There is no 2 ("32) in font nullfont!
+
+Overfull \vbox (3.88379pt too high) detected at line 359
+ []
+
 File: img/logo_unimib.pdf Graphic file (type pdf)
 <use img/logo_unimib.pdf>
- [15
+[15
 
 ]
 Missing character: There is no 1 ("31) in font nullfont!
@@ -1284,9 +1288,9 @@ File: img/logo_unimib.pdf Graphic file (type pdf)
 
 ]
 LaTeX Font Info:    Font shape `T1/lmss/m/it' in size <10> not available
-(Font)              Font shape `T1/lmss/m/sl' tried instead on input line 478.
+(Font)              Font shape `T1/lmss/m/sl' tried instead on input line 479.
 LaTeX Font Info:    Font shape `T1/lmss/m/it' in size <7> not available
-(Font)              Font shape `T1/lmss/m/sl' tried instead on input line 478.
+(Font)              Font shape `T1/lmss/m/sl' tried instead on input line 479.
 Missing character: There is no 1 ("31) in font nullfont!
 Missing character: There is no 4 ("34) in font nullfont!
 Missing character: There is no 3 ("33) in font nullfont!
@@ -1305,14 +1309,13 @@ File: img/logo_unimib.pdf Graphic file (type pdf)
 \tf@snm=\write8
 \openout8 = `slides.snm'.
 
-
-(./slides.aux)
+ (./slides.aux)
 Package rerunfilecheck Info: File `slides.out' has not changed.
 (rerunfilecheck)             Checksum: D41D8CD98F00B204E9800998ECF8427E;0.
  ) 
 Here is how much of TeX's memory you used:
  22649 strings out of 476788
- 424245 string characters out of 5822420
+ 424275 string characters out of 5822420
  961381 words of memory out of 6000000
  42251 multiletter control sequences out of 15000+600000
  457208 words of font info for 81 fonts, out of 8000000 for 9000
