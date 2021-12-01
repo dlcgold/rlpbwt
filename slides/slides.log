@@ -1,4 +1,4 @@
-This is XeTeX, Version 3.141592653-2.6-0.999993 (TeX Live 2021) (preloaded format=xelatex 2021.11.3)  28 NOV 2021 11:24
+This is XeTeX, Version 3.141592653-2.6-0.999993 (TeX Live 2021) (preloaded format=xelatex 2021.11.3)  1 DEC 2021 10:57
 entering extended mode
  \write18 enabled.
  %&-line parsing enabled.
@@ -1168,136 +1168,176 @@ File: img/logo_unimib.pdf Graphic file (type pdf)
 Missing character: There is no 5 ("35) in font nullfont!
 Missing character: There is no 5 ("35) in font nullfont!
 Missing character: There is no 6 ("36) in font nullfont!
-Missing character: There is no 1 ("31) in font nullfont!
+Missing character: There is no 0 ("30) in font nullfont!
+Missing character: There is no 2 ("32) in font nullfont!
+
+Overfull \vbox (4.0178pt too high) detected at line 137
+ []
+
+File: img/logo_unimib.pdf Graphic file (type pdf)
+<use img/logo_unimib.pdf>
+[7
+
+]
+File: img/trick.jpg Graphic file (type bmp)
+<img/trick.jpg>
 Missing character: There is no 2 ("32) in font nullfont!
 File: img/logo_unimib.pdf Graphic file (type pdf)
 <use img/logo_unimib.pdf>
- [7
+ [8
 
 ]
-Missing character: There is no 5 ("35) in font nullfont!
-Missing character: There is no 5 ("35) in font nullfont!
 Missing character: There is no 6 ("36) in font nullfont!
+Missing character: There is no 5 ("35) in font nullfont!
+Missing character: There is no 7 ("37) in font nullfont!
 Missing character: There is no 1 ("31) in font nullfont!
-Missing character: There is no 2 ("32) in font nullfont!
-File: img/logo_unimib.pdf Graphic file (type pdf)
-<use img/logo_unimib.pdf>
-
-[8
-
-]
-Missing character: There is no 7 ("37) in font nullfont!
-Missing character: There is no 4 ("34) in font nullfont!
-Missing character: There is no 7 ("37) in font nullfont!
-Missing character: There is no 9 ("39) in font nullfont!
 Missing character: There is no 2 ("32) in font nullfont!
 File: img/logo_unimib.pdf Graphic file (type pdf)
 <use img/logo_unimib.pdf>
  [9
 
 ]
+Missing character: There is no 6 ("36) in font nullfont!
+Missing character: There is no 5 ("35) in font nullfont!
 Missing character: There is no 7 ("37) in font nullfont!
-Missing character: There is no 4 ("34) in font nullfont!
-Missing character: There is no 7 ("37) in font nullfont!
-Missing character: There is no 9 ("39) in font nullfont!
+Missing character: There is no 1 ("31) in font nullfont!
 Missing character: There is no 2 ("32) in font nullfont!
 File: img/logo_unimib.pdf Graphic file (type pdf)
 <use img/logo_unimib.pdf>
  [10
 
 ]
-Missing character: There is no 7 ("37) in font nullfont!
+Missing character: There is no 8 ("38) in font nullfont!
 Missing character: There is no 4 ("34) in font nullfont!
-Missing character: There is no 7 ("37) in font nullfont!
+Missing character: There is no 8 ("38) in font nullfont!
 Missing character: There is no 9 ("39) in font nullfont!
 Missing character: There is no 2 ("32) in font nullfont!
 File: img/logo_unimib.pdf Graphic file (type pdf)
 <use img/logo_unimib.pdf>
  [11
 
-] (./slides.toc)
+]
+Missing character: There is no 8 ("38) in font nullfont!
+Missing character: There is no 4 ("34) in font nullfont!
+Missing character: There is no 8 ("38) in font nullfont!
+Missing character: There is no 9 ("39) in font nullfont!
 Missing character: There is no 2 ("32) in font nullfont!
 File: img/logo_unimib.pdf Graphic file (type pdf)
 <use img/logo_unimib.pdf>
  [12
 
 ]
-LaTeX Font Info:    Font shape `T1/lmss/m/it' in size <5> not available
-(Font)              Font shape `T1/lmss/m/sl' tried instead on input line 209.
-Missing character: There is no 1 ("31) in font nullfont!
-Missing character: There is no 0 ("30) in font nullfont!
-Missing character: There is no 0 ("30) in font nullfont!
-Missing character: There is no 1 ("31) in font nullfont!
-Missing character: There is no 0 ("30) in font nullfont!
-Missing character: There is no 0 ("30) in font nullfont!
+Missing character: There is no 8 ("38) in font nullfont!
+Missing character: There is no 4 ("34) in font nullfont!
+Missing character: There is no 8 ("38) in font nullfont!
+Missing character: There is no 9 ("39) in font nullfont!
 Missing character: There is no 2 ("32) in font nullfont!
 File: img/logo_unimib.pdf Graphic file (type pdf)
 <use img/logo_unimib.pdf>
  [13
 
 ]
-Missing character: There is no 1 ("31) in font nullfont!
-Missing character: There is no 0 ("30) in font nullfont!
-Missing character: There is no 9 ("39) in font nullfont!
-Missing character: There is no 1 ("31) in font nullfont!
-Missing character: There is no 1 ("31) in font nullfont!
-Missing character: There is no 4 ("34) in font nullfont!
+File: img/trick2.jpg Graphic file (type bmp)
+<img/trick2.jpg>
 Missing character: There is no 2 ("32) in font nullfont!
 File: img/logo_unimib.pdf Graphic file (type pdf)
 <use img/logo_unimib.pdf>
  [14
 
 ]
-LaTeX Font Info:    Font shape `T1/lmss/m/it' in size <9> not available
-(Font)              Font shape `T1/lmss/m/sl' tried instead on input line 359.
 Missing character: There is no 1 ("31) in font nullfont!
 Missing character: There is no 1 ("31) in font nullfont!
-Missing character: There is no 9 ("39) in font nullfont!
-Missing character: There is no 1 ("31) in font nullfont!
+Missing character: There is no 0 ("30) in font nullfont!
 Missing character: There is no 2 ("32) in font nullfont!
-Missing character: There is no 4 ("34) in font nullfont!
-Missing character: There is no 2 ("32) in font nullfont!
-
-Overfull \vbox (3.88379pt too high) detected at line 359
- []
-
 File: img/logo_unimib.pdf Graphic file (type pdf)
 <use img/logo_unimib.pdf>
-[15
+ [15
 
-]
-Missing character: There is no 1 ("31) in font nullfont!
-Missing character: There is no 2 ("32) in font nullfont!
-Missing character: There is no 9 ("39) in font nullfont!
-Missing character: There is no 1 ("31) in font nullfont!
-Missing character: There is no 2 ("32) in font nullfont!
-Missing character: There is no 4 ("34) in font nullfont!
+] (./slides.toc)
 Missing character: There is no 2 ("32) in font nullfont!
 File: img/logo_unimib.pdf Graphic file (type pdf)
 <use img/logo_unimib.pdf>
  [16
 
 ]
+LaTeX Font Info:    Font shape `T1/lmss/m/it' in size <5> not available
+(Font)              Font shape `T1/lmss/m/sl' tried instead on input line 272.
 Missing character: There is no 1 ("31) in font nullfont!
-Missing character: There is no 3 ("33) in font nullfont!
-Missing character: There is no 8 ("38) in font nullfont!
+Missing character: There is no 1 ("31) in font nullfont!
+Missing character: There is no 5 ("35) in font nullfont!
+Missing character: There is no 1 ("31) in font nullfont!
+Missing character: There is no 2 ("32) in font nullfont!
+Missing character: There is no 0 ("30) in font nullfont!
 Missing character: There is no 2 ("32) in font nullfont!
 File: img/logo_unimib.pdf Graphic file (type pdf)
 <use img/logo_unimib.pdf>
  [17
 
 ]
-LaTeX Font Info:    Font shape `T1/lmss/m/it' in size <10> not available
-(Font)              Font shape `T1/lmss/m/sl' tried instead on input line 479.
-LaTeX Font Info:    Font shape `T1/lmss/m/it' in size <7> not available
-(Font)              Font shape `T1/lmss/m/sl' tried instead on input line 479.
 Missing character: There is no 1 ("31) in font nullfont!
-Missing character: There is no 4 ("34) in font nullfont!
+Missing character: There is no 2 ("32) in font nullfont!
+Missing character: There is no 5 ("35) in font nullfont!
+Missing character: There is no 1 ("31) in font nullfont!
 Missing character: There is no 3 ("33) in font nullfont!
+Missing character: There is no 0 ("30) in font nullfont!
 Missing character: There is no 2 ("32) in font nullfont!
 File: img/logo_unimib.pdf Graphic file (type pdf)
 <use img/logo_unimib.pdf>
  [18
+
+]
+LaTeX Font Info:    Font shape `T1/lmss/m/it' in size <9> not available
+(Font)              Font shape `T1/lmss/m/sl' tried instead on input line 421.
+Missing character: There is no 1 ("31) in font nullfont!
+Missing character: There is no 3 ("33) in font nullfont!
+Missing character: There is no 5 ("35) in font nullfont!
+Missing character: There is no 1 ("31) in font nullfont!
+Missing character: There is no 4 ("34) in font nullfont!
+Missing character: There is no 0 ("30) in font nullfont!
+LaTeX Font Info:    Font shape `T1/lmss/m/it' in size <14.4> not available
+(Font)              Font shape `T1/lmss/m/sl' tried instead on input line 421.
+Missing character: There is no 2 ("32) in font nullfont!
+
+Overfull \vbox (3.88379pt too high) detected at line 421
+ []
+
+File: img/logo_unimib.pdf Graphic file (type pdf)
+<use img/logo_unimib.pdf>
+[19
+
+]
+Missing character: There is no 1 ("31) in font nullfont!
+Missing character: There is no 4 ("34) in font nullfont!
+Missing character: There is no 5 ("35) in font nullfont!
+Missing character: There is no 1 ("31) in font nullfont!
+Missing character: There is no 4 ("34) in font nullfont!
+Missing character: There is no 0 ("30) in font nullfont!
+Missing character: There is no 2 ("32) in font nullfont!
+File: img/logo_unimib.pdf Graphic file (type pdf)
+<use img/logo_unimib.pdf>
+ [20
+
+]
+Missing character: There is no 1 ("31) in font nullfont!
+Missing character: There is no 5 ("35) in font nullfont!
+Missing character: There is no 4 ("34) in font nullfont!
+Missing character: There is no 2 ("32) in font nullfont!
+File: img/logo_unimib.pdf Graphic file (type pdf)
+<use img/logo_unimib.pdf>
+ [21
+
+]
+LaTeX Font Info:    Font shape `T1/lmss/m/it' in size <10> not available
+(Font)              Font shape `T1/lmss/m/sl' tried instead on input line 541.
+LaTeX Font Info:    Font shape `T1/lmss/m/it' in size <7> not available
+(Font)              Font shape `T1/lmss/m/sl' tried instead on input line 541.
+Missing character: There is no 1 ("31) in font nullfont!
+Missing character: There is no 5 ("35) in font nullfont!
+Missing character: There is no 9 ("39) in font nullfont!
+Missing character: There is no 2 ("32) in font nullfont!
+File: img/logo_unimib.pdf Graphic file (type pdf)
+<use img/logo_unimib.pdf>
+ [22
 
 ]
 \tf@nav=\write6
@@ -1314,12 +1354,12 @@ Package rerunfilecheck Info: File `slides.out' has not changed.
 (rerunfilecheck)             Checksum: D41D8CD98F00B204E9800998ECF8427E;0.
  ) 
 Here is how much of TeX's memory you used:
- 22649 strings out of 476788
- 424275 string characters out of 5822420
+ 22700 strings out of 476788
+ 425733 string characters out of 5822420
  961381 words of memory out of 6000000
- 42251 multiletter control sequences out of 15000+600000
- 457208 words of font info for 81 fonts, out of 8000000 for 9000
+ 42299 multiletter control sequences out of 15000+600000
+ 460022 words of font info for 82 fonts, out of 8000000 for 9000
  1348 hyphenation exceptions out of 8191
  128i,15n,126p,434b,870s stack positions out of 5000i,500n,10000p,200000b,80000s
 
-Output written on slides.pdf (18 pages).
+Output written on slides.pdf (22 pages).

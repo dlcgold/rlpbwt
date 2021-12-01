@@ -38,8 +38,9 @@ public:
      * @brief constructor for run-length encoded PBWT matrix
      * @param filename path of the file with the panel, every row of the file is
      * one column of the panel
+     * @param verbose bool for extra print
      */
-    explicit rlpbwt(const char *filename);
+    explicit rlpbwt(const char *filename, bool verbose = false);
 
     /**
      * @brief function to extract a row of the original panel from the
@@ -48,9 +49,9 @@ public:
      * @param verbose bool for extra print
      * @return the queried row in a std::string
      */
-    std::string search_row(unsigned int i, bool verbose);
+    std::string search_row(unsigned int i, bool verbose = false);
 
-    std::vector<rlpbwt_match> external_match(const std::string &query);
+    std::vector<rlpbwt_match> external_match(const std::string &query) const;
 
 
     /**
@@ -88,16 +89,17 @@ private:
      * @param pref prefix array for previous column
      * @param div divergence array for previous column
      */
-    static void
+    __attribute__((unused)) static void
     update_old(std::string &column, std::vector<unsigned int> &pref,
-           std::vector<unsigned int> &div, unsigned int k);
+               std::vector<unsigned int> &div, unsigned int k);
 
     static void
     update(std::string &column, std::vector<unsigned int> &pref,
            std::vector<unsigned int> &div);
 
-    std::vector<unsigned int> update_external(unsigned int index, unsigned int e, unsigned int f,
-                         unsigned int g, const std::string& query);
+    std::vector<unsigned int>
+    update_external(unsigned int index, unsigned int e, unsigned int f,
+                    unsigned int g, const std::string &query);
 };
 
 

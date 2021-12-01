@@ -108,6 +108,39 @@
     standard BWT 
   \end{block}
 \end{frame}
+\begin{frame}{The permutation}
+  \begin{block}{Computing the permutation}
+    \[\pi_j(p)=
+      \begin{cases}
+        p-count_0 &\mbox{if } column[pref[p]]=0\\
+        count_0+count_1-1 &\mbox{if } column[pref[p]]=1\\
+      \end{cases}
+    \]
+    \begin{itemize}
+      \item $count_0$: total number of zeros in the PBWT column
+      \item $count_1$: number of ones in the PBWT column as far as index $p$
+    \end{itemize}
+  \end{block}
+  \begin{block}{``LF-mapping'' in Durbin's algorithm}
+    \[w(i,\sigma)=
+      \begin{cases}
+        u[i]&\mbox{if } \sigma=0\\
+        c+v[i]&\mbox{if } \sigma=1\\
+      \end{cases}
+    \]
+    \begin{itemize}
+      \item $c$: total number of zeros in the column
+      \item $u[i]$: number of zeros in the column as far as index $i$
+      \item $v[i]$: number of ones in the column as far as index $i$
+    \end{itemize}
+  \end{block}
+\end{frame}
+\begin{frame}{Travis's example}
+  \begin{figure}[H]
+    \centering
+    \includegraphics[scale = 0.2]{img/trick.jpg}
+  \end{figure}
+\end{frame}
 \begin{frame}{The compressed data structure}
   \begin{block}{The tables}
     \begin{itemize}
@@ -145,11 +178,37 @@
   \begin{block}{Next step}
     We continue repeating this procedure for each column
   \end{block}
-  
+\end{frame}
+\begin{frame}{Travis's example I}
+  \begin{figure}[H]
+    \centering
+    \includegraphics[scale = 0.22]{img/trick2.jpg}
+  \end{figure}
+\end{frame}
+\begin{frame}{Travis's example II}
+  \begin{block}{Extraction of row 9, $\pi_j(i)=\pi_j(p)+i-p$}
+    \begin{multicols}{2}
+      \begin{itemize}
+        \item $\pi_1(9)=17+9-9=17$
+        \item $\pi_2(17)=4+17-13=8$
+        \item $\pi_3(8)=4+8-8=3$
+        \item $\pi_4(3)=0+3-0=3$
+        \item $\pi_5(3)=0+3-0=3$
+        \item $\pi_6(3)=16+3-3=16$
+
+        \item $\pi_7(16)=2+16-3=15$
+        \item $\pi_8(15)=2+15-3=14$
+        \item $\pi_9(14)=3+14-12=5$
+        \item $\pi_{10}(5)=1+5-5=1$
+        \item $\pi_{11}(1)=17+1-0=18$
+        %\item $\pi_{12}(3)=16+3-3=16$        
+      \end{itemize}
+    \end{multicols}
+  \end{block}
 \end{frame}
 \section{Example}
-\begin{frame}{The Panel}
-  \begin{block}{Panel}
+\begin{frame}{The matrixes}
+  \begin{block}{Panel and query}
     \begin{table}[H]
       \centering
       \tiny
@@ -175,6 +234,10 @@
         0 & 0 & 0 & 1 & 0 & 1 & 1 & 1 & 1 & 1 & 1 & 1 & 0 & 0 & 1 & 0 & 0 & 0
              & 1 & 1\\
         \hline
+        \hline
+        \hline
+        0 & 0 & 1 & 0 & 1 & 1 & 1 & 1 & 1 & 1 & 1 & 0 & 0 & 1 & 0 & 0 & 0 & 1
+             & 1 & 1
       \end{tabular}
     \end{table}
   \end{block}
@@ -264,9 +327,8 @@
   \end{block}
 \end{frame}
 
-\begin{frame}{Run-Length PBWT I}
-  \begin{block}{Some tables: \textit{p, perm, next perm,
-        threshold}. $[0,1,2,3,4]$} 
+\begin{frame}{Run-Length PBWT I, \textit{p, perm, next perm, threshold}}
+  \begin{block}{ $[0,1,2,3,4]$} 
     {\footnotesize{\[
           \begin{matrix}
             0 & 4 & 4 & 0\\

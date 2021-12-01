@@ -10,8 +10,7 @@
 #include "../include/utils.h"
 #include "../include/exceptions.h"
 
-rlpbwt::rlpbwt(const char *filename) {
-    bool verbose = false;
+rlpbwt::rlpbwt(const char *filename, bool verbose) {
     std::ifstream input_matrix(filename);
     if (input_matrix.is_open()) {
         std::string column;
@@ -195,8 +194,9 @@ rlpbwt::build_column(std::string &column, std::vector<unsigned int> &pref,
     return {start, rows};
 }
 
-void rlpbwt::update_old(std::string &column, std::vector<unsigned int> &pref,
-                    std::vector<unsigned int> &div, unsigned int k) {
+__attribute__((unused)) void
+rlpbwt::update_old(std::string &column, std::vector<unsigned int> &pref,
+                   std::vector<unsigned int> &div, unsigned int k) {
     unsigned int height = pref.size();
     std::vector<unsigned int> new_pref(height);
     std::vector<unsigned int> new_div(height);
@@ -281,33 +281,36 @@ void rlpbwt::update(std::string &column, std::vector<unsigned int> &pref,
     pref = new_pref;
 }
 
-std::vector<rlpbwt_match> rlpbwt::external_match(const std::string &query) {
+std::vector<rlpbwt_match> rlpbwt::external_match(const std::string &query) const {
     if (query.size() != this->width) {
         throw NotEqualLengthException{};
     }
     std::cout << query << "\n";
-    unsigned int r_tmp = 0;
-    unsigned int e_tmp = 0;
-    if (query[1] == '0') {
-        if(this->cols[0].zero_first) {
+    unsigned int curr_r = 0;
+    unsigned int curr_bit = 0;
+    unsigned int curr_start = 0;
+    /*if (query[1] == '0') {
+        if (this->cols[0].zero_first) {
             r_tmp = 0;
-        }else{
+        } else {
             r_tmp = 1;
         }
     } else {
-        if(this->cols[1].zero_first) {
+        if (this->cols[1].zero_first) {
             r_tmp = 1;
-        }else{
+        } else {
             r_tmp = 0;
         }
     }
-    std::cout << "r_tmp " << r_tmp << "\n";
-    for (unsigned int i = 2; i < query.size(); i++) {
+    std::cout << "r_tmp " << r_tmp << "\n";*/
+    for (unsigned int i = 0; i < query.size(); i++) {
         auto symbol = query[i];
-        if (get_next_char(this->cols[i].zero_first, r_tmp) == symbol) {
+        if (i == 0) {
+            if (true) {
 
-        } else {
+            } else {
 
+            }
         }
     }
 
