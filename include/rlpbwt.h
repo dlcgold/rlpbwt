@@ -93,6 +93,15 @@ private:
     update_old(std::string &column, std::vector<unsigned int> &pref,
                std::vector<unsigned int> &div, unsigned int k);
 
+    unsigned int
+    next_run(unsigned int col_index, unsigned int start, unsigned int end,
+             bool verbose) const;
+
+    unsigned int
+    occ(unsigned int col_index, unsigned int row_index, char symbol) const;
+
+    unsigned int index_to_run(unsigned int index) const;
+
     static void
     update(std::string &column, std::vector<unsigned int> &pref,
            std::vector<unsigned int> &div);
@@ -100,6 +109,7 @@ private:
     std::vector<unsigned int>
     update_external(unsigned int index, unsigned int e, unsigned int f,
                     unsigned int g, const std::string &query);
+
 };
 
 

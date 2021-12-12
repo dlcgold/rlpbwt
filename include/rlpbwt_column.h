@@ -21,6 +21,7 @@ public:
      */
     bool zero_first;
 
+    unsigned int count_0;
     /**
      * @brief vector with the quadruple for every run in the column in PBWT
      * matrix (assuming biallelic)
@@ -38,7 +39,8 @@ public:
      * @param zeroFirst bool to check first value of the column
      * @param rows vector with every quadruple for every run
      */
-    rlpbwt_column(bool zeroFirst, std::vector<rlpbwt_rlrow> rows);
+    rlpbwt_column(bool zeroFirst, std::vector<rlpbwt_rlrow> rows,
+                  unsigned int count0);
 
     /**
      * @brief default destructor

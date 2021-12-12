@@ -6,8 +6,9 @@
 
 #include <utility>
 
-rlpbwt_column::rlpbwt_column(bool zeroFirst, std::vector<rlpbwt_rlrow> rows)
-        : zero_first(zeroFirst), rows(std::move(rows)) {}
+rlpbwt_column::rlpbwt_column(bool zeroFirst, std::vector<rlpbwt_rlrow> rows,
+                             unsigned int count0)
+        : zero_first(zeroFirst), rows(std::move(rows)), count_0(count0) {}
 rlpbwt_column::rlpbwt_column()
         : zero_first(), rows() {}
 

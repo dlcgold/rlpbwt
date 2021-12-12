@@ -88,7 +88,7 @@ std::string rlpbwt::search_row(unsigned int row_index, bool verbose) {
     unsigned int end = this->cols[0].rows[pos].lf_mapping(row_index);
 
     for (unsigned int i = 1; i < this->cols.size(); i++) {
-        if (start == cols[i].rows.size() - 1) {
+        if (start == this->cols[i].rows.size() - 1) {
             row.push_back(get_next_char(this->cols[i].zero_first, start));
             end = this->cols[i].rows[start].lf_mapping(end);
             start = this->cols[i].rows[start].next_perm;
@@ -122,11 +122,11 @@ std::string rlpbwt::search_row(unsigned int row_index, bool verbose) {
                               << "\n";
                 }
             }
-
         }
     }
     return row;
 }
+
 
 void rlpbwt::build_next_perm(rlpbwt_column &prev, rlpbwt_column &curr) {
     for (auto &row: prev.rows) {
@@ -191,7 +191,7 @@ rlpbwt::build_column(std::string &column, std::vector<unsigned int> &pref,
             rows.emplace_back(p_tmp, perm_tmp, 0, threshold);
         }
     }
-    return {start, rows};
+    return {start, rows, count0};
 }
 
 __attribute__((unused)) void
@@ -281,7 +281,88 @@ void rlpbwt::update(std::string &column, std::vector<unsigned int> &pref,
     pref = new_pref;
 }
 
-std::vector<rlpbwt_match> rlpbwt::external_match(const std::string &query) const {
+
+unsigned int
+rlpbwt::next_run(unsigned int col_index, unsigned int start, unsigned int end,
+                 bool verbose) const {
+    if (start == cols[col_index].rows.size() - 1) {
+        end = this->cols[col_index].rows[start].lf_mapping(end);
+        start = this->cols[col_index].rows[start].next_perm;
+        if (verbose) {
+            std::cout << "column " << col_index << ": " << start << ", " << end
+                      << "\n";
+        }
+    } else {
+        bool found = false;
+        for (unsigned int j = start; j < cols[col_index].rows.size() - 1; j++) {
+            if (cols[col_index].rows[j].p <= end &&
+                end < cols[col_index].rows[j + 1].p) {
+                found = true;
+                end = this->cols[col_index].rows[j].lf_mapping(end);
+                start = this->cols[col_index].rows[j].next_perm;
+                if (verbose) {
+                    std::cout << "column " << col_index << ": " << start << ", "
+                              << end
+                              << "\n";
+                }
+                break;
+            }
+        }
+        if (!found) {
+            unsigned int endrow = this->cols[col_index].rows.size() - 1;
+            end = this->cols[col_index].rows[endrow].lf_mapping(end);
+            start = this->cols[col_index].rows[endrow].next_perm;
+            if (verbose) {
+                std::cout << "column " << col_index << ": " << start << ", "
+                          << end
+                          << "\n";
+            }
+        }
+    }
+    return end;
+}
+
+unsigned int
+rlpbwt::occ(unsigned int col_index, unsigned int row_index, char symbol) const {
+    unsigned int u = 0;
+    unsigned int v = 0;
+    unsigned int c = this->cols[col_index].count_0;
+    for (unsigned int i = 0; i < row_index; i++) {
+        std::cout << this->cols[col_index].rows[i + 1].p << " - "
+                  << this->cols[col_index].rows[i].p << "\n";
+        if (i % 2 == 0) {
+            if (row_index != this->cols[col_index].rows.size() &&
+                i != row_index - 1) {
+                u += this->cols[col_index].rows[i + 1].p -
+                     this->cols[col_index].rows[i].p;
+            } else {
+                u += this->heigth - this->cols[col_index].rows[i].p;
+            }
+        } else {
+            if (row_index != this->cols[col_index].rows.size() &&
+                i != row_index - 1) {
+                v += this->cols[col_index].rows[i + 1].p -
+                     this->cols[col_index].rows[i].p;
+            } else {
+                v += this->heigth - this->cols[col_index].rows[i].p;
+            }
+        }
+    }
+    if (!this->cols[col_index].zero_first) {
+        std::swap(u, v);
+    }
+
+    std::cout << symbol << " c: " << c << ", u: " << u << ", v: " << v << "\n";
+    if (symbol == '0') {
+        return u;
+    } else {
+        return c + v;
+    }
+}
+
+
+std::vector<rlpbwt_match>
+rlpbwt::external_match(const std::string &query) const {
     if (query.size() != this->width) {
         throw NotEqualLengthException{};
     }
@@ -289,31 +370,142 @@ std::vector<rlpbwt_match> rlpbwt::external_match(const std::string &query) const
     unsigned int curr_r = 0;
     unsigned int curr_bit = 0;
     unsigned int curr_start = 0;
-    /*if (query[1] == '0') {
-        if (this->cols[0].zero_first) {
-            r_tmp = 0;
-        } else {
-            r_tmp = 1;
+
+    // search longest run of first char in first column
+    unsigned int max_r = 0;
+    unsigned int ind_max = 0;
+    //std::cout << this->cols[0].zero_first << " " << query[0] << "\n";
+    if ((this->cols[0].zero_first && query[0] == '0') ||
+        (!this->cols[0].zero_first && query[0] == '1')) {
+        for (unsigned int i = 0; i < this->cols[0].rows.size(); i++) {
+            unsigned int run_l = 0;
+            if (i != this->cols[0].rows.size() - 1) {
+                run_l = this->cols[0].rows[i + 1].p - this->cols[0].rows[i].p;
+            } else {
+                run_l = this->heigth - this->cols[0].rows[i].p;
+            }
+            //std::cout << run_l << ": " << this->cols[0].rows[i] << "\n";
+            if (max_r < run_l) {
+                max_r = run_l;
+                ind_max = i;
+            }
+            if (i <= this->cols[0].rows.size() - 2) {
+                i++;
+            } else {
+                break;
+            }
         }
     } else {
-        if (this->cols[1].zero_first) {
-            r_tmp = 1;
-        } else {
-            r_tmp = 0;
-        }
-    }
-    std::cout << "r_tmp " << r_tmp << "\n";*/
-    for (unsigned int i = 0; i < query.size(); i++) {
-        auto symbol = query[i];
-        if (i == 0) {
-            if (true) {
-
+        for (unsigned int i = 1; i < this->cols[0].rows.size(); i++) {
+            unsigned int run_l = 0;
+            if (i != this->cols[0].rows.size() - 1) {
+                run_l = this->cols[0].rows[i + 1].p - this->cols[0].rows[i].p;
             } else {
-
+                run_l = this->heigth - this->cols[0].rows[i].p;
+            }
+            //std::cout << run_l << ": " << this->cols[0].rows[i] << "\n";
+            if (max_r < run_l) {
+                max_r = run_l;
+                ind_max = i;
+            }
+            if (i <= this->cols[0].rows.size() - 2) {
+                i++;
+            } else {
+                break;
             }
         }
     }
+    std::cout << ind_max << "\n";
+    //unsigned int start = occ(0, ind_max, query[1]);
+    //unsigned int end = occ(0, ind_max + 1, query[1]);
 
+    //unsigned int start = 0;
+    //unsigned int end = 0;
+    //std::cout << "(" << start << ", " << end << ")\n";
+    curr_r = ind_max;
+    unsigned int curr_row = this->cols[0].rows[curr_r].p;
+    unsigned int start = this->cols[0].rows[curr_r].next_perm;
+    unsigned int end = this->cols[0].rows[curr_r].lf_mapping(curr_row);
+    bool verbose = true;
+    char curr_c;
+    unsigned int curr_e = 0;
+    std::cout << "run: " << curr_r << ", row " << curr_row << "\n";
+    std::cout << "(" << start << ", " << end << ")\n";
+    for (unsigned int o = 1; o < this->cols.size(); o++) {
+        bool check = true;
+        int i = 0;
+        while (check) {
+            if (start == this->cols[i].rows.size() - 1) {
+                curr_c = get_next_char(this->cols[i].zero_first, start);
+                end = this->cols[i].rows[start].lf_mapping(end);
+                start = this->cols[i].rows[start].next_perm;
+                if (verbose) {
+                    std::cout << "column " << i << ": " << start << ", " << end
+                              << "\n";
+                }
+                curr_r = start;
+            } else {
+                bool found = false;
+                for (unsigned int j = start; j < cols[i].rows.size() - 1; j++) {
+                    if (cols[i].rows[j].p <= end &&
+                        end < cols[i].rows[j + 1].p) {
+                        curr_c = get_next_char(this->cols[i].zero_first, j);
+                        found = true;
+                        end = this->cols[i].rows[j].lf_mapping(end);
+                        start = this->cols[i].rows[j].next_perm;
+                        if (verbose) {
+                            std::cout << "column " << i << ": " << start << ", "
+                                      << end
+                                      << "\n";
+                        }
+                        curr_r = j;
+                        break;
+                    }
+                }
+                if (!found) {
+                    unsigned int endrow = this->cols[i].rows.size() - 1;
+                    curr_c = get_next_char(this->cols[i].zero_first, endrow);
+                    end = this->cols[i].rows[endrow].lf_mapping(end);
+                    start = this->cols[i].rows[endrow].next_perm;
+                    if (verbose) {
+                        std::cout << "column " << i << ": " << start << ", "
+                                  << end
+                                  << "\n";
+                    }
+                    curr_r = endrow;
+                }
+            }
+            i++;
+            std::cout << "current char " << curr_c << "\n";
+            o++;
+            if (o == this->width - 1) {
+                std::cout << "match ending in " << o << "\n";
+                break;
+            }
+            if (curr_c != query[o]) {
+                check = false;
+                std::cout << "match ending in " << o - 1 << "\n";
+            }
+        }
+        if (o == this->width - 1) {
+            break;
+        }
+        std::cout << "old row: " << curr_row << "\n";
+        std::cout << "old run: " << curr_r << "\n";
+        if (o <= this->cols[o].rows[curr_r].threshold) {
+            if (curr_row - 1 >= 0) {
+                curr_row = curr_row - 1;
+            } else {
+                curr_row = 0;
+            }
+        } else {
+            curr_row = 0;
+        }
+        std::cout << "new row: " << curr_row << "\n";
+        curr_r = index_to_run(curr_row);
+        start = this->cols[o].rows[curr_r].next_perm;
+        end = this->cols[o].rows[curr_r].lf_mapping(curr_row);
+    }
     return std::vector<rlpbwt_match>();
 }
 
@@ -322,3 +514,24 @@ rlpbwt::update_external(unsigned int index, unsigned int e, unsigned int f,
                         unsigned int g, const std::string &query) {
 
 }
+
+unsigned int rlpbwt::index_to_run(unsigned int index) const {
+    unsigned int pos = 0;
+    bool found_first = false;
+    for (unsigned int i = 0; i < this->cols[0].rows.size() - 1; i++) {
+        if (this->cols[0].rows[i].p <= index &&
+            index < this->cols[0].rows[i + 1].p) {
+            pos = i;
+            found_first = true;
+            break;
+        }
+    }
+    if (!found_first) {
+        pos = this->cols[0].rows.size() - 1;
+    }
+    return pos;
+}
+
+
+
+
