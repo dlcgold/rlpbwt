@@ -101,7 +101,7 @@ private:
     occ(unsigned int col_index, unsigned int row_index, char symbol) const;
 
     unsigned int index_to_run(unsigned int index) const;
-
+    unsigned int get_run_length(unsigned int col_index, unsigned int run_index) const;
     static void
     update(std::string &column, std::vector<unsigned int> &pref,
            std::vector<unsigned int> &div);

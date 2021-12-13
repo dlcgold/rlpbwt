@@ -368,6 +368,7 @@ rlpbwt::external_match(const std::string &query) const {
     }
     std::cout << query << "\n";
     unsigned int curr_r = 0;
+    unsigned int curr_l = 0;
     unsigned int curr_bit = 0;
     unsigned int curr_start = 0;
 
@@ -428,12 +429,14 @@ rlpbwt::external_match(const std::string &query) const {
     unsigned int end = this->cols[0].rows[curr_r].lf_mapping(curr_row);
     bool verbose = true;
     char curr_c;
-    unsigned int curr_e = 0;
+    unsigned int curr_e = 1;
+    curr_l = get_run_length(0, curr_r);
     std::cout << "run: " << curr_r << ", row " << curr_row << "\n";
     std::cout << "(" << start << ", " << end << ")\n";
+    std::cout << "current_length: " << curr_l << "\n";
     for (unsigned int o = 1; o < this->cols.size(); o++) {
         bool check = true;
-        int i = 0;
+        unsigned int i = curr_e;
         while (check) {
             if (start == this->cols[i].rows.size() - 1) {
                 curr_c = get_next_char(this->cols[i].zero_first, start);
@@ -475,19 +478,39 @@ rlpbwt::external_match(const std::string &query) const {
                     curr_r = endrow;
                 }
             }
-            i++;
-            std::cout << "current char " << curr_c << "\n";
-            o++;
+            curr_row = this->cols[i].rows[curr_r].p;
+            unsigned int tmp_length = get_run_length(i, curr_r);
+            std::cout << "i: " << i << ", o: " << o << "\n";
+            std::cout << "current char " << curr_c << " vs " << query[o]
+                      << "\n";
+            std::cout << "current run " << curr_r << " current row " << curr_row
+                      << "\n";
+            std::cout << "prev length: " << curr_l << ", current length: "
+                      << tmp_length << "\n";
             if (o == this->width - 1) {
                 std::cout << "match ending in " << o << "\n";
                 break;
             }
             if (curr_c != query[o]) {
-                check = false;
-                std::cout << "match ending in " << o - 1 << "\n";
+                if (curr_l > tmp_length &&
+                    curr_r != this->cols[i].rows.size()) {
+                    curr_r = curr_r + 1;
+                    tmp_length = get_run_length(i, curr_r);
+                    curr_row = this->cols[i].rows[curr_r].p;
+                } else {
+                    check = false;
+                    if (o != this->width) {
+                        std::cout << "match ending in " << o << "\n";
+                    } else {
+                        std::cout << "match ending in " << o - 1 << "\n";
+                    }
+                }
             }
+            curr_l = tmp_length;
+            i++;
+            o++;
         }
-        if (o == this->width - 1) {
+        if (o == this->width) {
             break;
         }
         std::cout << "old row: " << curr_row << "\n";
@@ -505,6 +528,7 @@ rlpbwt::external_match(const std::string &query) const {
         curr_r = index_to_run(curr_row);
         start = this->cols[o].rows[curr_r].next_perm;
         end = this->cols[o].rows[curr_r].lf_mapping(curr_row);
+        curr_e = o;
     }
     return std::vector<rlpbwt_match>();
 }
@@ -530,6 +554,18 @@ unsigned int rlpbwt::index_to_run(unsigned int index) const {
         pos = this->cols[0].rows.size() - 1;
     }
     return pos;
+}
+
+unsigned int
+rlpbwt::get_run_length(unsigned int col_index, unsigned int run_index) const {
+    unsigned int length = 0;
+    if (run_index == this->cols[col_index].rows.size() - 1) {
+        length = heigth - this->cols[col_index].rows[run_index].p;
+    } else {
+        length = this->cols[col_index].rows[run_index + 1].p -
+                 this->cols[col_index].rows[run_index].p;
+    }
+    return length;
 }
 
 
