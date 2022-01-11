@@ -539,6 +539,25 @@
     \end{itemize}
   \end{block}
 \end{frame}
+\begin{frame}{new version}
+  A column C's representation consists of a bitvector B[0..m - 1] and a sequence
+  of thresholds T.  It supports the query CANDIDATE\_STEP, which takes a single
+  integer i and a bit b and returns a Boolean flag f and a single integer i'.
+  If B[i] = b, then f = TRUE and i' is the position of B[i] after B is stably
+  sorted.  If B[i] != b but there is some copy of b in B, the f = FALSE and i'
+  is the position after B is stably sorted of either of the last copy of b
+  before B[i] or of the first copy of b after B[i], depending on whether B[i] is
+  before or after the threshold for the run containing B[i].  If there is no
+  copy of b in B, then f = FALSE and i' = -1. 
+
+
+We store B and T run-length compressed, so they take O(r\_c) words of space and
+CANDIDATE\_STEP takes O(log log m) time.  We start a search with i = 0; we go
+from one column to the next setting i = i' when i' >= 0, with f telling us
+whether we've jumped or not (but not telling us whether we've hit the end of a
+MEM); when i' = -1, we were unable to match a column and we start over at the
+next column with i = 0. 
+\end{frame}
 % \begin{frame}[allowframebreaks]{References} 
 %   \nocite{*}
 %   \bibliographystyle{unsrt}

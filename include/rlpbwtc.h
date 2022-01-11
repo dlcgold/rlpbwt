@@ -1,9 +1,10 @@
 //
-// Created by dlcgold on 28/10/21.
+// Created by dlcgold on 04/01/22.
 //
 
-#ifndef RLPBWT_RLPBWT_H
-#define RLPBWT_RLPBWT_H
+#ifndef RLPBWT_RLPBWTC_H
+#define RLPBWT_RLPBWTC_H
+
 
 #include <vector>
 #include <string>
@@ -17,7 +18,7 @@
 /**
  * @brief class to rappresent the run-length encoded PBWT matrix
  */
-class rlpbwt {
+class rlpbwtc {
 public:
     /**
      * @brief vector with all the structs for every column in run-length encoded
@@ -41,7 +42,7 @@ public:
      * one column of the panel
      * @param verbose bool for extra print
      */
-    explicit rlpbwt(const char *filename, bool verbose = false);
+    explicit rlpbwtc(const char *filename, bool verbose = false);
 
     /**
      * @brief function to extract a row of the original panel from the
@@ -58,7 +59,11 @@ public:
     /**
      * @brief default destructor
      */
-    virtual ~rlpbwt();
+    virtual ~rlpbwtc();
+
+    void ematch(const std::string &query);
+
+    void ematchb(const std::string &query);
 
 private:
 
@@ -82,24 +87,14 @@ private:
     build_column(std::string &column, std::vector<unsigned int> &pref,
                  std::vector<unsigned int> &div);
 
-
-    /**
-     * @brief function to get pref and div arrays at column i+1 from the values
-     * in column i
-     * @param column current column
-     * @param pref prefix array for previous column
-     * @param div divergence array for previous column
-     */
-    __attribute__((unused)) static void
-    update_old(std::string &column, std::vector<unsigned int> &pref,
-               std::vector<unsigned int> &div, unsigned int k);
-
     unsigned int
     next_run(unsigned int col_index, unsigned int start, unsigned int end,
              bool verbose) const;
 
     unsigned int
-    occ(unsigned int col_index, unsigned int row_index, char symbol, bool verbose = false) const;
+    occ(unsigned int col_index, unsigned int row_index, char symbol,
+        unsigned int offset, bool verbose = false) const;
+
 
     unsigned int index_to_run(unsigned int index, unsigned int col_index) const;
 
@@ -115,9 +110,13 @@ private:
                     unsigned int g, const std::string &query);
 
     std::pair<int, bool>
-    candidate_step(unsigned int run_index, unsigned int col_index, char symbol) const;
+    candidate_step(unsigned int run_index,
+                   unsigned int col_index, char symbol) const;
 
+    unsigned int update_end_run(unsigned int curr_run, unsigned int curr_l,
+                                unsigned int col_index);
 };
 
 
 #endif //RLPBWT_RLPBWT_H
+

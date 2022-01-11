@@ -2,6 +2,7 @@
 #include "include/rlpbwt_rlrow.h"
 #include "include/exceptions.h"
 #include "gtest/gtest.h"
+#include "include/rlpbwtc.h"
 
 
 
@@ -59,7 +60,7 @@
 TEST (BuildRlpbwtTestSample, TestBuild) {
     rlpbwt rlpbwt("../input/sample.txt");
     std::cout << rlpbwt.heigth << " " << rlpbwt.width << "\n";
-    bool verbose = true;
+    bool verbose = false;
     if (verbose) {
         int count = 0;
         for (const auto &c: rlpbwt.cols) {
@@ -73,8 +74,25 @@ TEST (BuildRlpbwtTestSample, TestBuild) {
             std::cout << "--------------\n";
         }
     }
-    std::cout << rlpbwt.search_row(4);
-    rlpbwt.external_match("010010100011101");
+    //std::cout << rlpbwt.search_row(4);
+    //rlpbwt.external_match("010010100011101");
+    rlpbwtc rlpbwtc("../input/sample.txt");
+    std::cout << rlpbwtc.heigth << " " << rlpbwtc.width << "\n";
+    verbose = true;
+    if (verbose) {
+        int count = 0;
+        for (const auto &c: rlpbwtc.cols) {
+            std::cout << "column: " << count << ", start with 0? "
+                      << c.zero_first << "\n";
+
+            for (const auto &r: c.rows) {
+                std::cout << r << " | " << r.lf_mapping(r.p)<<"\n";
+            }
+            count++;
+            std::cout << "--------------\n";
+        }
+    }
+    rlpbwtc.ematchb("010010100011101");
 }
 
 //TEST (BuildRlpbwtTestSimple, TestSizeZero) {
