@@ -6,13 +6,17 @@
 #define RLPBWT_RLPBWTM_H
 
 
+#include <ostream>
+
 class rlpbwtm {
 private:
     unsigned int begin;
     unsigned int end;
     unsigned int nhaplo;
 public:
-    rlpbwtm(unsigned int begin, unsigned int anEnd, unsigned int nhaplo);
+    friend std::ostream &operator<<(std::ostream &os, const rlpbwtm &rlpbwtm);
+
+    rlpbwtm(unsigned int begin, unsigned int end, unsigned int nhaplo);
 
     virtual ~rlpbwtm();
 

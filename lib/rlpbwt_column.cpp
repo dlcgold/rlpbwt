@@ -6,11 +6,11 @@
 
 #include <utility>
 
-rlpbwt_column::rlpbwt_column(bool zeroFirst, std::vector<rlpbwt_rlrow> rows,
+rlpbwt_column::rlpbwt_column(bool zeroFirst, std::vector<rlrow> rows,
                              unsigned int count0)
-        : zero_first(zeroFirst), rows(std::move(rows)), count_0(count0) {}
+        : zero_first(zeroFirst), count_0(count0), rows(std::move(rows)) {}
 rlpbwt_column::rlpbwt_column()
-        : zero_first(), rows() {}
+        : zero_first(), count_0(), rows() {}
 
 std::ostream &operator<<(std::ostream &os, const rlpbwt_column &column) {
     std::string value;

@@ -1,4 +1,4 @@
-#include "include/rlpbwt.h"
+
 #include "include/rlpbwt_rlrow.h"
 #include "include/exceptions.h"
 #include "gtest/gtest.h"
@@ -58,45 +58,35 @@
 //}
 
 TEST (BuildRlpbwtTestSample, TestBuild) {
-    rlpbwt rlpbwt("../input/sample.txt");
-    std::cout << rlpbwt.heigth << " " << rlpbwt.width << "\n";
-    bool verbose = false;
-    if (verbose) {
-        int count = 0;
-        for (const auto &c: rlpbwt.cols) {
-            std::cout << "column: " << count << ", start with 0? "
-                      << c.zero_first << "\n";
-
-            for (const auto &r: c.rows) {
-                std::cout << r << " | " << r.lf_mapping(r.p)<<"\n";
-            }
-            count++;
-            std::cout << "--------------\n";
-        }
-    }
     //std::cout << rlpbwt.search_row(4);
     //rlpbwt.external_match("010010100011101");
     rlpbwtc rlpbwtc("../input/sample.txt");
     std::cout << rlpbwtc.heigth << " " << rlpbwtc.width << "\n";
-    verbose = true;
+    bool verbose = true;
     if (verbose) {
         int count = 0;
         for (const auto &c: rlpbwtc.cols) {
             std::cout << "column: " << count << ", start with 0? "
-                      << c.zero_first << "\n";
+                      << c.zero_first << ", zeros? " << c.count_0 << "\n";
 
             for (const auto &r: c.rows) {
-                std::cout << r << " | " << r.lf_mapping(r.p)<<"\n";
+                std::cout << r << "\n";
             }
-            for (auto d: c.div){
+            for (auto d: c.div) {
+                std::cout << d << " ";
+            }
+            std::cout << "\n";
+            for (auto d: c.uv) {
                 std::cout << d << " ";
             }
             count++;
             std::cout << "\n--------------\n";
         }
     }
-    rlpbwtc.ematchb("010010100011101", false);
-    //std::cout << rlpbwtc.prev_run(12,7,true) << "\n";
+    auto matches = rlpbwtc.ematch("010010100011101", false);
+    for (auto m: matches) {
+        std::cout << m << "\n";
+    }
 }
 
 //TEST (BuildRlpbwtTestSimple, TestSizeZero) {

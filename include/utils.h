@@ -19,4 +19,7 @@
  */
 char get_next_char(bool zero_first, unsigned int index_run);
 
+template<typename T> double vectorsizeof(const typename std::vector<T> &vec) {
+    return (sizeof(T) * vec.size()) * 0.000001;
+}
 #endif //RLPBWT_UTILS_H

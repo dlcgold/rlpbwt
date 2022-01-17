@@ -18,8 +18,10 @@ unsigned int rlpbwt_rlrow::lf_mapping(unsigned int i) const {
 }
 
 std::ostream &operator<<(std::ostream &os, const rlpbwt_rlrow &rlrow) {
+//    os << rlrow.p << "\t" << rlrow.perm_p << "\t"
+//       << rlrow.next_perm << "\t" << rlrow.threshold;
     os << rlrow.p << "\t" << rlrow.perm_p << "\t"
-       << rlrow.next_perm << "\t" << rlrow.threshold;
+       << rlrow.next_perm;
     return os;
 }
 

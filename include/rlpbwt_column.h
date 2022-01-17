@@ -7,8 +7,9 @@
 
 #include <vector>
 #include <ostream>
+#include <sdsl/vectors.hpp>
 #include "rlpbwt_rlrow.h"
-
+#include "rlrow.h"
 /**
  * @brief class to rappresent every column in run-length encoded
  * PBWT matrix
@@ -21,14 +22,17 @@ public:
      */
     bool zero_first;
 
-    unsigned int count_0;
+    unsigned int count_0{};
     /**
      * @brief vector with the quadruple for every run in the column in PBWT
      * matrix (assuming biallelic)
      */
-    std::vector<rlpbwt_rlrow> rows;
+    std::vector<rlrow> rows;
 
-    std::vector<unsigned int> div;
+    //std::vector<unsigned int> div;
+    sdsl::int_vector<> div;
+    std::vector<unsigned int> uv;
+
     /**
      * @brief default constructor
      */
@@ -40,7 +44,7 @@ public:
      * @param zeroFirst bool to check first value of the column
      * @param rows vector with every quadruple for every run
      */
-    rlpbwt_column(bool zeroFirst, std::vector<rlpbwt_rlrow> rows,
+    rlpbwt_column(bool zeroFirst, std::vector<rlrow> rows,
                   unsigned int count0);
 
     /**
