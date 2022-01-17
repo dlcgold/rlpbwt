@@ -88,11 +88,15 @@ TEST (BuildRlpbwtTestSample, TestBuild) {
             for (const auto &r: c.rows) {
                 std::cout << r << " | " << r.lf_mapping(r.p)<<"\n";
             }
+            for (auto d: c.div){
+                std::cout << d << " ";
+            }
             count++;
-            std::cout << "--------------\n";
+            std::cout << "\n--------------\n";
         }
     }
-    rlpbwtc.ematchb("010010100011101");
+    rlpbwtc.ematchb("010010100011101", false);
+    //std::cout << rlpbwtc.prev_run(12,7,true) << "\n";
 }
 
 //TEST (BuildRlpbwtTestSimple, TestSizeZero) {

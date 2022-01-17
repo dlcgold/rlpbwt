@@ -12,9 +12,13 @@
 #include <climits>
 #include <cassert>
 #include <utility>
+#include <fstream>
+#include <algorithm>
 #include "rlpbwt_column.h"
 #include "rlpbwt_match.h"
-
+#include "utils.h"
+#include "exceptions.h"
+#include "rlpbwtm.h"
 /**
  * @brief class to rappresent the run-length encoded PBWT matrix
  */
@@ -63,7 +67,10 @@ public:
 
     void ematch(const std::string &query);
 
-    void ematchb(const std::string &query);
+    void ematchb(const std::string &query, bool verbose = false);
+
+    unsigned int
+    prev_run(unsigned int col_index, unsigned int index, bool verbose) const;
 
 private:
 
@@ -115,6 +122,7 @@ private:
 
     unsigned int update_end_run(unsigned int curr_run, unsigned int curr_l,
                                 unsigned int col_index);
+
 };
 
 

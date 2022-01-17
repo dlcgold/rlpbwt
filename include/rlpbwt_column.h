@@ -28,6 +28,7 @@ public:
      */
     std::vector<rlpbwt_rlrow> rows;
 
+    std::vector<unsigned int> div;
     /**
      * @brief default constructor
      */

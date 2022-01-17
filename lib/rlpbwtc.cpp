@@ -2,13 +2,7 @@
 // Created by dlcgold on 04/01/22.
 //
 
-#include <iostream>
-#include <fstream>
-#include <string>
-#include <algorithm>
-#include "../include/utils.h"
 #include "../include/rlpbwtc.h"
-#include "../include/exceptions.h"
 
 rlpbwtc::rlpbwtc(const char *filename, bool verbose) {
     std::ifstream input_matrix(filename);
@@ -46,6 +40,7 @@ rlpbwtc::rlpbwtc(const char *filename, bool verbose) {
             column.erase(std::remove(column.begin(), column.end(), ' '),
                          column.end());
             auto col = rlpbwtc::build_column(column, pref, div);
+            col.div = div;
             tmp_cols[count] = col;
 
             //rlpbwtc::update_old(column, pref, div, count);
@@ -57,6 +52,9 @@ rlpbwtc::rlpbwtc(const char *filename, bool verbose) {
             rlpbwtc::update(column, pref, div);
             count++;
         }
+        auto col = rlpbwtc::build_column(column, pref, div);
+        col.div = div;
+        tmp_cols.push_back(col);
         this->cols = tmp_cols;
         this->width = tmp_width;
         this->heigth = tmp_height;
@@ -327,7 +325,7 @@ rlpbwtc::index_to_run(unsigned int index, unsigned int col_index) const {
     unsigned int pos = 0;
     bool found_first = false;
     for (unsigned int i = 0; i < this->cols[col_index].rows.size() - 1; i++) {
-        if (this->cols[0].rows[i].p <= index &&
+        if (this->cols[col_index].rows[i].p <= index &&
             index < this->cols[col_index].rows[i + 1].p) {
             pos = i;
             found_first = true;
@@ -539,7 +537,7 @@ unsigned int rlpbwtc::update_end_run(unsigned int curr_run, unsigned int curr_l,
     return end_run;
 }
 
-void rlpbwtc::ematchb(const std::string &query) {
+void rlpbwtc::ematchb(const std::string &query, bool verbose) {
     if (query.size() != this->width) {
         throw NotEqualLengthException{};
     }
@@ -553,155 +551,268 @@ void rlpbwtc::ematchb(const std::string &query) {
     unsigned int curr_offset = 0;
     unsigned int end_offset = 0;
     unsigned int curr_len = 0;
+    unsigned int curr_beg = 0;
     for (unsigned i = 0; i < query.size(); i++) {
-
-        std::cout << "before at " << i << " from " << curr_index << " to "
-                  << end_index
-                  << "\n";
-        curr_len = (end_index - curr_index) - 1;
-        if (i == 10) {
-
-            std::cout << index_to_run(curr_index, i) << "\n";
-            std::cout << this->cols[i].rows[index_to_run(curr_index, i)].p
+        if (verbose) {
+            std::cout << "before at " << i << " from " << curr_index << " to "
+                      << end_index
                       << "\n";
         }
+        curr_run = index_to_run(curr_index, i);
+        end_run = index_to_run(end_index, i);
+        curr_len = (end_index - curr_index);
         curr_offset =
-                curr_index - this->cols[i].rows[index_to_run(curr_index, i)].p;
+                curr_index - this->cols[i].rows[curr_run].p;
         end_offset =
-                end_index - this->cols[i].rows[index_to_run(end_index, i)].p;
-        std::cout << "offset: (" << curr_offset << ", " << end_offset << ")\n";
+                end_index - this->cols[i].rows[end_run].p;
 
-        if ((index_to_run(curr_index, i) == 0 &&
-             get_next_char(this->cols[i].zero_first,
-                           index_to_run(curr_index, i)) == '1') ||
-            (index_to_run(curr_index, i) == 1 &&
-             get_next_char(this->cols[i].zero_first,
-                           index_to_run(curr_index, i)) == '0')) {
-            curr_offset = 0;
+        if (query[i] == '0') {
+            if (curr_run == 0 &&
+                get_next_char(this->cols[i].zero_first,
+                              curr_run) == '1') {
+                curr_offset = 0;
+            } else if (end_run == 0 &&
+                       get_next_char(this->cols[i].zero_first,
+                                     end_run) == '1') {
+                end_offset = 0;
+            }
         }
-        if ((index_to_run(end_index, i) == 0 &&
-             get_next_char(this->cols[i].zero_first,
-                           index_to_run(end_index, i)) == '1') ||
-            (index_to_run(end_index, i) == 1 &&
-             get_next_char(this->cols[i].zero_first,
-                           index_to_run(end_index, i)) == '0')) {
-            end_offset = 0;
+        if (query[i] == '1') {
+            if (curr_run == 1 &&
+                get_next_char(this->cols[i].zero_first,
+                              curr_run) == '0') {
+                curr_offset = 0;
+            } else if (end_run == 1 &&
+                       get_next_char(this->cols[i].zero_first,
+                                     end_run) == '0') {
+                end_offset = 0;
+            }
         }
-        curr_tmp = occ(i, index_to_run(curr_index, i), query[i], curr_offset);
-        end_tmp = occ(i, index_to_run(end_index, i), query[i], end_offset);
+
+
+        curr_tmp = occ(i, curr_run, query[i], curr_offset);
+        end_tmp = occ(i, end_run, query[i], end_offset);
         if (curr_tmp >= this->heigth) {
             curr_tmp -= curr_offset;
         }
         if (end_tmp >= this->heigth) {
             end_tmp -= end_offset;
         }
-        curr_index = this->cols[i].rows[index_to_run(curr_tmp, i)].p;
-        end_index = this->cols[i].rows[index_to_run(end_tmp, i)].p;
-        curr_run = index_to_run(curr_index, i);
-        end_run = index_to_run(end_index, i);
-        std::cout << "middle at " << i << " from " << curr_tmp << " to "
-                  << end_tmp
-                  << "\n";
+        curr_run = index_to_run(curr_tmp, i);
+        end_run = index_to_run(end_tmp, i);
+        curr_index = this->cols[i].rows[curr_run].p;
+        end_index = this->cols[i].rows[end_run].p;
+        if (verbose) {
+            std::cout << "middle at " << i << " from " << curr_tmp << " to "
+                      << end_tmp
+                      << "\n";
+        }
         if (curr_tmp < end_tmp) {
-            std::cout << "case 1\n";
+            if (verbose) {
+                std::cout << "case 1\n";
+            }
             calculated = true;
             curr_index = curr_tmp;
             end_index = end_tmp;
-            curr_run = index_to_run(curr_index, i);
-            end_run = index_to_run(end_index, i);
-        } else if (get_next_char(this->cols[i].zero_first,
-                                 index_to_run(curr_tmp, i)) == query[i]) {
-            std::cout << "case 1.5\n";
-            calculated = true;
-            curr_index = curr_tmp;
-            end_index = end_tmp;
-            curr_run = index_to_run(curr_index, i);
-            end_run = index_to_run(end_index, i);
+            //curr_run = index_to_run(curr_index, i);
+            //end_run = index_to_run(end_index, i);
+//        }
+//        else if (get_next_char(this->cols[i].zero_first,
+//                                 index_to_run(curr_tmp, i)) == query[i]) {
+//            if (verbose) {
+//                std::cout << "case 1.5\n";
+//            }
+//            calculated = true;
+//            curr_index = curr_tmp;
+//            end_index = end_tmp;
+            //curr_run = index_to_run(curr_index, i);
+            //end_run = index_to_run(end_index, i);
         } else {
+            if (verbose) {
+                std::cout << "f: " << curr_tmp << ", g: " << end_tmp << "\n";
+            }
             if (i > 0) {
-                std::cout << "match ending at " << i - 1 << " with " << curr_len
-                          << " haplotypes \n";
+                std::cout << "match at (" << curr_beg << ", " << i - 1
+                          << ") with " << curr_len << " haplotypes \n";
             }
             calculated = false;
-            if ((query[i] == '0' && curr_tmp > 0) ||
-                curr_run == this->cols[i].rows.size() - 1) {
-                //curr_tmp == this->heigth)            {
-
-                std::cout << "\tbegin case 2 curr run " << curr_run
-                          << ", curr index " << curr_index << "\n";
-                if (get_next_char(this->cols[i].zero_first, curr_run) ==
-                    query[i]) {
-                    curr_index = this->cols[i + 1].rows[curr_run].threshold;
-                } else {
-                    curr_index = this->cols[i + 1].rows[curr_run -
-                                                        1].threshold;
+            curr_beg = i - this->cols[i + 1].div[curr_tmp];
+            if (verbose) {
+                std::cout << "before curr beg: " << curr_beg << "\n";
+            }
+            if ((query[curr_beg] == '0' && curr_tmp > 0) ||
+                curr_tmp == this->heigth) {
+                if (verbose) {
+                    std::cout << "begin case 2 curr run " << curr_run
+                              << ", curr index " << curr_index << "\n";
+                    std::cout << "currtmp: " << curr_tmp << ", endtmp: "
+                              << end_tmp
+                              << "\n";
                 }
-//                if (get_next_char(this->cols[i].zero_first, curr_run) ==
-//                    query[i]) {
-//                    curr_index = this->cols[i + 1].rows[curr_run].p;
-//                } else {
-//                    if (curr_index > this->cols[i + 1].rows[curr_run].threshold) {
-//                        curr_index = this->cols[i + 1].rows[curr_run +
-//                                                           1].p - 1;
-//                    } else {
-//                        curr_index = this->cols[i + 1].rows[end_run -
-//                                                           1].p;
-//                    }
-//                }
+                curr_tmp = end_tmp - 1;
+                if (curr_beg > 1) {
+                    unsigned int i_tmp = i + 1;
+                    unsigned int curr_rev = curr_tmp;
+                    // reach curr_neg -1 column
+                    while (i_tmp != curr_beg - 1) {
+                        curr_rev = prev_run(i_tmp, curr_rev, false);
+                        i_tmp--;
+                    }
+                    // first step to reverse procede with lf
+                    unsigned int tmp_run = index_to_run(curr_rev, i_tmp);
+                    char curr_elem = get_next_char(
+                            this->cols[i_tmp].zero_first,
+                            tmp_run);
+                    while (curr_beg > 0 && query[curr_beg - 1] == curr_elem) {
+                        curr_beg -= 1;
+                        curr_rev = prev_run(curr_beg, curr_rev, false);
+                        tmp_run = index_to_run(curr_rev, curr_beg - 1);
+                        curr_elem = get_next_char(
+                                this->cols[curr_beg - 1].zero_first,
+                                tmp_run);
+                    }
+                }
+                while (curr_tmp > 0 &&
+                       (i + 1) - this->cols[i + 1].div[curr_tmp] <= curr_beg) {
+                    curr_tmp--;
+                }
+                curr_index = curr_tmp;
                 end_index = end_tmp;
                 curr_run = index_to_run(curr_index, i);
                 end_run = index_to_run(end_index, i);
-
-                std::cout << "\tend case 2 curr run " << curr_run
-                          << ", curr index " << curr_index << "\n";
-            } else {
-                std::cout << "\tbegin case 3 end run " << end_run
-                          << ", end index " << end_index << "\n";
-
-                if (get_next_char(this->cols[i].zero_first, end_run) ==
-                    query[i]) {
-                    end_index = this->cols[i + 1].rows[end_run].threshold;
-                } else {
-                    end_index = this->cols[i + 1].rows[end_run +
-                                                       1].threshold;
+                if (verbose) {
+                    std::cout << "end case 2 curr run " << curr_run
+                              << ", curr index " << curr_index
+                              << ", end run " << end_run << ", end index "
+                              << end_index << "\n";
                 }
-//                if (get_next_char(this->cols[i].zero_first, end_run) ==
-//                    query[i]) {
-//                    end_index = this->cols[i + 1].rows[end_run].p;
-//                } else {
-//                    if (end_index > this->cols[i + 1].rows[end_run].threshold) {
-//                        end_index = this->cols[i + 1].rows[end_run +
-//                                                           1].p - 1;
-//                    } else {
-//                        end_index = this->cols[i + 1].rows[end_run -
-//                                                           1].p;
-//                    }
-//                }
+            } else {
+                if (verbose) {
+                    std::cout << "begin case 3 end run " << end_run
+                              << ", end index " << end_index << "\n";
+                    std::cout << "currtmp: " << curr_tmp << ", endtmp: "
+                              << end_tmp
+                              << "\n";
+                }
+                end_tmp = curr_tmp + 1;
+                if (curr_beg > 1) {
+                    unsigned int i_tmp = i + 1;
+                    unsigned int curr_rev = curr_tmp;
+                    // reach curr_neg -1 column
+                    while (i_tmp != curr_beg - 1) {
+                        curr_rev = prev_run(i_tmp, curr_rev, false);
+                        i_tmp--;
+                    }
+                    // first step to reverse procede with lf
+                    unsigned int tmp_run = index_to_run(curr_rev, i_tmp);
+                    char curr_elem = get_next_char(
+                            this->cols[i_tmp].zero_first,
+                            tmp_run);
+                    while (curr_beg > 0 && query[curr_beg - 1] == curr_elem) {
+                        curr_beg -= 1;
+                        curr_rev = prev_run(curr_beg, curr_rev, false);
+                        tmp_run = index_to_run(curr_rev, curr_beg - 1);
+                        curr_elem = get_next_char(
+                                this->cols[curr_beg - 1].zero_first,
+                                tmp_run);
+                    }
+                }
+                if (verbose) {
+                    std::cout << "end curr beg: " << curr_beg << "\n";
+                }
+                while (end_tmp < this->heigth &&
+                       (i + 1) - this->cols[i + 1].div[end_tmp] <= curr_beg) {
+                    end_tmp++;
+                }
                 curr_index = curr_tmp;
+                end_index = end_tmp;
                 curr_run = index_to_run(curr_index, i);
                 end_run = index_to_run(end_index, i);
-                std::cout << "\tend case 3 end run " << end_run
-                          << ", end index " << end_index << "\n";
-
+                if (verbose) {
+                    std::cout << "end case 3 curr run " << curr_run
+                              << ", curr index " << curr_index
+                              << ", end run " << end_run << ", end index "
+                              << end_index << "\n";
+                }
             }
-
         }
-        if (i == 6) {
-            curr_index = 19;
-            end_index = 20;
-        } else if (i == 10) {
-            curr_index = 17;
-            end_index = 17;
-        } else if (i == 12) {
-            curr_index = 17;
-            end_index = 20;
+        if (verbose) {
+            std::cout << "after at " << i << " from " << curr_index << " to "
+                      << end_index
+                      << "\n";
         }
-        std::cout << "after at " << i << " from " << curr_index << " to "
-                  << end_index
-                  << "\n";
-
     }
+    if (curr_index < end_index) {
+        curr_len = end_index - curr_index;
+        std::cout << "match at (" << curr_beg << ", " << query.size() - 1
+                  << ") with " << curr_len << " haplotypes \n";
+    }
+}
 
+unsigned int rlpbwtc::prev_run(unsigned int col_index, unsigned int index,
+                               bool verbose) const {
+    col_index = col_index - 1;
+    unsigned int c = this->cols[col_index].count_0;
+    unsigned int u = 0;
+    unsigned int v = 0;
+    unsigned int pos = 0;
+    unsigned int offset = 0;
+    bool found = false;
+    if (verbose) {
+        std::cout << "c: " << c << "\n";
+    }
+    if (index < c) {
+        u = index;
+        if (verbose) {
+            std::cout << "u: " << u << "\n";
+        }
+        for (unsigned int i = 0;
+             i < this->cols[col_index].rows.size() - 1; ++i) {
+            if (this->cols[col_index].rows[i].perm_p <= u &&
+                u < this->cols[col_index].rows[i + 1].perm_p) {
+                pos = i;
+                found = true;
+                break;
+            }
+        }
+        if (!found) {
+            pos = this->cols[col_index].rows.size() - 1;
+        }
+        if (verbose) {
+            std::cout << "pos: " << pos << "\n";
+        }
+        offset = u - this->cols[col_index].rows[pos].perm_p;
+        if (verbose) {
+            std::cout << "offset: " << offset << "\n";
+        }
+        return this->cols[col_index].rows[pos].p + offset;
+    } else {
+        v = index - c;
+        if (verbose) {
+            std::cout << "v: " << v << "\n";
+        }
+        for (unsigned int i = 0;
+             i < this->cols[col_index].rows.size() - 1; ++i) {
+            if (this->cols[col_index].rows[i].next_perm <= v &&
+                v < this->cols[col_index].rows[i + 1].next_perm) {
+                pos = i;
+                found = true;
+                break;
+            }
+        }
+        if (!found) {
+            pos = this->cols[col_index].rows.size() - 1;
+        }
+        if (verbose) {
+            std::cout << "pos: " << pos << "\n";
+        }
+        offset = v - this->cols[col_index].rows[pos].next_perm;
+        if (verbose) {
+            std::cout << "offset: " << offset << "\n";
+        }
+        return this->cols[col_index].rows[pos].p + offset;
+    }
+    return 0;
 }
 
 
