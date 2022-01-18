@@ -8,7 +8,7 @@
 #include <string>
 #include <vector>
 #include <climits>
-#include "rlpbwt_column.h"
+#include "col.h"
 
 /**
  * @brief function to get the char (in bialleic case with 0 and 1) at certain

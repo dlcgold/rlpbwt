@@ -2,25 +2,25 @@
 // Created by dlcgold on 17/01/22.
 //
 
-#include "../include/rlpbwtm.h"
+#include "../include/match.h"
 
-rlpbwtm::rlpbwtm(unsigned int begin, unsigned int end, unsigned int nhaplo)
+match::match(unsigned int begin, unsigned int end, unsigned int nhaplo)
         : begin(begin), end(end), nhaplo(nhaplo) {}
 
-rlpbwtm::~rlpbwtm() = default;
+match::~match() = default;
 
-std::ostream &operator<<(std::ostream &os, const rlpbwtm &rlpbwtm) {
+std::ostream &operator<<(std::ostream &os, const match &rlpbwtm) {
     os << "match in [" << rlpbwtm.begin << ", " << rlpbwtm.end << "] with "
        << rlpbwtm.nhaplo << " haplotypes";
     return os;
 }
 
-bool rlpbwtm::operator==(const rlpbwtm &rhs) const {
+bool match::operator==(const match &rhs) const {
     return begin == rhs.begin &&
            end == rhs.end &&
            nhaplo == rhs.nhaplo;
 }
 
-bool rlpbwtm::operator!=(const rlpbwtm &rhs) const {
+bool match::operator!=(const match &rhs) const {
     return !(rhs == *this);
 }
