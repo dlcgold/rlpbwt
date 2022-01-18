@@ -93,6 +93,15 @@ TEST (BuildRlpbwtTestSample, TestBuild) {
     for (const auto &m: matches) {
         std::cout << m << "\n";
     }
+    auto match0 = rlpbwtm(0,5,4);
+    auto match1 = rlpbwtm(3,9,1);
+    auto match2 = rlpbwtm(7,11,1);
+    auto match3 = rlpbwtm(11,14,3);
+    EXPECT_EQ(matches[0], match0);
+    EXPECT_EQ(matches[1], match1);
+    EXPECT_EQ(matches[2], match2);
+    EXPECT_EQ(matches[3], match3);
+
     auto rlsize = sizeof(rlpbwtc.width) * 10E-6;
     rlsize += sizeof(rlpbwtc.heigth) * 10E-6;
     for (const auto &c: rlpbwtc.cols) {

@@ -14,6 +14,10 @@ private:
     unsigned int end;
     unsigned int nhaplo;
 public:
+    bool operator==(const rlpbwtm &rhs) const;
+
+    bool operator!=(const rlpbwtm &rhs) const;
+
     friend std::ostream &operator<<(std::ostream &os, const rlpbwtm &rlpbwtm);
 
     rlpbwtm(unsigned int begin, unsigned int end, unsigned int nhaplo);
