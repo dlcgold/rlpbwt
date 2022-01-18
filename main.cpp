@@ -3,8 +3,7 @@
 #include "include/exceptions.h"
 #include "gtest/gtest.h"
 #include "include/rlpbwtc.h"
-
-
+#include <gperftools/heap-profiler.h>
 
 //TEST (BuildRlpbwtTest, TestSize) {
 //    rlpbwt rlpbwt("../input/matrix3.txt");
@@ -58,9 +57,14 @@
 //}
 
 TEST (BuildRlpbwtTestSample, TestBuild) {
+
     //std::cout << rlpbwt.search_row(4);
     //rlpbwt.external_match("010010100011101");
+    HeapProfilerStart("heap.prof");
+    std::cout << IsHeapProfilerRunning() << "\n";
     rlpbwtc rlpbwtc("../input/sample.txt");
+    HeapProfilerDump("end construction");
+    HeapProfilerStop();
     std::cout << rlpbwtc.heigth << " " << rlpbwtc.width << "\n";
     bool verbose = true;
     if (verbose) {
@@ -75,18 +79,26 @@ TEST (BuildRlpbwtTestSample, TestBuild) {
             for (auto d: c.div) {
                 std::cout << d << " ";
             }
-            std::cout << "\n";
-            for (auto d: c.uv) {
-                std::cout << d << " ";
-            }
             count++;
             std::cout << "\n--------------\n";
         }
     }
-    auto matches = rlpbwtc.ematch("010010100011101", false);
-    for (auto m: matches) {
+    auto matches = rlpbwtc.ematch("010010100011101");
+    for (const auto &m: matches) {
         std::cout << m << "\n";
     }
+    auto rlsize = sizeof(rlpbwtc.width) * 10E-6;
+    rlsize += sizeof(rlpbwtc.heigth) * 10E-6;
+    for (auto c: rlpbwtc.cols) {
+        rlsize += sizeof(c.zero_first) * 10E-6;
+        rlsize += sizeof(c.count_0) * 10E-6;
+        rlsize += sizeof(unsigned int) * (double) c.rows.size() * 10E-6;
+        rlsize += sizeof(unsigned int) * (double) c.rows.size() * 10E-6;
+        rlsize += sdsl::size_in_mega_bytes(c.div);
+    }
+    double nrlsize = sizeof(unsigned int) *
+                     (double) (rlpbwtc.heigth * rlpbwtc.width * 5) * 10E-6;
+    std::cout << rlsize << " vs " << nrlsize << "\n";
 }
 
 //TEST (BuildRlpbwtTestSimple, TestSizeZero) {

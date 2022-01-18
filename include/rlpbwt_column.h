@@ -31,7 +31,6 @@ public:
 
     //std::vector<unsigned int> div;
     sdsl::int_vector<> div;
-    std::vector<unsigned int> uv;
 
     /**
      * @brief default constructor

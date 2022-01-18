@@ -133,9 +133,8 @@ rlpbwtc::build_column(std::string &column, std::vector<unsigned int> &pref,
             begrun = true;
         }
     }
-    auto colret = rlpbwt_column(start, rows, count0);
-    colret.uv = uv;
-    return colret;
+
+    return {start, rows, count0};
 }
 
 
@@ -292,7 +291,11 @@ std::vector<rlpbwtm> rlpbwtc::ematch(const std::string &query, bool verbose) {
                 }
                 matches.emplace_back(curr_beg, i - 1, curr_len);
             }
-            curr_beg = i - this->cols[i + 1].div[curr_tmp];
+            if(curr_tmp == this->cols[i + 1].div.size()){
+                curr_beg = i + 1;
+            }else {
+                curr_beg = i - this->cols[i + 1].div[curr_tmp];
+            }
             if (verbose) {
                 std::cout << "before curr beg: " << curr_beg << "\n";
             }
