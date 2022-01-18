@@ -5,7 +5,6 @@
 #include "../include/rlpbwtc.h"
 
 
-
 rlpbwtc::rlpbwtc(const char *filename, bool verbose) {
     std::ifstream input_matrix(filename);
     if (input_matrix.is_open()) {
@@ -74,9 +73,9 @@ rlpbwtc::build_column(std::string &column, std::vector<unsigned int> &pref,
                       sdsl::int_vector<> &div) {
     unsigned int height = pref.size();
     unsigned int count0 = 0;
+    unsigned int u = 0;
+    unsigned int v = 0;
     unsigned int count0tmp = 0;
-    unsigned int count1tmp = 0;
-    unsigned int count0tmptmp = 0;
     unsigned int count1 = 0;
     unsigned int lcs = 0;
     bool start = true;
@@ -103,14 +102,14 @@ rlpbwtc::build_column(std::string &column, std::vector<unsigned int> &pref,
     std::vector<unsigned int> uv;
     for (unsigned int i = 0; i < height; i++) {
         if (begrun) {
-            count0tmp = count0tmptmp;
-            count1tmp = count1;
+            u = count0tmp;
+            v = count1;
             begrun = false;
         }
         if (column[pref[i]] == '1') {
             count1++;
         } else {
-            count0tmptmp++;
+            count0tmp++;
         }
 
         if ((i == 0) || (column[pref[i]] != column[pref[i - 1]])) {
@@ -124,10 +123,10 @@ rlpbwtc::build_column(std::string &column, std::vector<unsigned int> &pref,
         if ((i == height - 1) ||
             (column[pref[i]] != column[pref[i + 1]])) {
             if (pusho) {
-                rows.emplace_back(p_tmp, count1tmp);
+                rows.emplace_back(p_tmp, v);
                 std::swap(pusho, pushz);
             } else {
-                rows.emplace_back(p_tmp, count0tmp);
+                rows.emplace_back(p_tmp, u);
                 std::swap(pusho, pushz);
             }
             begrun = true;
@@ -191,6 +190,9 @@ unsigned int
 rlpbwtc::index_to_run(unsigned int index, unsigned int col_index) const {
     unsigned int pos = 0;
     bool found_first = false;
+    if (index >= this->cols[col_index].rows.back().p) {
+        return this->cols[col_index].rows.size() - 1;
+    }
     for (unsigned int i = 0; i < this->cols[col_index].rows.size() - 1; i++) {
         if (this->cols[col_index].rows[i].p <= index &&
             index < this->cols[col_index].rows[i + 1].p) {
@@ -290,14 +292,18 @@ std::vector<rlpbwtm> rlpbwtc::ematch(const std::string &query, bool verbose) {
                 }
                 matches.emplace_back(curr_beg, i - 1, curr_len);
             }
-            if(curr_tmp == this->cols[i + 1].div.size()){
+
+            // update e
+            if (curr_tmp == this->cols[i + 1].div.size()) {
                 curr_beg = i + 1;
-            }else {
+            } else {
                 curr_beg = i - this->cols[i + 1].div[curr_tmp];
             }
+
             if (verbose) {
                 std::cout << "before curr beg: " << curr_beg << "\n";
             }
+
             if ((query[curr_beg] == '0' && curr_tmp > 0) ||
                 curr_tmp == this->heigth) {
                 if (verbose) {
@@ -491,27 +497,20 @@ std::pair<unsigned int, unsigned int>
 rlpbwtc::uvtrick(unsigned int col_index, unsigned int row_index) const {
     unsigned int u;
     unsigned int v;
-    if (this->cols[col_index].zero_first) {
-        if (row_index == 0) {
-            u = 0;
-            v = 0;
-        } else if (row_index % 2 == 0) {
-            u = this->cols[col_index].rows[row_index - 1].uv;
-            v = this->cols[col_index].rows[row_index].uv;
-        } else {
-            u = this->cols[col_index].rows[row_index].uv;
-            v = this->cols[col_index].rows[row_index - 1].uv;
+    if (row_index == 0) {
+        u = 0;
+        v = 0;
+    } else if (row_index % 2 == 0) {
+        u = this->cols[col_index].rows[row_index - 1].uv;
+        v = this->cols[col_index].rows[row_index].uv;
+        if (!this->cols[col_index].zero_first) {
+            std::swap(u, v);
         }
     } else {
-        if (row_index == 0) {
-            u = 0;
-            v = 0;
-        } else if (row_index % 2 == 0) {
-            u = this->cols[col_index].rows[row_index].uv;
-            v = this->cols[col_index].rows[row_index - 1].uv;
-        } else {
-            u = this->cols[col_index].rows[row_index - 1].uv;
-            v = this->cols[col_index].rows[row_index].uv;
+        u = this->cols[col_index].rows[row_index].uv;
+        v = this->cols[col_index].rows[row_index - 1].uv;
+        if (!this->cols[col_index].zero_first) {
+            std::swap(u, v);
         }
     }
     return {u, v};
