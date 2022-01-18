@@ -133,7 +133,6 @@ rlpbwtc::build_column(std::string &column, std::vector<unsigned int> &pref,
             begrun = true;
         }
     }
-
     return {start, rows, count0};
 }
 

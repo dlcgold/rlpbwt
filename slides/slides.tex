@@ -539,24 +539,105 @@
     \end{itemize}
   \end{block}
 \end{frame}
-\begin{frame}{new version}
-  A column C's representation consists of a bitvector B[0..m - 1] and a sequence
-  of thresholds T.  It supports the query CANDIDATE\_STEP, which takes a single
-  integer i and a bit b and returns a Boolean flag f and a single integer i'.
-  If B[i] = b, then f = TRUE and i' is the position of B[i] after B is stably
-  sorted.  If B[i] != b but there is some copy of b in B, the f = FALSE and i'
-  is the position after B is stably sorted of either of the last copy of b
-  before B[i] or of the first copy of b after B[i], depending on whether B[i] is
-  before or after the threshold for the run containing B[i].  If there is no
-  copy of b in B, then f = FALSE and i' = -1. 
+\begin{frame}{Travis's New Version}
+  \begin{block}{}
+    A column C's representation consists of a bitvector $B[0..m - 1]$ and a
+    sequence of thresholds $T$.  It supports the query \textit{CANDIDATE\_STEP},
+    which takes a single 
+    integer $i$ and a bit $b$ and returns a boolean flag $f$ and a single
+    integer $i'$. 
+    If $B[i] = b$, then $f = TRUE$ and $i'$ is the position of $B[i]$ after $B$
+    is stably 
+    sorted. If $B[i] \neq b$ but there is some copy of $b$ in $B$, the $f =
+    FALSE$ and $i'$ 
+    is the position after $B$ is stably sorted of either of the last copy of $b$
+    before B[i] or of the first copy of b after $B[i]$, depending on whether
+    $B[i]$ is 
+    before or after the threshold for the run containing $B[i]$.  If there is no
+    copy of $b$ in $B$, then $f = FALSE$ and $i' = -1$. 
 
-
-We store B and T run-length compressed, so they take O(r\_c) words of space and
-CANDIDATE\_STEP takes O(log log m) time.  We start a search with i = 0; we go
-from one column to the next setting i = i' when i' >= 0, with f telling us
-whether we've jumped or not (but not telling us whether we've hit the end of a
-MEM); when i' = -1, we were unable to match a column and we start over at the
-next column with i = 0. 
+    We store $B$ and $T$ run-length compressed, so they take $O(r_c)$ words of
+    space and \textit{CANDIDATE\_STEP} takes $O(\log \log m)$ time.  We start a
+    search with $i = 0$; we go 
+    from one column to the next setting $i = i'$ when $i' \geq 0$, with $f$
+    telling us whether we've jumped or not (\textbf{but not telling us whether
+      we've hit the end of a MEM}); when $i' = -1$, we were unable to match a
+    column and we start over at the next column with $i = 0$.  
+  \end{block}
+\end{frame}
+\section{A new Idea}
+\begin{frame}{New Idea I}
+  \only<1>{
+    \begin{block}{Let's take a step back and get closer to Durbin's original
+        idea.} 
+      At the moment we save:
+      \begin{itemize}
+        \item the position of every head of a run
+        \item a boolean to mark if the first run is composed by zeros or ones
+        \item the $c$ value of the column
+        \item a single value for $u$ and $v$ (that are as in Durbin)
+        \item the whole \textit{divergence array}, actually the \textit{LCP
+          array}, (\textbf{WIP}) 
+      \end{itemize}
+    \end{block}
+  }
+  \only<2>{
+    \begin{figure}[H]
+      \centering
+      \includegraphics[scale = 0.5]{img/c5.jpg}
+      \caption{Example, column 5: $00101111000000000000$}
+    \end{figure}
+  }
+\end{frame}
+\begin{frame}{New Idea II}
+  \begin{block}{$uv$ values trick}
+    Values $u$ and $v$ increase alternately in the biallelic case so we save
+    every time the only value that increase at the head of a run.\\
+    The, with a simple \textit{If/Else} selection based on the first element of
+    the column and the index of the run and on being even or odd of the index we
+    can extract both $u$ and $v$ values. Infact the two values are,
+    alternatively, saved in the current index and in the previous one.
+  \end{block}
+   \begin{block}{$w(i,\sigma)$ function}
+    We can use the same \textit{LF-mapping} as in Durbin but we have to consider
+    every time an \textit{offset} between the position of the head of the run,
+    that's $i$, which contains the ``virtual'' index, and the index itself.
+    \[w(i,\sigma)=
+      \begin{cases}
+        u[i]+offset&\mbox{if } \sigma=0\\
+        c+v[i]+offset&\mbox{if } \sigma=1\\
+      \end{cases}
+    \]
+  \end{block}
+\end{frame}
+\begin{frame}{New Idea III}
+  \begin{block}{External haplotype matches}
+    Than we proceed as in Durbin, updating $f$ and $g$ using $w(i,\sigma)$.\\
+    Every time we ``virtually'' use indexes over the whole column but actually
+    run heads plus offsets are used. \\
+    In case we update $e$ using $f$ and the \textit{divergence/LCP array}
+    (\textbf{WIP}).\\
+    In order to update $e$ we should in theory follow the line indicated in $i +
+    1$ by $f$ in the original panel which we have not memorized. So, at most at
+    a cost of $O(r)$ for every column, we proceed to reverse te use of $u$ and
+    $v$ to move backwards between the columns virtually following a row of the
+    original panel.\\
+    Than we use th e the \textit{divergence/LCP array} (\textbf{WIP}) to update
+    $f$ 
+    and $g$ depending on the case.\\
+    After detect a match, we can know the cardinality of the lines that match
+    but not what they are, 
+  \end{block}
+\end{frame}
+\begin{frame}{New Idea IV}
+  \begin{block}{WIP}
+    At the moment \textit{divergence array} is saved as an
+    \texttt{sdsl::int\_vector<>} on which it's used
+    \texttt{sdsl::util::bit\_compress()} in order to save space.\\
+    The original idea of thresholds seems to me absolutely not applicable but
+    maybe we can think of storing only a subset of the \textit{divergence/LCP
+      array} and I'm thinking how to do it .   
+  \end{block}
 \end{frame}
 % \begin{frame}[allowframebreaks]{References} 
 %   \nocite{*}

@@ -70,8 +70,14 @@ TEST (BuildRlpbwtTestSample, TestBuild) {
     if (verbose) {
         int count = 0;
         for (const auto &c: rlpbwtc.cols) {
-            std::cout << "column: " << count << ", start with 0? "
-                      << c.zero_first << ", zeros? " << c.count_0 << "\n";
+            std::string z;
+            if (c.zero_first) {
+                z = "yes";
+            } else {
+                z = "no";
+            }
+            std::cout << "column: " << count << "\nstart with 0? "
+                      << z << ", c: " << c.count_0 << "\n";
 
             for (const auto &r: c.rows) {
                 std::cout << r << "\n";
@@ -89,7 +95,7 @@ TEST (BuildRlpbwtTestSample, TestBuild) {
     }
     auto rlsize = sizeof(rlpbwtc.width) * 10E-6;
     rlsize += sizeof(rlpbwtc.heigth) * 10E-6;
-    for (auto c: rlpbwtc.cols) {
+    for (const auto &c: rlpbwtc.cols) {
         rlsize += sizeof(c.zero_first) * 10E-6;
         rlsize += sizeof(c.count_0) * 10E-6;
         rlsize += sizeof(unsigned int) * (double) c.rows.size() * 10E-6;
@@ -98,6 +104,7 @@ TEST (BuildRlpbwtTestSample, TestBuild) {
     }
     double nrlsize = sizeof(unsigned int) *
                      (double) (rlpbwtc.heigth * rlpbwtc.width * 5) * 10E-6;
+    nrlsize += sizeof(unsigned int) * (double) rlpbwtc.width * 10E-6;
     std::cout << rlsize << " vs " << nrlsize << "\n";
 }
 

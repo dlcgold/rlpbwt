@@ -29,7 +29,7 @@ public:
      */
     std::vector<rlrow> rows;
 
-    //std::vector<unsigned int> div;
+
     sdsl::int_vector<> div;
 
     /**
