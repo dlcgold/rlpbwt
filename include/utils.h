@@ -8,7 +8,7 @@
 #include <string>
 #include <vector>
 #include <climits>
-#include "col.h"
+#include "column.h"
 
 /**
  * @brief function to get the char (in bialleic case with 0 and 1) at certain

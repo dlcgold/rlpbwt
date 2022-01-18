@@ -8,15 +8,15 @@
 rlpbwt::rlpbwt(const char *filename, bool verbose) {
     std::ifstream input_matrix(filename);
     if (input_matrix.is_open()) {
-        std::string column;
-        getline(input_matrix, column);
-        column.erase(std::remove(column.begin(), column.end(), ' '),
-                     column.end());
-        const unsigned int tmp_height = column.size();
+        std::string new_column;
+        getline(input_matrix, new_column);
+        new_column.erase(std::remove(new_column.begin(), new_column.end(), ' '),
+                         new_column.end());
+        const unsigned int tmp_height = new_column.size();
         unsigned int tmp_width = std::count(
                 std::istreambuf_iterator<char>(input_matrix),
                 std::istreambuf_iterator<char>(), '\n') + 1;
-        std::vector<col> tmp_cols(tmp_width);
+        std::vector<column> tmp_cols(tmp_width);
         input_matrix.clear();
         input_matrix.seekg(0, std::ios::beg);
         std::vector<unsigned int> pref(tmp_height);
@@ -26,9 +26,9 @@ rlpbwt::rlpbwt(const char *filename, bool verbose) {
             div[i] = 0;
         }
         unsigned int count = 0;
-        while (getline(input_matrix, column)) {
+        while (getline(input_matrix, new_column)) {
             if (verbose) {
-                std::cout << "\ncolumn " << count << "\n";
+                std::cout << "\nnew_column " << count << "\n";
                 for (auto e: pref) {
                     std::cout << e << " ";
                 }
@@ -38,22 +38,23 @@ rlpbwt::rlpbwt(const char *filename, bool verbose) {
                 }
                 std::cout << "\n";
             }
-            column.erase(std::remove(column.begin(), column.end(), ' '),
-                         column.end());
-            auto col = rlpbwt::build_column(column, pref, div);
+            new_column.erase(
+                    std::remove(new_column.begin(), new_column.end(), ' '),
+                    new_column.end());
+            auto col = rlpbwt::build_column(new_column, pref, div);
             sdsl::util::bit_compress(div);
             col.div = div;
             tmp_cols[count] = col;
 
-            //rlpbwt::update_old(column, pref, div, count);
-//            std::cout << "build at column " << count << "\n";
+            //rlpbwt::update_old(new_column, pref, div, count);
+//            std::cout << "build at new_column " << count << "\n";
 //            for (auto e: div) {
 //                std::cout << e << " ";
 //            }
-            rlpbwt::update(column, pref, div);
+            rlpbwt::update(new_column, pref, div);
             count++;
         }
-        auto col = rlpbwt::build_column(column, pref, div);
+        auto col = rlpbwt::build_column(new_column, pref, div);
         sdsl::util::bit_compress(div);
         col.div = div;
         tmp_cols.push_back(col);
@@ -68,7 +69,7 @@ rlpbwt::rlpbwt(const char *filename, bool verbose) {
 
 rlpbwt::~rlpbwt() = default;
 
-col
+column
 rlpbwt::build_column(std::string &column, std::vector<unsigned int> &pref,
                      sdsl::int_vector<> &div) {
     unsigned int height = pref.size();
@@ -207,7 +208,8 @@ rlpbwt::index_to_run(unsigned int index, unsigned int col_index) const {
     return pos;
 }
 
-std::vector<match> rlpbwt::external_match(const std::string &query, bool verbose) {
+std::vector<match>
+rlpbwt::external_match(const std::string &query, bool verbose) {
     if (query.size() != this->width) {
         throw NotEqualLengthException{};
     }

@@ -2,17 +2,17 @@
 // Created by dlcgold on 28/10/21.
 //
 
-#include "../include/col.h"
+#include "../include/column.h"
 
 #include <utility>
 
-col::col(bool zeroFirst, std::vector<rlrow> rows,
-         unsigned int count0)
+column::column(bool zeroFirst, std::vector<rlrow> rows,
+               unsigned int count0)
         : zero_first(zeroFirst), count_0(count0), rows(std::move(rows)) {}
-col::col()
+column::column()
         : zero_first(), count_0(), rows() {}
 
-std::ostream &operator<<(std::ostream &os, const col &column) {
+std::ostream &operator<<(std::ostream &os, const column &column) {
     std::string value;
     if(column.zero_first){
         value = "0";
@@ -26,4 +26,4 @@ std::ostream &operator<<(std::ostream &os, const col &column) {
     return os;
 }
 
-col::~col() = default;
+column::~column() = default;

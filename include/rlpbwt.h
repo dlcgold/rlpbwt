@@ -14,7 +14,7 @@
 #include <utility>
 #include <fstream>
 #include <algorithm>
-#include "col.h"
+#include "column.h"
 #include "utils.h"
 #include "exceptions.h"
 #include "match.h"
@@ -28,7 +28,7 @@ public:
      * @brief vector with all the structs for every column in run-length encoded
      * PBWT matrix
      */
-    std::vector<col> cols;
+    std::vector<column> cols;
 
     /**
      * @brief heigth of the original panel
@@ -70,7 +70,7 @@ private:
      * @param div current divergence array
      * @return the struct for the run-length encoded PBWT column
      */
-    static col
+    static column
     build_column(std::string &column, std::vector<unsigned int> &pref,
                  sdsl::int_vector<> &div);
 

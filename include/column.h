@@ -2,8 +2,8 @@
 // Created by dlcgold on 28/10/21.
 //
 
-#ifndef RLPBWT_COL_H
-#define RLPBWT_COL_H
+#ifndef RLPBWT_COLUMN_H
+#define RLPBWT_COLUMN_H
 
 #include <vector>
 #include <ostream>
@@ -13,7 +13,7 @@
  * @brief class to rappresent every column in run-length encoded
  * PBWT matrix
  */
-class col {
+class column {
 public:
     /**
      * @brief bool to check first value of the column in PBWT matrix
@@ -34,7 +34,7 @@ public:
     /**
      * @brief default constructor
      */
-    col();
+    column();
 
     /**
      * @brief constructor of a run-length encoded PBWT column
@@ -42,21 +42,21 @@ public:
      * @param zeroFirst bool to check first value of the column
      * @param rows vector with every quadruple for every run
      */
-    col(bool zeroFirst, std::vector<rlrow> rows,
-        unsigned int count0);
+    column(bool zeroFirst, std::vector<rlrow> rows,
+           unsigned int count0);
 
     /**
      * @brief default destructor
      */
-    virtual ~col();
+    virtual ~column();
 
     /**
      * @brief ostream overload to print the struct for a column
      */
     friend std::ostream &
-    operator<<(std::ostream &os, const col &column);
+    operator<<(std::ostream &os, const column &column);
 
 };
 
 
-#endif //RLPBWT_COL_H
+#endif //RLPBWT_COLUMN_H
