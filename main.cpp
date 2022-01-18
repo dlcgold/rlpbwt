@@ -37,7 +37,7 @@ TEST (BuildRlpbwtTest, TestBuildAndQuery) {
             std::cout << "\n--------------\n";
         }
     }
-    auto matches = rlpbwt.ematch("010010100011101");
+    auto matches = rlpbwt.external_match("010010100011101");
     for (const auto &m: matches) {
         std::cout << m << "\n";
     }

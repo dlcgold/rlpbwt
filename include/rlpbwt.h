@@ -53,7 +53,8 @@ public:
      */
     virtual ~rlpbwt();
 
-    std::vector<match> ematch(const std::string &query, bool verbose = false);
+    std::vector<match>
+    external_match(const std::string &query, bool verbose = false);
 
     unsigned int
     prev_run(unsigned int col_index, unsigned int index, bool verbose) const;

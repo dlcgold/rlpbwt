@@ -207,7 +207,7 @@ rlpbwt::index_to_run(unsigned int index, unsigned int col_index) const {
     return pos;
 }
 
-std::vector<match> rlpbwt::ematch(const std::string &query, bool verbose) {
+std::vector<match> rlpbwt::external_match(const std::string &query, bool verbose) {
     if (query.size() != this->width) {
         throw NotEqualLengthException{};
     }
