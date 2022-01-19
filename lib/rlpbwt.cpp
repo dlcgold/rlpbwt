@@ -174,8 +174,8 @@ void rlpbwt::update(std::string &column, std::vector<unsigned int> &pref,
 }
 
 unsigned int
-rlpbwt::occ(unsigned int col_index, unsigned int row_index, char symbol,
-            unsigned int offset, bool verbose) const {
+rlpbwt::lf(unsigned int col_index, unsigned int row_index, char symbol,
+           unsigned int offset, bool verbose) const {
     auto uv = uvtrick(col_index, row_index);
     if (verbose) {
         std::cout << uv.first << ", " << uv.second << "\n";
@@ -260,8 +260,8 @@ rlpbwt::external_match(const std::string &query, bool verbose) {
                 end_offset = 0;
             }
         }
-        curr_tmp = occ(i, curr_run, query[i], curr_offset);
-        end_tmp = occ(i, end_run, query[i], end_offset);
+        curr_tmp = lf(i, curr_run, query[i], curr_offset);
+        end_tmp = lf(i, end_run, query[i], end_offset);
         if (curr_tmp >= this->heigth) {
             curr_tmp -= curr_offset;
         }
@@ -516,7 +516,6 @@ rlpbwt::uvtrick(unsigned int col_index, unsigned int row_index) const {
         }
     }
     return {u, v};
-
 }
 
 
