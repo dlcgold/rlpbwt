@@ -10,10 +10,22 @@
 
 class match {
 private:
+    /**
+     * @brief index on columns for the begin of a match
+     */
     unsigned int begin;
+
+    /**
+     * @brief index on columns for the end of a match
+     */
     unsigned int end;
+
+    /**
+     * @brief number of haplotypes in the match
+     */
     unsigned int nhaplo;
 public:
+
     bool operator==(const match &rhs) const;
 
     bool operator!=(const match &rhs) const;

@@ -43,20 +43,14 @@ rlpbwt::rlpbwt(const char *filename, bool verbose) {
                     new_column.end());
             auto col = rlpbwt::build_column(new_column, pref, div);
             sdsl::util::bit_compress(div);
-            col.div = div;
+            col.lcp = div;
             tmp_cols[count] = col;
-
-            //rlpbwt::update_old(new_column, pref, div, count);
-//            std::cout << "build at new_column " << count << "\n";
-//            for (auto e: div) {
-//                std::cout << e << " ";
-//            }
             rlpbwt::update(new_column, pref, div);
             count++;
         }
         auto col = rlpbwt::build_column(new_column, pref, div);
         sdsl::util::bit_compress(div);
-        col.div = div;
+        col.lcp = div;
         tmp_cols.push_back(col);
         this->cols = tmp_cols;
         this->width = tmp_width;
@@ -296,10 +290,10 @@ rlpbwt::external_match(const std::string &query, bool verbose) {
             }
 
             // update e
-            if (curr_tmp == this->cols[i + 1].div.size()) {
+            if (curr_tmp == this->cols[i + 1].lcp.size()) {
                 curr_beg = i + 1;
             } else {
-                curr_beg = i - this->cols[i + 1].div[curr_tmp];
+                curr_beg = i - this->cols[i + 1].lcp[curr_tmp];
             }
 
             if (verbose) {
@@ -339,7 +333,7 @@ rlpbwt::external_match(const std::string &query, bool verbose) {
                     }
                 }
                 while (curr_tmp > 0 &&
-                       (i + 1) - this->cols[i + 1].div[curr_tmp] <= curr_beg) {
+                       (i + 1) - this->cols[i + 1].lcp[curr_tmp] <= curr_beg) {
                     curr_tmp--;
                 }
                 curr_index = curr_tmp;
@@ -387,7 +381,7 @@ rlpbwt::external_match(const std::string &query, bool verbose) {
                     std::cout << "end curr beg: " << curr_beg << "\n";
                 }
                 while (end_tmp < this->heigth &&
-                       (i + 1) - this->cols[i + 1].div[end_tmp] <= curr_beg) {
+                       (i + 1) - this->cols[i + 1].lcp[end_tmp] <= curr_beg) {
                     end_tmp++;
                 }
                 curr_index = curr_tmp;
@@ -410,7 +404,7 @@ rlpbwt::external_match(const std::string &query, bool verbose) {
     }
     if (curr_index < end_index) {
         curr_len = end_index - curr_index;
-        curr_beg = (query.size() - 1) - this->cols[query.size()].div[curr_tmp];
+        curr_beg = (query.size() - 1) - this->cols[query.size()].lcp[curr_tmp];
         if (verbose) {
             std::cout << "match at (" << curr_beg << ", " << query.size() - 1
                       << ") with " << curr_len << " haplotypes \n";
@@ -517,6 +511,8 @@ rlpbwt::uvtrick(unsigned int col_index, unsigned int row_index) const {
     }
     return {u, v};
 }
+
+rlpbwt::rlpbwt() : cols(), heigth(0), width(0){}
 
 
 

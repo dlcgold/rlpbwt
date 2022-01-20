@@ -9,6 +9,7 @@
 #include <ostream>
 #include <sdsl/vectors.hpp>
 #include "rlrow.h"
+
 /**
  * @brief class to rappresent every column in run-length encoded
  * PBWT matrix
@@ -21,15 +22,20 @@ public:
      */
     bool zero_first;
 
-    unsigned int count_0{};
+    /**
+     * @brief total number of zeros in the column
+     */
+    unsigned int count_0;
     /**
      * @brief vector with the quadruple for every run in the column in PBWT
      * matrix (assuming biallelic)
      */
     std::vector<rlrow> rows;
 
-
-    sdsl::int_vector<> div;
+    /**
+     * @brief lcp array saved as a sdsl::int_vector
+     */
+    sdsl::int_vector<> lcp;
 
     /**
      * @brief default constructor

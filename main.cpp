@@ -3,14 +3,15 @@
 #include <gperftools/heap-profiler.h>
 #include "include/exceptions.h"
 #include "include/rlpbwt.h"
+#include "include/birlpbwt.h"
 
 
 TEST (BuildRlpbwtTest, TestBuildAndQuery) {
-    HeapProfilerStart("heap.prof");
-    std::cout << IsHeapProfilerRunning() << "\n";
+    //HeapProfilerStart("heap.prof");
+    //std::cout << IsHeapProfilerRunning() << "\n";
     rlpbwt rlpbwt("../input/sample.txt");
-    HeapProfilerDump("end construction");
-    HeapProfilerStop();
+    //HeapProfilerDump("end construction");
+    //HeapProfilerStop();
     EXPECT_EQ(rlpbwt.heigth, 20);
     EXPECT_EQ(rlpbwt.width, 15);
     std::cout << rlpbwt.heigth << " " << rlpbwt.width << "\n";
@@ -30,7 +31,7 @@ TEST (BuildRlpbwtTest, TestBuildAndQuery) {
             for (const auto &r: c.rows) {
                 std::cout << r << "\n";
             }
-            for (auto d: c.div) {
+            for (auto d: c.lcp) {
                 std::cout << d << " ";
             }
             count++;
@@ -52,17 +53,26 @@ TEST (BuildRlpbwtTest, TestBuildAndQuery) {
 
     auto rlsize = sizeof(rlpbwt.width) * 10E-6;
     rlsize += sizeof(rlpbwt.heigth) * 10E-6;
+    auto rlsizeb = rlsize;
     for (const auto &c: rlpbwt.cols) {
         rlsize += sizeof(c.zero_first) * 10E-6;
         rlsize += sizeof(c.count_0) * 10E-6;
         rlsize += sizeof(unsigned int) * (double) c.rows.size() * 10E-6;
         rlsize += sizeof(unsigned int) * (double) c.rows.size() * 10E-6;
-        rlsize += sdsl::size_in_mega_bytes(c.div);
+        rlsizeb += sizeof(c.zero_first) * 10E-6;
+        rlsizeb += sizeof(c.count_0) * 10E-6;
+        rlsizeb += sizeof(unsigned int) * (double) c.rows.size() * 10E-6;
+        rlsizeb += sizeof(unsigned int) * (double) c.rows.size() * 10E-6;
+        rlsize += sdsl::size_in_mega_bytes(c.lcp);
     }
     double nrlsize = sizeof(unsigned int) *
                      (double) (rlpbwt.heigth * rlpbwt.width * 5) * 10E-6;
     nrlsize += sizeof(unsigned int) * (double) rlpbwt.width * 10E-6;
-    std::cout << rlsize << " vs " << nrlsize << "\n";
+    std::cout << rlsize << " vs " << rlsizeb << " vs " << nrlsize << "\n";
+}
+
+TEST (BuildBiRlpbwtTest, TestBuildAndQuery) {
+    birlpbwt birlpbwt("../input/sample.txt");
 }
 
 int main(int argc, char **argv) {

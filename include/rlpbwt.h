@@ -30,15 +30,16 @@ public:
      */
     std::vector<column> cols;
 
+
     /**
      * @brief heigth of the original panel
      */
-    unsigned int heigth;
+    unsigned int heigth{};
 
     /**
      * @brief width of the original panel
      */
-    unsigned int width;
+    unsigned int width{};
 
     /**
      * @brief constructor for run-length encoded PBWT matrix
@@ -47,6 +48,11 @@ public:
      * @param verbose bool for extra print
      */
     explicit rlpbwt(const char *filename, bool verbose = false);
+
+    /**
+     * @brief default constructor
+     */
+    rlpbwt();
 
     /**
      * @brief default destructor
@@ -75,19 +81,29 @@ public:
     unsigned int
     prev_run(unsigned int col_index, unsigned int index, bool verbose) const;
 
-private:
+/**
+ * @brief function to obtain the struct for the run-length encoded PBWT
+ * column, except for next_perm values
+ * @param column current column
+ * @param pref current prefix array
+ * @param div current divergence array
+ * @return the struct for the run-length encoded PBWT column
+ */
+static column
+build_column(std::string &column, std::vector<unsigned int> &pref,
+             sdsl::int_vector<> &div);
 
-    /**
-     * @brief function to obtain the struct for the run-length encoded PBWT
-     * column, except for next_perm values
-     * @param column current column
-     * @param pref current prefix array
-     * @param div current divergence array
-     * @return the struct for the run-length encoded PBWT column
-     */
-    static column
-    build_column(std::string &column, std::vector<unsigned int> &pref,
-                 sdsl::int_vector<> &div);
+/**
+ * @brief utility to compute prefix and divergence array
+ * @param column the current column
+ * @param pref the previous prefix array
+ * @param div the previous divergence array
+ */
+static void
+update(std::string &column, std::vector<unsigned int> &pref,
+       sdsl::int_vector<> &div);
+
+private:
 
 
     /**
@@ -112,16 +128,6 @@ private:
      * @return run index
      */
     unsigned int index_to_run(unsigned int index, unsigned int col_index) const;
-
-    /**
-     * @brief utility to compute prefix and divergence array
-     * @param column the current column
-     * @param pref the previous prefix array
-     * @param div the previous divergence array
-     */
-    static void
-    update(std::string &column, std::vector<unsigned int> &pref,
-           sdsl::int_vector<> &div);
 
     /**
      * @brief trick to extract u and v value from a run in rlpbwt column
