@@ -38,7 +38,7 @@ TEST (BuildRlpbwtTest, TestBuildAndQuery) {
             std::cout << "\n--------------\n";
         }
     }
-    auto matches = rlpbwt.external_match("010010100011101");
+    auto matches = rlpbwt.external_match("010010100011101", true);
     for (const auto &m: matches) {
         std::cout << m << "\n";
     }
@@ -73,9 +73,47 @@ TEST (BuildRlpbwtTest, TestBuildAndQuery) {
 
 TEST (BuildBiRlpbwtTest, TestBuildAndQuery) {
     birlpbwt birlpbwt("../input/sample.txt");
+    bool verbose = false;
+    if (verbose) {
+        int count = 0;
+        for (const auto &c: birlpbwt.brlpbwt.cols) {
+            std::string z;
+            if (c.zero_first) {
+                z = "yes";
+            } else {
+                z = "no";
+            }
+            std::cout << "column: " << count << "\nstart with 0? "
+                      << z << ", c: " << c.count_0 << "\n";
+
+            for (const auto &r: c.rows) {
+                std::cout << r << "\n";
+            }
+            for (auto d: c.lcp) {
+                std::cout << d << " ";
+            }
+            count++;
+            std::cout << "\n--------------\n";
+        }
+    }
+    auto matches = birlpbwt.external_match("010010100011101", false);
+    for (const auto &m: matches) {
+        std::cout << m << "\n";
+    }
+    auto match0 = match(0, 5, 4);
+    auto match1 = match(3, 9, 1);
+    auto match2 = match(7, 11, 1);
+    auto match3 = match(11, 14, 3);
+    EXPECT_EQ(matches[0], match0);
+    EXPECT_EQ(matches[1], match1);
+    EXPECT_EQ(matches[2], match2);
+    EXPECT_EQ(matches[3], match3);
 }
 
 int main(int argc, char **argv) {
     ::testing::InitGoogleTest(&argc, argv);
+    //::testing::GTEST_FLAG(filter) = "BuildBiRlpbwtTest*";
+    //::testing::GTEST_FLAG(filter) = "BuildRlpbwtTest*";
+
     return RUN_ALL_TESTS();
 }

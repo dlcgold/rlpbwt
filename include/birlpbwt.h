@@ -15,6 +15,7 @@ class birlpbwt {
 public:
     rlpbwt frlpbwt = rlpbwt();
     rlpbwt brlpbwt = rlpbwt();
+
     explicit birlpbwt(const char *filename, bool verbose = false);
 
     /**

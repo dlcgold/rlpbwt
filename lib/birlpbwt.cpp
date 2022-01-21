@@ -45,15 +45,11 @@ birlpbwt::birlpbwt(const char *filename, bool verbose) {
                     new_column.end());
             revrows.push_front(new_column);
             auto col = rlpbwt::build_column(new_column, pref, div);
-            sdsl::util::bit_compress(div);
-            col.lcp = div;
             tmp_cols[count] = col;
             rlpbwt::update(new_column, pref, div);
             count++;
         }
         auto col = rlpbwt::build_column(new_column, pref, div);
-        sdsl::util::bit_compress(div);
-        col.lcp = div;
         tmp_cols.push_back(col);
         this->frlpbwt.cols = tmp_cols;
         this->frlpbwt.width = tmp_width;
@@ -61,14 +57,12 @@ birlpbwt::birlpbwt(const char *filename, bool verbose) {
         input_matrix.close();
 
         std::vector<column> tmp_colsb(tmp_width);
-        input_matrix.clear();
-        input_matrix.seekg(0, std::ios::beg);
         for (unsigned int i = 0; i < tmp_height; i++) {
             pref[i] = i;
             div[i] = 0;
         }
         count = 0;
-        for(auto& new_columnb : revrows){
+        for (auto &new_columnb: revrows) {
             if (verbose) {
                 std::cout << "\nnew_column " << count << "\n";
                 for (auto e: pref) {
@@ -80,13 +74,13 @@ birlpbwt::birlpbwt(const char *filename, bool verbose) {
                 }
                 std::cout << "\n";
             }
-            auto colf = rlpbwt::build_column(new_columnb, pref, div);
-            sdsl::util::bit_compress(div);
-            colf.lcp = div;
-            tmp_colsb[count] = col;
+            auto colb = rlpbwt::build_column(new_columnb, pref, div);
+            tmp_colsb[count] = colb;
             rlpbwt::update(new_columnb, pref, div);
             count++;
         }
+        auto colb = rlpbwt::build_column(revrows.back(), pref, div);
+        tmp_colsb.push_back(colb);
         this->brlpbwt.cols = tmp_colsb;
         this->brlpbwt.width = tmp_width;
         this->brlpbwt.heigth = tmp_height;
@@ -97,9 +91,29 @@ birlpbwt::birlpbwt(const char *filename, bool verbose) {
 
 std::vector<match>
 birlpbwt::external_match(const std::string &query, bool verbose) {
-    std::vector<match> fmatch;
-    std::vector<match> bmatch;
     std::vector<match> matches;
+    std::vector<match> fm = this->frlpbwt.end_external_match(query, true,
+                                                             verbose);
+    if(verbose) {
+        std::cout << "forward matches:\n";
+        for (const auto &m: fm) {
+            std::cout << m << "\n";
+        }
+    }
+    std::string query_rev(query.rbegin(), query.rend());
+    std::vector<match> bm = this->brlpbwt.end_external_match(query_rev, false,
+                                                             verbose);
+    if(verbose) {
+        std::cout << "backward matches:\n";
+        for (const auto &m: bm) {
+            std::cout << m << "\n";
+        }
+    }
+    for (unsigned int i = 0; i < fm.size(); ++i) {
+        matches.push_back({std::min(fm[i].begin, bm[i].begin),
+                           std::max(fm[i].end, bm[i].end),
+                           std::min(fm[i].nhaplo, bm[i].nhaplo)});
+    }
 
     return matches;
 }

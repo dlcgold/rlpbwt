@@ -9,7 +9,7 @@
 #include <ostream>
 
 class match {
-private:
+public:
     /**
      * @brief index on columns for the begin of a match
      */
@@ -24,7 +24,6 @@ private:
      * @brief number of haplotypes in the match
      */
     unsigned int nhaplo;
-public:
 
     bool operator==(const match &rhs) const;
 

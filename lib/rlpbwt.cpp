@@ -4,6 +4,7 @@
 
 #include "../include/rlpbwt.h"
 
+rlpbwt::rlpbwt() : cols(), heigth(0), width(0) {}
 
 rlpbwt::rlpbwt(const char *filename, bool verbose) {
     std::ifstream input_matrix(filename);
@@ -256,10 +257,10 @@ rlpbwt::external_match(const std::string &query, bool verbose) {
         }
         curr_tmp = lf(i, curr_run, query[i], curr_offset);
         end_tmp = lf(i, end_run, query[i], end_offset);
-        if (curr_tmp >= this->heigth) {
+        if (curr_tmp > this->heigth) {
             curr_tmp -= curr_offset;
         }
-        if (end_tmp >= this->heigth) {
+        if (end_tmp > this->heigth) {
             end_tmp -= end_offset;
         }
         curr_run = index_to_run(curr_tmp, i);
@@ -512,7 +513,146 @@ rlpbwt::uvtrick(unsigned int col_index, unsigned int row_index) const {
     return {u, v};
 }
 
-rlpbwt::rlpbwt() : cols(), heigth(0), width(0){}
+std::vector<match>
+rlpbwt::end_external_match(const std::string &query, bool forward,
+                           bool verbose) {
+    if (query.size() != this->width) {
+        throw NotEqualLengthException{};
+    }
+    std::vector<match> matches;
+    unsigned int curr_run = 0;
+    unsigned int end_run = 0;
+    unsigned int curr_index = 0;
+    unsigned int end_index = 0;
+    unsigned int curr_tmp = 0;
+    unsigned int end_tmp = 0;
+    unsigned int curr_offset = 0;
+    unsigned int end_offset = 0;
+    unsigned int curr_len = 0;
+    unsigned int curr_beg = 0;
+    unsigned int i;
+    for (i = 0; i < query.size(); i++) {
+        if (verbose) {
+            std::cout << "before at " << i << " from " << curr_index << " to "
+                      << end_index
+                      << "\n";
+        }
+        curr_run = index_to_run(curr_index, i);
+        end_run = index_to_run(end_index, i);
+        curr_len = (end_index - curr_index);
+        curr_offset = curr_index - this->cols[i].rows[curr_run].p;
+        end_offset = end_index - this->cols[i].rows[end_run].p;
+
+        if (query[i] == '0') {
+            if (curr_run == 0 &&
+                get_next_char(this->cols[i].zero_first,
+                              curr_run) == '1') {
+                curr_offset = 0;
+            } else if (end_run == 0 &&
+                       get_next_char(this->cols[i].zero_first,
+                                     end_run) == '1') {
+                end_offset = 0;
+            }
+        }
+        if (query[i] == '1') {
+            if (curr_run == 1 &&
+                get_next_char(this->cols[i].zero_first,
+                              curr_run) == '0') {
+                curr_offset = 0;
+            } else if (end_run == 1 &&
+                       get_next_char(this->cols[i].zero_first,
+                                     end_run) == '0') {
+                end_offset = 0;
+            }
+        }
+
+        curr_tmp = lf(i, curr_run, query[i], curr_offset);
+        end_tmp = lf(i, end_run, query[i], end_offset);
+
+        if (curr_tmp > this->heigth) {
+            curr_tmp -= curr_offset;
+        }
+        if (end_tmp > this->heigth) {
+            end_tmp -= end_offset;
+        }
+        curr_run = index_to_run(curr_tmp, i);
+        end_run = index_to_run(end_tmp, i);
+        curr_index = this->cols[i].rows[curr_run].p;
+        end_index = this->cols[i].rows[end_run].p;
+        if (verbose) {
+            std::cout << "middle at " << i << " from " << curr_tmp << " to "
+                      << end_tmp
+                      << "\n";
+        }
+        if (curr_tmp < end_tmp) {
+            if (verbose) {
+                std::cout << "case 1\n";
+            }
+            curr_index = curr_tmp;
+            end_index = end_tmp;
+        } else {
+            if (verbose) {
+                std::cout << "f: " << curr_tmp << ", g: " << end_tmp << "\n";
+            }
+            if (i > 0) {
+                if (verbose) {
+                    std::cout << "match at (" << curr_beg << ", " << i - 1
+                              << ") with " << curr_len << " haplotypes \n";
+                }
+                if (forward) {
+                    matches.emplace_back(curr_beg, i - 1, curr_len);
+                } else {
+                    unsigned int rev_beg = query.size() - (i - 1) - 1;
+                    unsigned int rev_end = query.size() - curr_beg - 1;
+                    matches.emplace_back(rev_beg, rev_end, curr_len);
+                }
+            }
+
+            curr_beg = i;
+
+            if (verbose) {
+                std::cout << "before curr beg: " << curr_beg << "\n";
+            }
+
+            if (query[curr_beg] == '0') {
+                curr_index = 0;
+                end_index = this->cols[i].count_0;
+                curr_run = index_to_run(curr_index, i);
+                end_run = index_to_run(end_index, i);
+            } else {
+                curr_index = this->cols[i].count_0;
+                end_index = this->heigth;
+                curr_run = index_to_run(curr_index, i);
+                end_run = index_to_run(end_index, i);
+            }
+        }
+        if (verbose) {
+            std::cout << "after at " << i << " from " << curr_index << " to "
+                      << end_index
+                      << "\n";
+        }
+    }
+    if (curr_index < end_index) {
+        curr_len = end_index - curr_index;
+        //curr_beg = (query.size() - 1) - this->cols[query.size()].lcp[curr_tmp];
+        //curr_beg = i;
+        if (verbose) {
+            std::cout << "match at (" << curr_beg << ", " << query.size() - 1
+                      << ") with " << curr_len << " haplotypes \n";
+        }
+        if (forward) {
+            matches.emplace_back(curr_beg, query.size() - 1, curr_len);
+        } else {
+            unsigned int rev_beg = query.size() - (query.size() - 1) - 1;
+            unsigned int rev_end = query.size() - curr_beg;
+            matches.emplace_back(rev_beg, rev_end, curr_len);
+        }
+    }
+    if (!forward) {
+        std::reverse(matches.begin(), matches.end());
+    }
+    return matches;
+}
 
 
 
