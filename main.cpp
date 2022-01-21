@@ -15,28 +15,9 @@ TEST (BuildRlpbwtTest, TestBuildAndQuery) {
     EXPECT_EQ(rlpbwt.heigth, 20);
     EXPECT_EQ(rlpbwt.width, 15);
     std::cout << rlpbwt.heigth << " " << rlpbwt.width << "\n";
-    bool verbose = true;
+    bool verbose = false;
     if (verbose) {
-        int count = 0;
-        for (const auto &c: rlpbwt.cols) {
-            std::string z;
-            if (c.zero_first) {
-                z = "yes";
-            } else {
-                z = "no";
-            }
-            std::cout << "column: " << count << "\nstart with 0? "
-                      << z << ", c: " << c.count_0 << "\n";
-
-            for (const auto &r: c.rows) {
-                std::cout << r << "\n";
-            }
-            for (auto d: c.lcp) {
-                std::cout << d << " ";
-            }
-            count++;
-            std::cout << "\n--------------\n";
-        }
+        rlpbwt.print();
     }
     auto matches = rlpbwt.external_match("010010100011101", true);
     for (const auto &m: matches) {
@@ -75,26 +56,7 @@ TEST (BuildBiRlpbwtTest, TestBuildAndQuery) {
     birlpbwt birlpbwt("../input/sample.txt");
     bool verbose = false;
     if (verbose) {
-        int count = 0;
-        for (const auto &c: birlpbwt.brlpbwt.cols) {
-            std::string z;
-            if (c.zero_first) {
-                z = "yes";
-            } else {
-                z = "no";
-            }
-            std::cout << "column: " << count << "\nstart with 0? "
-                      << z << ", c: " << c.count_0 << "\n";
-
-            for (const auto &r: c.rows) {
-                std::cout << r << "\n";
-            }
-            for (auto d: c.lcp) {
-                std::cout << d << " ";
-            }
-            count++;
-            std::cout << "\n--------------\n";
-        }
+        birlpbwt.print();
     }
     auto matches = birlpbwt.external_match("010010100011101", false);
     for (const auto &m: matches) {

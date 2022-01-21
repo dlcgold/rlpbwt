@@ -654,6 +654,30 @@ rlpbwt::end_external_match(const std::string &query, bool forward,
     return matches;
 }
 
+void rlpbwt::print() {
+    int count = 0;
+    for (const auto &c: this->cols) {
+        std::string z;
+        if (c.zero_first) {
+            z = "yes";
+        } else {
+            z = "no";
+        }
+        std::cout << "column: " << count << "\nstart with 0? "
+                  << z << ", c: " << c.count_0 << "\n";
+
+        for (const auto &r: c.rows) {
+            std::cout << r << "\n";
+        }
+        for (auto d: c.lcp) {
+            std::cout << d << " ";
+        }
+        count++;
+        if(count != (int)this->cols.size())
+            std::cout << "\n-------------- \n";
+    }
+}
+
 
 
 

@@ -113,7 +113,7 @@ public:
     std::vector<match>
     end_external_match(const std::string &query, bool forward = true,
                        bool verbose = false);
-
+    void print();
 private:
 
     /**
@@ -148,6 +148,7 @@ private:
      */
     std::pair<unsigned int, unsigned int>
     uvtrick(unsigned int col_index, unsigned int row_index) const;
+
 
 };
 

@@ -94,7 +94,7 @@ birlpbwt::external_match(const std::string &query, bool verbose) {
     std::vector<match> matches;
     std::vector<match> fm = this->frlpbwt.end_external_match(query, true,
                                                              verbose);
-    if(verbose) {
+    if (verbose) {
         std::cout << "forward matches:\n";
         for (const auto &m: fm) {
             std::cout << m << "\n";
@@ -103,7 +103,7 @@ birlpbwt::external_match(const std::string &query, bool verbose) {
     std::string query_rev(query.rbegin(), query.rend());
     std::vector<match> bm = this->brlpbwt.end_external_match(query_rev, false,
                                                              verbose);
-    if(verbose) {
+    if (verbose) {
         std::cout << "backward matches:\n";
         for (const auto &m: bm) {
             std::cout << m << "\n";
@@ -116,4 +116,12 @@ birlpbwt::external_match(const std::string &query, bool verbose) {
     }
 
     return matches;
+}
+
+void birlpbwt::print() {
+    std::cout << "\tforward\n";
+    this->frlpbwt.print();
+    std::cout << "\t--------------------------------------\n";
+    std::cout << "\ttackward\n";
+    this->brlpbwt.print();
 }

@@ -27,7 +27,7 @@ public:
      */
     std::vector<match>
     external_match(const std::string &query, bool verbose = false);
-
+    void print();
 };
 
 
