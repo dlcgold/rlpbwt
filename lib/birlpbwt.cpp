@@ -110,9 +110,9 @@ birlpbwt::external_match(const std::string &query, bool verbose) {
         }
     }
     for (unsigned int i = 0; i < fm.size(); ++i) {
-        matches.push_back({std::min(fm[i].begin, bm[i].begin),
+        matches.emplace_back(std::min(fm[i].begin, bm[i].begin),
                            std::max(fm[i].end, bm[i].end),
-                           std::min(fm[i].nhaplo, bm[i].nhaplo)});
+                           std::min(fm[i].nhaplo, bm[i].nhaplo));
     }
 
     return matches;
