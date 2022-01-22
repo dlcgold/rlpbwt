@@ -102,7 +102,7 @@ birlpbwt::external_match(const std::string &query, bool verbose) {
     }
     std::string query_rev(query.rbegin(), query.rend());
     std::vector<match> bm = this->brlpbwt.end_external_match(query_rev, false,
-                                                             true);
+                                                             verbose);
 
     if (verbose) {
         std::cout << "backward matches:\n";

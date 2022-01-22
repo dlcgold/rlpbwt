@@ -263,10 +263,10 @@ rlpbwt::external_match(const std::string &query, bool verbose) {
         if (end_tmp > this->heigth) {
             end_tmp -= end_offset;
         }
-        curr_run = index_to_run(curr_tmp, i);
+        /*curr_run = index_to_run(curr_tmp, i);
         end_run = index_to_run(end_tmp, i);
         curr_index = this->cols[i].rows[curr_run].p;
-        end_index = this->cols[i].rows[end_run].p;
+        end_index = this->cols[i].rows[end_run].p;*/
         if (verbose) {
             std::cout << "middle at " << i << " from " << curr_tmp << " to "
                       << end_tmp
@@ -339,13 +339,11 @@ rlpbwt::external_match(const std::string &query, bool verbose) {
                 }
                 curr_index = curr_tmp;
                 end_index = end_tmp;
-                curr_run = index_to_run(curr_index, i);
-                end_run = index_to_run(end_index, i);
+                /*curr_run = index_to_run(curr_index, i);
+                end_run = index_to_run(end_index, i);*/
                 if (verbose) {
-                    std::cout << "end case 2 curr run " << curr_run
-                              << ", curr index " << curr_index
-                              << ", end run " << end_run << ", end index "
-                              << end_index << "\n";
+                    std::cout << "end case 2 curr curr index " << curr_index
+                              << ", end index " << end_index << "\n";
                 }
             } else {
                 if (verbose) {
@@ -387,13 +385,11 @@ rlpbwt::external_match(const std::string &query, bool verbose) {
                 }
                 curr_index = curr_tmp;
                 end_index = end_tmp;
-                curr_run = index_to_run(curr_index, i);
-                end_run = index_to_run(end_index, i);
+                /*curr_run = index_to_run(curr_index, i);
+                end_run = index_to_run(end_index, i);*/
                 if (verbose) {
-                    std::cout << "end case 3 curr run " << curr_run
-                              << ", curr index " << curr_index
-                              << ", end run " << end_run << ", end index "
-                              << end_index << "\n";
+                    std::cout << "end case 3 curr index " << curr_index
+                              << ", end index " << end_index << "\n";
                 }
             }
         }
@@ -575,10 +571,10 @@ rlpbwt::end_external_match(const std::string &query, bool forward,
         if (end_tmp > this->heigth) {
             end_tmp -= end_offset;
         }
-        curr_run = index_to_run(curr_tmp, i);
-        end_run = index_to_run(end_tmp, i);
-        curr_index = this->cols[i].rows[curr_run].p;
-        end_index = this->cols[i].rows[end_run].p;
+        //curr_run = index_to_run(curr_tmp, i);
+        //end_run = index_to_run(end_tmp, i);
+        //curr_index = this->cols[i].rows[curr_run].p;
+        //end_index = this->cols[i].rows[end_run].p;
         if (verbose) {
             std::cout << "middle at " << i << " from " << curr_tmp << " to "
                       << end_tmp
@@ -617,13 +613,13 @@ rlpbwt::end_external_match(const std::string &query, bool forward,
             if (query[curr_beg] == '0') {
                 curr_index = 0;
                 end_index = this->cols[i].count_0;
-                curr_run = index_to_run(curr_index, i);
-                end_run = index_to_run(end_index, i);
+                //curr_run = index_to_run(curr_index, i);
+                //end_run = index_to_run(end_index, i);
             } else {
                 curr_index = this->cols[i].count_0;
                 end_index = this->heigth;
-                curr_run = index_to_run(curr_index, i);
-                end_run = index_to_run(end_index, i);
+                //curr_run = index_to_run(curr_index, i);
+                //end_run = index_to_run(end_index, i);
             }
         }
         if (verbose) {
@@ -673,7 +669,7 @@ void rlpbwt::print() {
             std::cout << d << " ";
         }
         count++;
-        if(count != (int)this->cols.size())
+        if (count != (int) this->cols.size())
             std::cout << "\n-------------- \n";
     }
 }
