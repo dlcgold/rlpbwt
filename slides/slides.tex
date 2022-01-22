@@ -566,6 +566,36 @@
   \end{block}
 \end{frame}
 \section{A new Idea}
+\begin{frame}{Durbin's Algorithm Example}
+  \only<1>{
+    \begin{figure}[H]
+      \centering
+      \includegraphics[scale = 0.3]{graph/fgtravis.pdf}
+    \end{figure}
+  }
+  \only<2>{
+    \begin{figure}[H]
+      \centering
+      \includegraphics[scale = 0.3]{graph/divtravis.pdf}
+    \end{figure}
+  }\only<3>{
+    \begin{figure}[H]
+      \centering
+      \includegraphics[scale = 0.3]{graph/preftravis.pdf}
+    \end{figure}
+  }\only<4>{
+    \begin{figure}[H]
+      \centering
+      \includegraphics[scale = 0.3]{graph/backtravis.pdf}
+    \end{figure}
+  }
+\end{frame}
+\begin{frame}
+   \begin{figure}[H]
+      \centering
+      \includegraphics[scale = 0.27]{img/match.pdf}
+    \end{figure}
+\end{frame}
 \begin{frame}{New Idea I}
   \only<1>{
     \begin{block}{Let's take a step back and get closer to Durbin's original
@@ -638,6 +668,48 @@
     maybe we can think of storing only a subset of the \textit{divergence/LCP
       array} and I'm thinking how to do it.   
   \end{block}
+\end{frame}
+\begin{frame}{Two Pass on RLPBWT}
+  \begin{block}{}
+    In order to not save the \textit{divergence/LCP array} we could make two
+    \textit{RLPBWT}, one for the normal order and one for the reverse order.
+  \end{block}
+  \begin{block}{}
+    Instead of use the \textit{divergence/LCP array} to retrieve matches
+    that are overlapped in the panel we look for non overlapped matches only.\\
+    To do this when we find a match we continue the search updating $f$ and $g$
+    based only on $c$ and $h$, the total number of haplotypes in the panel:
+    \[(f,g)=
+      \begin{cases}
+        (0, c) & \mbox{if } \sigma=0\\
+        (c, h) & \mbox{if } \sigma=1
+      \end{cases}
+    \]
+  \end{block}
+  \begin{block}{}
+    We query in this way the first one with the haplotype and the second one
+    with the reverse of the haplotype. Than we intersect the results.
+  \end{block}
+\end{frame}
+\begin{frame}{Two Pass on RLPBWT}
+  \only<1>{
+    \begin{figure}[H]
+      \centering
+      \includegraphics[scale = 0.3]{graph/bifronttravis.pdf}
+    \end{figure}
+  }
+  \only<2>{
+    \begin{figure}[H]
+      \centering
+      \includegraphics[scale = 0.3]{graph/bibacktravis.pdf}
+    \end{figure}
+  }
+  \only<3>{
+    \begin{figure}[H]
+      \centering
+      \includegraphics[scale = 0.3]{graph/bitravismatch.pdf}
+    \end{figure}
+  }
 \end{frame}
 % \begin{frame}[allowframebreaks]{References} 
 %   \nocite{*}

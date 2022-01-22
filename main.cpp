@@ -35,13 +35,14 @@ TEST (BuildRlpbwtTest, TestBuildAndQuery) {
     auto rlsize = sizeof(rlpbwt.width) * 10E-6;
     rlsize += sizeof(rlpbwt.heigth) * 10E-6;
     auto rlsizeb = rlsize;
+    std::cout << rlsize << "\n";
     for (const auto &c: rlpbwt.cols) {
-        rlsize += sizeof(c.zero_first) * 10E-6;
-        rlsize += sizeof(c.count_0) * 10E-6;
+        rlsize += sizeof(bool ) * 10E-6;
+        rlsize += sizeof(unsigned int) * 10E-6;
         rlsize += sizeof(unsigned int) * (double) c.rows.size() * 10E-6;
         rlsize += sizeof(unsigned int) * (double) c.rows.size() * 10E-6;
-        rlsizeb += sizeof(c.zero_first) * 10E-6;
-        rlsizeb += sizeof(c.count_0) * 10E-6;
+        rlsizeb += sizeof(bool) * 10E-6;
+        rlsizeb += sizeof(unsigned int) * 10E-6;
         rlsizeb += sizeof(unsigned int) * (double) c.rows.size() * 10E-6;
         rlsizeb += sizeof(unsigned int) * (double) c.rows.size() * 10E-6;
         rlsize += sdsl::size_in_mega_bytes(c.lcp);
@@ -49,7 +50,7 @@ TEST (BuildRlpbwtTest, TestBuildAndQuery) {
     double nrlsize = sizeof(unsigned int) *
                      (double) (rlpbwt.heigth * rlpbwt.width * 5) * 10E-6;
     nrlsize += sizeof(unsigned int) * (double) rlpbwt.width * 10E-6;
-    std::cout << rlsize << " vs " << rlsizeb << " vs " << nrlsize << "\n";
+    std::cout << rlsize << " vs " << rlsizeb * 2 << " vs " << nrlsize << "\n";
 }
 
 TEST (BuildBiRlpbwtTest, TestBuildAndQuery) {
@@ -70,6 +71,26 @@ TEST (BuildBiRlpbwtTest, TestBuildAndQuery) {
     EXPECT_EQ(matches[1], match1);
     EXPECT_EQ(matches[2], match2);
     EXPECT_EQ(matches[3], match3);
+    auto rlsizeb = sizeof(birlpbwt.frlpbwt.width) * 10E-6;
+    rlsizeb += sizeof(birlpbwt.frlpbwt.heigth) * 10E-6;
+    rlsizeb *= 2;
+    for (const auto &c: birlpbwt.frlpbwt.cols) {
+        rlsizeb += sizeof(bool) * 10E-6;
+        rlsizeb += sizeof(unsigned int) * 10E-6;
+        rlsizeb += sizeof(unsigned int) * (double) c.rows.size() * 10E-6;
+        rlsizeb += sizeof(unsigned int) * (double) c.rows.size() * 10E-6;
+    }
+    for (const auto &c: birlpbwt.brlpbwt.cols) {
+        rlsizeb += sizeof(bool) * 10E-6;
+        rlsizeb += sizeof(unsigned int) * 10E-6;
+        rlsizeb += sizeof(unsigned int) * (double) c.rows.size() * 10E-6;
+        rlsizeb += sizeof(unsigned int) * (double) c.rows.size() * 10E-6;
+    }
+    double nrlsize = sizeof(unsigned int) * (double) (birlpbwt.frlpbwt.heigth *
+                                                      birlpbwt.frlpbwt.width *
+                                                      5) * 10E-6;
+    std::cout << rlsizeb << " vs " << nrlsize << "\n";
+
 }
 
 int main(int argc, char **argv) {
