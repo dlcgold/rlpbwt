@@ -6,6 +6,7 @@
 #define RLPBWT_BIRLPBWT_H
 
 #include <iostream>
+#include <sstream>
 #include <vector>
 #include <list>
 #include "rlpbwt.h"
@@ -28,6 +29,8 @@ public:
     std::vector<match>
     external_match(const std::string &query, unsigned int min_len = 1, bool verbose = false);
 
+    void external_match_vcf(const char *filename, unsigned int min_len = 1,
+                            bool verbose = false);
 
 
     void print();

@@ -64,7 +64,6 @@ birlpbwt::birlpbwt(const char *filename, bool vcf, bool verbose) {
             for (int i = 0; i < 9; i++) {
                 getline(ss, line, '\t');
             }
-            int index = 0;
             while (getline(ss, line, '\t')) {
                 new_column.push_back(line[0]);
                 new_column.push_back(line[2]);
@@ -80,7 +79,7 @@ birlpbwt::birlpbwt(const char *filename, bool vcf, bool verbose) {
         this->frlpbwt.width = tmp_width;
         this->frlpbwt.heigth = tmp_height;
         std::vector<column> tmp_colsb(tmp_width);
-        for (unsigned int i = 0; i < tmp_height; i++) {
+        for (int i = 0; i < tmp_height; i++) {
             pref[i] = i;
             div[i] = 0;
         }
@@ -200,7 +199,7 @@ birlpbwt::external_match(const std::string &query, unsigned int min_len,
                          bool verbose) {
     std::vector<match> matches;
     std::vector<match> fm = this->frlpbwt.end_external_match(query, true,
-                                                             false);
+                                                             verbose);
     if (verbose) {
         std::cout << "forward matches:\n";
         for (const auto &m: fm) {
@@ -219,17 +218,112 @@ birlpbwt::external_match(const std::string &query, unsigned int min_len,
     }
     unsigned int begin = 0;
     unsigned int end = 0;
+    unsigned int nhaplo = 0;
     for (unsigned int i = 0; i < fm.size(); ++i) {
         begin = std::min(fm[i].begin, bm[i].begin);
         end = std::max(fm[i].end, bm[i].end);
-        if (end - begin != 0 && end - begin >= min_len) {
-            matches.emplace_back(begin, end,
-                                 std::min(fm[i].nhaplo, bm[i].nhaplo));
+        nhaplo = std::min(fm[i].nhaplo, bm[i].nhaplo);
+        if (end - begin != 0 && end - begin >= min_len && nhaplo > 0) {
+            matches.emplace_back(begin, end, nhaplo);
         }
     }
     return matches;
 }
 
+
+void birlpbwt::external_match_vcf(const char *filename, unsigned int min_len,
+                                  bool verbose) {
+    std::ifstream in(filename);
+    if (in.fail()) {
+        throw FileNotFoundException{};
+    }
+
+    std::string line;
+    while (getline(in, line)) {
+        if (line.size() < 2u) {
+            throw FileNotGoodException{};
+        }
+        if (line[0] != '#' || line[1] != '#') {
+            break;
+        }
+    }
+    int Q = -9;
+    unsigned int tmp_width = 0;
+    std::stringstream ss(line);
+    while (getline(ss, line, '\t')) {
+        Q++;
+    }
+    if (Q < 1) {
+        throw FileNotGoodException{};
+    }
+    while (std::getline(in, line)) {
+        tmp_width++;
+    }
+    if (tmp_width != this->frlpbwt.width) {
+        throw NotEqualLengthException{};
+    }
+    in.clear();
+    in.seekg(0);
+
+    while (getline(in, line)) {
+        if (line[0] != '#' || line[1] != '#') break;
+    }
+    ss = std::stringstream(line);
+
+    std::vector<std::string> qIDs;
+
+    for (int i = 0; i < 9; i++) {
+        getline(ss, line, '\t');
+    }
+    std::string tmp;
+    for (int i = 0; i < Q; i++) {
+        getline(ss, tmp, '\t');
+        qIDs.push_back(tmp);
+        qIDs.push_back(tmp);
+    }
+    Q <<= 1;
+    std::vector<std::vector<char>> queries_tmp(tmp_width,
+                                               std::vector<char>(Q));
+    // read query panel
+    for (unsigned int k = 0; k < this->frlpbwt.width; k++) {
+        getline(in, line);
+        ss = std::stringstream(line);
+        for (int i = 0; i < 9; i++) {
+            getline(ss, line, '\t');
+        }
+        int i = 0;
+        while (getline(ss, line, '\t')) {
+            queries_tmp[k][i++] = line[0];
+            queries_tmp[k][i++] = line[2];
+        }
+    }
+    in.close();
+    std::vector<std::string> queries;
+    std::string tmpq;
+    std::cout << queries_tmp.size() << " " << queries_tmp[0].size() << "\n";
+    for (unsigned int i = 0; i < queries_tmp[0].size(); i++) {
+        for (unsigned int j = 0; j < queries_tmp.size(); j++) {
+            tmpq.push_back(queries_tmp[j][i]);
+        }
+        queries.push_back(tmpq);
+        tmpq.clear();
+    }
+    unsigned count = 0;
+    for (const auto &s: queries) {
+        if (verbose) {
+            std::cout << count << "(" << s.size() << "): " << s << "\n";
+        }
+        auto matches = external_match(s, min_len, verbose);
+        if (!matches.empty()) {
+            std::cout << "matches with " << qIDs[count] << "\n";
+            for (const auto &m: matches) {
+                std::cout << m << "\n";
+            }
+        }
+        count++;
+    }
+
+}
 
 void birlpbwt::print() {
     std::cout << "\tforward\n";
@@ -238,5 +332,4 @@ void birlpbwt::print() {
     std::cout << "\ttackward\n";
     this->brlpbwt.print();
 }
-
 

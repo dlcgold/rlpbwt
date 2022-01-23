@@ -130,14 +130,14 @@ rlpbwt::rlpbwt(const char *filename, bool vcf, bool verbose) {
                         std::remove(new_column.begin(), new_column.end(), ' '),
                         new_column.end());
                 auto col = rlpbwt::build_column(new_column, pref, div);
-                sdsl::util::bit_compress(div);
+                //sdsl::util::bit_compress(div);
                 col.lcp = div;
                 tmp_cols[count] = col;
                 rlpbwt::update(new_column, pref, div);
                 count++;
             }
             auto col = rlpbwt::build_column(new_column, pref, div);
-            sdsl::util::bit_compress(div);
+            //sdsl::util::bit_compress(div);
             col.lcp = div;
             tmp_cols.push_back(col);
             this->cols = tmp_cols;
@@ -292,7 +292,8 @@ rlpbwt::index_to_run(unsigned int index, unsigned int col_index) const {
 }
 
 std::vector<match>
-rlpbwt::external_match(const std::string &query, bool verbose) {
+rlpbwt::external_match(const std::string &query, unsigned int min_len,
+                       bool verbose) {
     if (query.size() != this->width) {
         throw NotEqualLengthException{};
     }
@@ -375,16 +376,20 @@ rlpbwt::external_match(const std::string &query, bool verbose) {
                     std::cout << "match at (" << curr_beg << ", " << i - 1
                               << ") with " << curr_len << " haplotypes \n";
                 }
-                matches.emplace_back(curr_beg, i - 1, curr_len);
+                if ((i - 1) - curr_beg >= min_len) {
+                    matches.emplace_back(curr_beg, i - 1, curr_len);
+                }
             }
 
             // update e
+            // TODO check correctness
             if (curr_tmp == this->cols[i + 1].lcp.size()) {
                 curr_beg = i + 1;
-            } else {
+            } else if ((int) i - (int) this->cols[i + 1].lcp[curr_tmp] < 0) {
+                curr_beg = 0;
+            }else {
                 curr_beg = i - this->cols[i + 1].lcp[curr_tmp];
             }
-
             if (verbose) {
                 std::cout << "before curr beg: " << curr_beg << "\n";
             }
@@ -414,11 +419,13 @@ rlpbwt::external_match(const std::string &query, bool verbose) {
                             tmp_run);
                     while (curr_beg > 0 && query[curr_beg - 1] == curr_elem) {
                         curr_beg -= 1;
-                        curr_rev = prev_run(curr_beg, curr_rev, false);
-                        tmp_run = index_to_run(curr_rev, curr_beg - 1);
-                        curr_elem = get_next_char(
-                                this->cols[curr_beg - 1].zero_first,
-                                tmp_run);
+                        if(curr_beg >0) {
+                            curr_rev = prev_run(curr_beg, curr_rev, false);
+                            tmp_run = index_to_run(curr_rev, curr_beg - 1);
+                            curr_elem = get_next_char(
+                                    this->cols[curr_beg - 1].zero_first,
+                                    tmp_run);
+                        }
                     }
                 }
                 while (curr_tmp > 0 &&
@@ -450,6 +457,7 @@ rlpbwt::external_match(const std::string &query, bool verbose) {
                         curr_rev = prev_run(i_tmp, curr_rev, false);
                         i_tmp--;
                     }
+
                     // first step to reverse procede with lf
                     unsigned int tmp_run = index_to_run(curr_rev, i_tmp);
                     char curr_elem = get_next_char(
@@ -457,11 +465,13 @@ rlpbwt::external_match(const std::string &query, bool verbose) {
                             tmp_run);
                     while (curr_beg > 0 && query[curr_beg - 1] == curr_elem) {
                         curr_beg -= 1;
-                        curr_rev = prev_run(curr_beg, curr_rev, false);
-                        tmp_run = index_to_run(curr_rev, curr_beg - 1);
-                        curr_elem = get_next_char(
-                                this->cols[curr_beg - 1].zero_first,
-                                tmp_run);
+                        if(curr_beg > 0) {
+                            curr_rev = prev_run(curr_beg, curr_rev, false);
+                            tmp_run = index_to_run(curr_rev, curr_beg - 1);
+                            curr_elem = get_next_char(
+                                    this->cols[curr_beg - 1].zero_first,
+                                    tmp_run);
+                        }
                     }
                 }
                 if (verbose) {
@@ -494,7 +504,9 @@ rlpbwt::external_match(const std::string &query, bool verbose) {
             std::cout << "match at (" << curr_beg << ", " << query.size() - 1
                       << ") with " << curr_len << " haplotypes \n";
         }
-        matches.emplace_back(curr_beg, query.size() - 1, curr_len);
+        if ((query.size() - 1) - curr_beg >= min_len) {
+            matches.emplace_back(curr_beg, query.size() - 1, curr_len);
+    }
     }
     return matches;
 }
@@ -716,11 +728,15 @@ rlpbwt::end_external_match(const std::string &query, bool forward,
                       << ") with " << curr_len << " haplotypes \n";
         }
         if (forward) {
-            matches.emplace_back(curr_beg, query.size() - 1, curr_len);
+            if(curr_len>0) {
+                matches.emplace_back(curr_beg, query.size() - 1, curr_len);
+            }
         } else {
-            unsigned int rev_beg = query.size() - (query.size() - 1) - 1;
-            unsigned int rev_end = query.size() - curr_beg;
-            matches.emplace_back(rev_beg, rev_end, curr_len);
+            if(curr_len>0) {
+                unsigned int rev_beg = query.size() - (query.size() - 1) - 1;
+                unsigned int rev_end = query.size() - curr_beg;
+                matches.emplace_back(rev_beg, rev_end, curr_len);
+            }
         }
     }
     if (!forward) {
@@ -750,6 +766,99 @@ void rlpbwt::print() {
         count++;
         if (count != (int) this->cols.size())
             std::cout << "\n-------------- \n";
+    }
+}
+
+void rlpbwt::external_match_vcf(const char *filename, unsigned int min_len,
+                                bool verbose) {
+    std::ifstream in(filename);
+    if (in.fail()) {
+        throw FileNotFoundException{};
+    }
+
+    std::string line;
+    while (getline(in, line)) {
+        if (line.size() < 2u) {
+            throw FileNotGoodException{};
+        }
+        if (line[0] != '#' || line[1] != '#') {
+            break;
+        }
+    }
+    int Q = -9;
+    unsigned int tmp_width = 0;
+    std::stringstream ss(line);
+    while (getline(ss, line, '\t')) {
+        Q++;
+    }
+    if (Q < 1) {
+        throw FileNotGoodException{};
+    }
+    while (std::getline(in, line)) {
+        tmp_width++;
+    }
+    if (tmp_width != this->width) {
+        throw NotEqualLengthException{};
+    }
+    in.clear();
+    in.seekg(0);
+
+    while (getline(in, line)) {
+        if (line[0] != '#' || line[1] != '#') break;
+    }
+    ss = std::stringstream(line);
+
+    std::vector<std::string> qIDs;
+
+    for (int i = 0; i < 9; i++) {
+        getline(ss, line, '\t');
+    }
+    std::string tmp;
+    for (int i = 0; i < Q; i++) {
+        getline(ss, tmp, '\t');
+        qIDs.push_back(tmp);
+        qIDs.push_back(tmp);
+    }
+    Q <<= 1;
+    std::vector<std::vector<char>> queries_tmp(tmp_width,
+                                               std::vector<char>(Q));
+    // read query panel
+    for (unsigned int k = 0; k < this->width; k++) {
+        getline(in, line);
+        ss = std::stringstream(line);
+        for (int i = 0; i < 9; i++) {
+            getline(ss, line, '\t');
+        }
+        int i = 0;
+        while (getline(ss, line, '\t')) {
+            queries_tmp[k][i++] = line[0];
+            queries_tmp[k][i++] = line[2];
+        }
+    }
+    in.close();
+    std::vector<std::string> queries;
+    std::string tmpq;
+    std::cout  << queries_tmp.size() << " " << queries_tmp[0].size() << "\n";
+    for (unsigned int i = 0; i < queries_tmp[0].size(); i++) {
+        for (unsigned int j = 0; j < queries_tmp.size(); j++) {
+            tmpq.push_back(queries_tmp[j][i]);
+        }
+        queries.push_back(tmpq);
+        tmpq.clear();
+    }
+    unsigned count = 0;
+    for (const auto &s: queries) {
+        if (verbose) {
+            std::cout << count << "(" << s.size() << "): " << s << "\n";
+        }
+        auto matches = external_match(s, min_len, verbose);
+        if (!matches.empty()) {
+            std::cout << "matches with " << qIDs[count] << "\n";
+            for (const auto &m: matches) {
+                std::cout << m << "\n";
+            }
+        }
+        count++;
     }
 }
 

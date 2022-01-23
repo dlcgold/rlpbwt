@@ -93,14 +93,15 @@ TEST (BuildBiRlpbwtTest, TestBuildAndQuery) {
 }
 
 TEST (BuildRlpbwtVCF, TestBuildAndQuery) {
-    rlpbwt rlpbwt("../input/sample_panel.vcf", true );
+    rlpbwt rlpbwt("../input/sample_panel.vcf", true);
     std::cout << rlpbwt.width << " " << rlpbwt.heigth << "\n";
     //rlpbwt.print();
     EXPECT_EQ(rlpbwt.heigth, 900);
     EXPECT_EQ(rlpbwt.width, 500);
+    rlpbwt.external_match_vcf("../input/sample_query.vcf", 255);
 }
 
-TEST (BuildBiRlpbwtVCF, TestBuildAndQuery) {
+TEST (BuildBiRlpbwtVCF, TestBuild) {
     birlpbwt birlpbwt("../input/sample_panel.vcf", true);
     std::cout << birlpbwt.frlpbwt.width << " " << birlpbwt.frlpbwt.heigth
               << "\n";
@@ -136,8 +137,16 @@ TEST (BuildBiRlpbwtVCF, TestBuildAndQuery) {
     std::cout << rlsizeb << " vs " << nrlsize << "\n";
     std::cout << "saved: " << obj + objb << " vs "
               << (birlpbwt.frlpbwt.heigth * birlpbwt.frlpbwt.width * 5) + 1
-              << " and avg height "
+              << " (~"
+              << ((birlpbwt.frlpbwt.heigth * birlpbwt.frlpbwt.width * 5) + 1) /
+                 (obj + objb) << " times less) and avg height "
               << (size + sizeb) / (birlpbwt.frlpbwt.width * 2) << "\n";
+}
+TEST (BuildBiRlpbwtVCF, TestQuery) {
+    birlpbwt birlpbwt("../input/sample_panel.vcf", true);
+    EXPECT_EQ(birlpbwt.frlpbwt.heigth, 900);
+    EXPECT_EQ(birlpbwt.frlpbwt.width, 500);
+    birlpbwt.external_match_vcf("../input/sample_query.vcf", 255);
 }
 
 int main(int argc, char **argv) {

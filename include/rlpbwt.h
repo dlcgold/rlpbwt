@@ -15,6 +15,7 @@
 #include <fstream>
 #include <sstream>
 #include <algorithm>
+#include <list>
 #include "column.h"
 #include "utils.h"
 #include "exceptions.h"
@@ -68,7 +69,11 @@ public:
      * @return a vector of matches (begin, end, number of matches)
      */
     std::vector<match>
-    external_match(const std::string &query, bool verbose = false);
+    external_match(const std::string &query, unsigned int min_len = 1,
+                   bool verbose = false);
+
+    void external_match_vcf(const char *filename, unsigned int min_len = 1,
+                            bool verbose = false);
 
     /**
      * @brief function to get the run in previous column which come from the
@@ -114,7 +119,10 @@ public:
     std::vector<match>
     end_external_match(const std::string &query, bool forward = true,
                        bool verbose = false);
+
     void print();
+
+
 private:
 
     /**

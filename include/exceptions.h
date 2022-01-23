@@ -17,6 +17,15 @@ class FileNotFoundException: public std::exception {
 };
 
 /**
+ * @brief exception file not well formed
+ */
+class FileNotGoodException: public std::exception {
+    const char* what() const noexcept override {
+        return "file not good for queries";
+    }
+};
+
+/**
  * @brief exception file not found
  */
 class NotEqualLengthException: public std::exception {
