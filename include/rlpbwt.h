@@ -13,6 +13,7 @@
 #include <cassert>
 #include <utility>
 #include <fstream>
+#include <sstream>
 #include <algorithm>
 #include "column.h"
 #include "utils.h"
@@ -48,6 +49,7 @@ public:
      * @param verbose bool for extra print
      */
     explicit rlpbwt(const char *filename, bool verbose = false);
+    explicit rlpbwt(const char *filename, bool vcf, bool verbose = false);
 
     /**
      * @brief default constructor

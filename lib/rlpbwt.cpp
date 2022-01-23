@@ -62,6 +62,95 @@ rlpbwt::rlpbwt(const char *filename, bool verbose) {
     }
 }
 
+
+rlpbwt::rlpbwt(const char *filename, bool vcf, bool verbose) {
+    std::string line;
+    std::ifstream input(filename);
+    if (!input.is_open()) {
+        throw FileNotFoundException{};
+    }
+    while (std::getline(input, line)) {
+        if (line[0] != '#' || line[1] != '#') {
+            break;
+        }
+    }
+    std::stringstream ss(line);
+    int tmp_height = -9;
+    int tmp_width = 0;
+    while (getline(ss, line, '\t')) {
+        tmp_height++;
+    }
+    tmp_height <<= 1;
+    while (std::getline(input, line)){
+        tmp_width++;
+    }
+    input.clear();
+    input.seekg(0);
+    while (std::getline(input, line)) {
+        if (line[0] != '#' || line[1] != '#') {
+            break;
+        }
+    }
+    ss = std::stringstream(line);
+    for (int i = 0; i < 9; i++) {
+        getline(ss, line, '\t');
+    }
+    /*std::vector<std::string> IDs(tmp_height);
+    for (int i = 0; i < tmp_height; i += 2) {
+        getline(ss, IDs[i], '\t');
+        IDs[i + 1] = IDs[i] + "-1";
+        IDs[i] += "-0";
+        std::cout << IDs[i] << ", " << IDs[i+1] << "\n";
+    }
+    */
+    std::vector<unsigned int> pref(tmp_height);
+    sdsl::int_vector<> div(tmp_height);
+    for (int i = 0; i < tmp_height; i++) {
+        pref[i] = i;
+        div[i] = 0;
+    }
+    std::string new_column;
+    std::vector<column> tmp_cols(tmp_width);
+    for (int k = 0; k < tmp_width; k++) {
+        if (verbose) {
+            std::cout << "\nnew_column " << k << "\n";
+            for (auto e: pref) {
+                std::cout << e << " ";
+            }
+            std::cout << "\n";
+            for (auto e: div) {
+                std::cout << e << " ";
+            }
+            std::cout << "\n";
+        }
+        new_column.clear();
+        std::getline(input, line);
+        ss = std::stringstream(line);
+        for (int i = 0; i < 9; i++) {
+            getline(ss, line, '\t');
+        }
+        int index = 0;
+        while (getline(ss, line, '\t')) {
+            new_column.push_back(line[0]);
+            new_column.push_back(line[2]);
+        }
+        //std::cout << new_column << "\n";
+        auto col = rlpbwt::build_column(new_column, pref, div);
+        sdsl::util::bit_compress(div);
+        col.lcp = div;
+        tmp_cols[k] = col;
+        rlpbwt::update(new_column, pref, div);
+    }
+    auto col = rlpbwt::build_column(new_column, pref, div);
+    sdsl::util::bit_compress(div);
+    col.lcp = div;
+    tmp_cols.push_back(col);
+    this->cols = tmp_cols;
+    this->width = tmp_width;
+    this->heigth = tmp_height;
+}
+
+
 rlpbwt::~rlpbwt() = default;
 
 column
@@ -571,10 +660,7 @@ rlpbwt::end_external_match(const std::string &query, bool forward,
         if (end_tmp > this->heigth) {
             end_tmp -= end_offset;
         }
-        //curr_run = index_to_run(curr_tmp, i);
-        //end_run = index_to_run(end_tmp, i);
-        //curr_index = this->cols[i].rows[curr_run].p;
-        //end_index = this->cols[i].rows[end_run].p;
+
         if (verbose) {
             std::cout << "middle at " << i << " from " << curr_tmp << " to "
                       << end_tmp
@@ -603,9 +689,7 @@ rlpbwt::end_external_match(const std::string &query, bool forward,
                     matches.emplace_back(rev_beg, rev_end, curr_len);
                 }
             }
-
             curr_beg = i;
-
             if (verbose) {
                 std::cout << "before curr beg: " << curr_beg << "\n";
             }
@@ -613,13 +697,9 @@ rlpbwt::end_external_match(const std::string &query, bool forward,
             if (query[curr_beg] == '0') {
                 curr_index = 0;
                 end_index = this->cols[i].count_0;
-                //curr_run = index_to_run(curr_index, i);
-                //end_run = index_to_run(end_index, i);
             } else {
                 curr_index = this->cols[i].count_0;
                 end_index = this->heigth;
-                //curr_run = index_to_run(curr_index, i);
-                //end_run = index_to_run(end_index, i);
             }
         }
         if (verbose) {

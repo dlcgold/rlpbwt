@@ -37,7 +37,7 @@ TEST (BuildRlpbwtTest, TestBuildAndQuery) {
     auto rlsizeb = rlsize;
     std::cout << rlsize << "\n";
     for (const auto &c: rlpbwt.cols) {
-        rlsize += sizeof(bool ) * 10E-6;
+        rlsize += sizeof(bool) * 10E-6;
         rlsize += sizeof(unsigned int) * 10E-6;
         rlsize += sizeof(unsigned int) * (double) c.rows.size() * 10E-6;
         rlsize += sizeof(unsigned int) * (double) c.rows.size() * 10E-6;
@@ -59,7 +59,7 @@ TEST (BuildBiRlpbwtTest, TestBuildAndQuery) {
     if (verbose) {
         birlpbwt.print();
     }
-    auto matches = birlpbwt.external_match("010010100011101", false);
+    auto matches = birlpbwt.external_match("010010100011101");
     for (const auto &m: matches) {
         std::cout << m << "\n";
     }
@@ -90,13 +90,58 @@ TEST (BuildBiRlpbwtTest, TestBuildAndQuery) {
                                                       birlpbwt.frlpbwt.width *
                                                       5) * 10E-6;
     std::cout << rlsizeb << " vs " << nrlsize << "\n";
+}
 
+TEST (BuildRlpbwtVCF, TestBuildAndQuery) {
+    rlpbwt rlpbwt("../input/sample_panel.vcf", true, false);
+    std::cout << rlpbwt.width << " " << rlpbwt.heigth << "\n";
+    rlpbwt.print();
+}
+
+TEST (BuildBiRlpbwtVCF, TestBuildAndQuery) {
+    birlpbwt birlpbwt("../input/sample_panel.vcf", true, false);
+    std::cout << birlpbwt.frlpbwt.width << " " << birlpbwt.frlpbwt.heigth
+              << "\n";
+    //birlpbwt.print()
+    unsigned int size = 0;
+    unsigned int sizeb = 0;
+    unsigned int obj = 0;
+    unsigned int objb = 0;
+    auto rlsizeb = sizeof(birlpbwt.frlpbwt.width) * 10E-6;
+    rlsizeb += sizeof(birlpbwt.frlpbwt.heigth) * 10E-6;
+    rlsizeb *= 2;
+    for (const auto &c: birlpbwt.frlpbwt.cols) {
+        rlsizeb += sizeof(bool) * 10E-6;
+        rlsizeb += sizeof(unsigned int) * 10E-6;
+        rlsizeb += sizeof(unsigned int) * (double) c.rows.size() * 10E-6;
+        rlsizeb += sizeof(unsigned int) * (double) c.rows.size() * 10E-6;
+        size += c.rows.size();
+        obj += (c.rows.size() * 2 + 2);
+    }
+    for (const auto &c: birlpbwt.brlpbwt.cols) {
+        rlsizeb += sizeof(bool) * 10E-6;
+        rlsizeb += sizeof(unsigned int) * 10E-6;
+        rlsizeb += sizeof(unsigned int) * (double) c.rows.size() * 10E-6;
+        rlsizeb += sizeof(unsigned int) * (double) c.rows.size() * 10E-6;
+        sizeb += c.rows.size();
+        objb += (c.rows.size() * 2 + 2);
+    }
+    double nrlsize = sizeof(unsigned int) * (double) (birlpbwt.frlpbwt.heigth *
+                                                      birlpbwt.frlpbwt.width *
+                                                      5) * 10E-6;
+    std::cout << rlsizeb << " vs " << nrlsize << "\n";
+    std::cout << "saved: " << obj + objb << " vs "
+              << (birlpbwt.frlpbwt.heigth * birlpbwt.frlpbwt.width * 5) + 1
+              << " and avg height "
+              << (size + sizeb) / (birlpbwt.frlpbwt.width * 2) << "\n";
 }
 
 int main(int argc, char **argv) {
     ::testing::InitGoogleTest(&argc, argv);
-    //::testing::GTEST_FLAG(filter) = "BuildBiRlpbwtTest*";
     //::testing::GTEST_FLAG(filter) = "BuildRlpbwtTest*";
+    ::testing::GTEST_FLAG(filter) = "BuildBiRlpbwtTest*";
+    //::testing::GTEST_FLAG(filter) = "BuildRlpbwtVCF*";
+    //::testing::GTEST_FLAG(filter) = "BuildBiRlpbwtVCF*";
 
     return RUN_ALL_TESTS();
 }

@@ -18,6 +18,8 @@ public:
 
     explicit birlpbwt(const char *filename, bool verbose = false);
 
+    explicit birlpbwt(const char *filename, bool vcf, bool verbose = false);
+
     /**
      * @brief function to compute matches between the panel and a new query
      *
@@ -26,7 +28,10 @@ public:
      * @return a vector of matches (begin, end, number of matches)
      */
     std::vector<match>
-    external_match(const std::string &query, bool verbose = false);
+    external_match(const std::string &query, unsigned int min_len = 1, bool verbose = false);
+
+
+
     void print();
 };
 
