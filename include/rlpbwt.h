@@ -48,7 +48,6 @@ public:
      * one column of the panel
      * @param verbose bool for extra print
      */
-    explicit rlpbwt(const char *filename, bool verbose = false);
     explicit rlpbwt(const char *filename, bool vcf, bool verbose = false);
 
     /**

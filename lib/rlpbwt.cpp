@@ -6,30 +6,58 @@
 
 rlpbwt::rlpbwt() : cols(), heigth(0), width(0) {}
 
-rlpbwt::rlpbwt(const char *filename, bool verbose) {
-    std::ifstream input_matrix(filename);
-    if (input_matrix.is_open()) {
-        std::string new_column;
-        getline(input_matrix, new_column);
-        new_column.erase(std::remove(new_column.begin(), new_column.end(), ' '),
-                         new_column.end());
-        const unsigned int tmp_height = new_column.size();
-        unsigned int tmp_width = std::count(
-                std::istreambuf_iterator<char>(input_matrix),
-                std::istreambuf_iterator<char>(), '\n') + 1;
-        std::vector<column> tmp_cols(tmp_width);
-        input_matrix.clear();
-        input_matrix.seekg(0, std::ios::beg);
+rlpbwt::rlpbwt(const char *filename, bool vcf, bool verbose) {
+    if (vcf) {
+        std::string line;
+        std::ifstream input(filename);
+        if (!input.is_open()) {
+            throw FileNotFoundException{};
+        }
+        while (std::getline(input, line)) {
+            if (line[0] != '#' || line[1] != '#') {
+                break;
+            }
+        }
+        std::stringstream ss(line);
+        int tmp_height = -9;
+        int tmp_width = 0;
+        while (getline(ss, line, '\t')) {
+            tmp_height++;
+        }
+        tmp_height <<= 1;
+        while (std::getline(input, line)) {
+            tmp_width++;
+        }
+        input.clear();
+        input.seekg(0);
+        while (std::getline(input, line)) {
+            if (line[0] != '#' || line[1] != '#') {
+                break;
+            }
+        }
+        ss = std::stringstream(line);
+        for (int i = 0; i < 9; i++) {
+            getline(ss, line, '\t');
+        }
+        /*std::vector<std::string> IDs(tmp_height);
+        for (int i = 0; i < tmp_height; i += 2) {
+            getline(ss, IDs[i], '\t');
+            IDs[i + 1] = IDs[i] + "-1";
+            IDs[i] += "-0";
+            std::cout << IDs[i] << ", " << IDs[i+1] << "\n";
+        }
+        */
         std::vector<unsigned int> pref(tmp_height);
         sdsl::int_vector<> div(tmp_height);
-        for (unsigned int i = 0; i < tmp_height; i++) {
+        for (int i = 0; i < tmp_height; i++) {
             pref[i] = i;
             div[i] = 0;
         }
-        unsigned int count = 0;
-        while (getline(input_matrix, new_column)) {
+        std::string new_column;
+        std::vector<column> tmp_cols(tmp_width);
+        for (int k = 0; k < tmp_width; k++) {
             if (verbose) {
-                std::cout << "\nnew_column " << count << "\n";
+                std::cout << "\nnew_column " << k << "\n";
                 for (auto e: pref) {
                     std::cout << e << " ";
                 }
@@ -39,15 +67,23 @@ rlpbwt::rlpbwt(const char *filename, bool verbose) {
                 }
                 std::cout << "\n";
             }
-            new_column.erase(
-                    std::remove(new_column.begin(), new_column.end(), ' '),
-                    new_column.end());
+            new_column.clear();
+            std::getline(input, line);
+            ss = std::stringstream(line);
+            for (int i = 0; i < 9; i++) {
+                getline(ss, line, '\t');
+            }
+            int index = 0;
+            while (getline(ss, line, '\t')) {
+                new_column.push_back(line[0]);
+                new_column.push_back(line[2]);
+            }
+            //std::cout << new_column << "\n";
             auto col = rlpbwt::build_column(new_column, pref, div);
             sdsl::util::bit_compress(div);
             col.lcp = div;
-            tmp_cols[count] = col;
+            tmp_cols[k] = col;
             rlpbwt::update(new_column, pref, div);
-            count++;
         }
         auto col = rlpbwt::build_column(new_column, pref, div);
         sdsl::util::bit_compress(div);
@@ -56,100 +92,63 @@ rlpbwt::rlpbwt(const char *filename, bool verbose) {
         this->cols = tmp_cols;
         this->width = tmp_width;
         this->heigth = tmp_height;
-        input_matrix.close();
     } else {
-        throw FileNotFoundException{};
+        std::ifstream input_matrix(filename);
+        if (input_matrix.is_open()) {
+            std::string new_column;
+            getline(input_matrix, new_column);
+            new_column.erase(
+                    std::remove(new_column.begin(), new_column.end(), ' '),
+                    new_column.end());
+            const unsigned int tmp_height = new_column.size();
+            unsigned int tmp_width = std::count(
+                    std::istreambuf_iterator<char>(input_matrix),
+                    std::istreambuf_iterator<char>(), '\n') + 1;
+            std::vector<column> tmp_cols(tmp_width);
+            input_matrix.clear();
+            input_matrix.seekg(0, std::ios::beg);
+            std::vector<unsigned int> pref(tmp_height);
+            sdsl::int_vector<> div(tmp_height);
+            for (unsigned int i = 0; i < tmp_height; i++) {
+                pref[i] = i;
+                div[i] = 0;
+            }
+            unsigned int count = 0;
+            while (getline(input_matrix, new_column)) {
+                if (verbose) {
+                    std::cout << "\nnew_column " << count << "\n";
+                    for (auto e: pref) {
+                        std::cout << e << " ";
+                    }
+                    std::cout << "\n";
+                    for (auto e: div) {
+                        std::cout << e << " ";
+                    }
+                    std::cout << "\n";
+                }
+                new_column.erase(
+                        std::remove(new_column.begin(), new_column.end(), ' '),
+                        new_column.end());
+                auto col = rlpbwt::build_column(new_column, pref, div);
+                sdsl::util::bit_compress(div);
+                col.lcp = div;
+                tmp_cols[count] = col;
+                rlpbwt::update(new_column, pref, div);
+                count++;
+            }
+            auto col = rlpbwt::build_column(new_column, pref, div);
+            sdsl::util::bit_compress(div);
+            col.lcp = div;
+            tmp_cols.push_back(col);
+            this->cols = tmp_cols;
+            this->width = tmp_width;
+            this->heigth = tmp_height;
+            input_matrix.close();
+        } else {
+            throw FileNotFoundException{};
+        }
     }
 }
-
-
-rlpbwt::rlpbwt(const char *filename, bool vcf, bool verbose) {
-    std::string line;
-    std::ifstream input(filename);
-    if (!input.is_open()) {
-        throw FileNotFoundException{};
-    }
-    while (std::getline(input, line)) {
-        if (line[0] != '#' || line[1] != '#') {
-            break;
-        }
-    }
-    std::stringstream ss(line);
-    int tmp_height = -9;
-    int tmp_width = 0;
-    while (getline(ss, line, '\t')) {
-        tmp_height++;
-    }
-    tmp_height <<= 1;
-    while (std::getline(input, line)){
-        tmp_width++;
-    }
-    input.clear();
-    input.seekg(0);
-    while (std::getline(input, line)) {
-        if (line[0] != '#' || line[1] != '#') {
-            break;
-        }
-    }
-    ss = std::stringstream(line);
-    for (int i = 0; i < 9; i++) {
-        getline(ss, line, '\t');
-    }
-    /*std::vector<std::string> IDs(tmp_height);
-    for (int i = 0; i < tmp_height; i += 2) {
-        getline(ss, IDs[i], '\t');
-        IDs[i + 1] = IDs[i] + "-1";
-        IDs[i] += "-0";
-        std::cout << IDs[i] << ", " << IDs[i+1] << "\n";
-    }
-    */
-    std::vector<unsigned int> pref(tmp_height);
-    sdsl::int_vector<> div(tmp_height);
-    for (int i = 0; i < tmp_height; i++) {
-        pref[i] = i;
-        div[i] = 0;
-    }
-    std::string new_column;
-    std::vector<column> tmp_cols(tmp_width);
-    for (int k = 0; k < tmp_width; k++) {
-        if (verbose) {
-            std::cout << "\nnew_column " << k << "\n";
-            for (auto e: pref) {
-                std::cout << e << " ";
-            }
-            std::cout << "\n";
-            for (auto e: div) {
-                std::cout << e << " ";
-            }
-            std::cout << "\n";
-        }
-        new_column.clear();
-        std::getline(input, line);
-        ss = std::stringstream(line);
-        for (int i = 0; i < 9; i++) {
-            getline(ss, line, '\t');
-        }
-        int index = 0;
-        while (getline(ss, line, '\t')) {
-            new_column.push_back(line[0]);
-            new_column.push_back(line[2]);
-        }
-        //std::cout << new_column << "\n";
-        auto col = rlpbwt::build_column(new_column, pref, div);
-        sdsl::util::bit_compress(div);
-        col.lcp = div;
-        tmp_cols[k] = col;
-        rlpbwt::update(new_column, pref, div);
-    }
-    auto col = rlpbwt::build_column(new_column, pref, div);
-    sdsl::util::bit_compress(div);
-    col.lcp = div;
-    tmp_cols.push_back(col);
-    this->cols = tmp_cols;
-    this->width = tmp_width;
-    this->heigth = tmp_height;
-}
-
 
 rlpbwt::~rlpbwt() = default;
 

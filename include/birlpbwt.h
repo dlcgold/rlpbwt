@@ -16,8 +16,6 @@ public:
     rlpbwt frlpbwt = rlpbwt();
     rlpbwt brlpbwt = rlpbwt();
 
-    explicit birlpbwt(const char *filename, bool verbose = false);
-
     explicit birlpbwt(const char *filename, bool vcf, bool verbose = false);
 
     /**

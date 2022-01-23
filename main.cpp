@@ -9,7 +9,7 @@
 TEST (BuildRlpbwtTest, TestBuildAndQuery) {
     //HeapProfilerStart("heap.prof");
     //std::cout << IsHeapProfilerRunning() << "\n";
-    rlpbwt rlpbwt("../input/sample.txt");
+    rlpbwt rlpbwt("../input/sample.txt", false);
     //HeapProfilerDump("end construction");
     //HeapProfilerStop();
     EXPECT_EQ(rlpbwt.heigth, 20);
@@ -54,7 +54,7 @@ TEST (BuildRlpbwtTest, TestBuildAndQuery) {
 }
 
 TEST (BuildBiRlpbwtTest, TestBuildAndQuery) {
-    birlpbwt birlpbwt("../input/sample.txt");
+    birlpbwt birlpbwt("../input/sample.txt", false);
     bool verbose = false;
     if (verbose) {
         birlpbwt.print();
@@ -93,15 +93,19 @@ TEST (BuildBiRlpbwtTest, TestBuildAndQuery) {
 }
 
 TEST (BuildRlpbwtVCF, TestBuildAndQuery) {
-    rlpbwt rlpbwt("../input/sample_panel.vcf", true, false);
+    rlpbwt rlpbwt("../input/sample_panel.vcf", true );
     std::cout << rlpbwt.width << " " << rlpbwt.heigth << "\n";
-    rlpbwt.print();
+    //rlpbwt.print();
+    EXPECT_EQ(rlpbwt.heigth, 900);
+    EXPECT_EQ(rlpbwt.width, 500);
 }
 
 TEST (BuildBiRlpbwtVCF, TestBuildAndQuery) {
-    birlpbwt birlpbwt("../input/sample_panel.vcf", true, false);
+    birlpbwt birlpbwt("../input/sample_panel.vcf", true);
     std::cout << birlpbwt.frlpbwt.width << " " << birlpbwt.frlpbwt.heigth
               << "\n";
+    EXPECT_EQ(birlpbwt.frlpbwt.heigth, 900);
+    EXPECT_EQ(birlpbwt.frlpbwt.width, 500);
     //birlpbwt.print()
     unsigned int size = 0;
     unsigned int sizeb = 0;
@@ -139,9 +143,9 @@ TEST (BuildBiRlpbwtVCF, TestBuildAndQuery) {
 int main(int argc, char **argv) {
     ::testing::InitGoogleTest(&argc, argv);
     //::testing::GTEST_FLAG(filter) = "BuildRlpbwtTest*";
-    ::testing::GTEST_FLAG(filter) = "BuildBiRlpbwtTest*";
+    //::testing::GTEST_FLAG(filter) = "BuildBiRlpbwtTest*";
     //::testing::GTEST_FLAG(filter) = "BuildRlpbwtVCF*";
-    //::testing::GTEST_FLAG(filter) = "BuildBiRlpbwtVCF*";
+    ::testing::GTEST_FLAG(filter) = "BuildBiRlpbwtVCF*";
 
     return RUN_ALL_TESTS();
 }
