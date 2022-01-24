@@ -307,8 +307,8 @@ void birlpbwt::external_match_vcf(const char *filename, unsigned int min_len,
     std::cout << queries_tmp.size() << " " << queries_tmp[0].size() << "\n";
     std::ofstream out;
     for (unsigned int i = 0; i < queries_tmp[0].size(); i++) {
-        for (unsigned int j = 0; j < queries_tmp.size(); j++) {
-            tmpq.push_back(queries_tmp[j][i]);
+        for (auto & j : queries_tmp) {
+            tmpq.push_back(j[i]);
         }
         queries.push_back(tmpq);
         tmpq.clear();

@@ -1,9 +1,7 @@
 #include <iostream>
 #include <gtest/gtest.h>
 #include <gperftools/heap-profiler.h>
-#include <boost/archive/text_iarchive.hpp>
 #include <boost/archive/text_oarchive.hpp>
-#include <boost/serialization/vector.hpp>
 #include "include/exceptions.h"
 #include "include/rlpbwt.h"
 #include "include/birlpbwt.h"
@@ -159,7 +157,6 @@ TEST (BuildBiRlpbwtVCF, TestQuery) {
     std::ofstream outfile("birlpbwt.ser");
     boost::archive::text_oarchive archive(outfile);
     archive << birlpbwt;
-    std::cout << "lcp: " << birlpbwt.frlpbwt.cols[0].lcp.size() << "\n";
     EXPECT_EQ(birlpbwt.frlpbwt.heigth, 900);
     EXPECT_EQ(birlpbwt.frlpbwt.width, 500);
     clock_t START = clock();
@@ -172,8 +169,8 @@ int main(int argc, char **argv) {
     ::testing::InitGoogleTest(&argc, argv);
     //::testing::GTEST_FLAG(filter) = "BuildRlpbwtTest*";
     //::testing::GTEST_FLAG(filter) = "BuildBiRlpbwtTest*";
-    ::testing::GTEST_FLAG(filter) = "BuildRlpbwtVCF*";
-    //::testing::GTEST_FLAG(filter) = "BuildBiRlpbwtVCF*";
+    //::testing::GTEST_FLAG(filter) = "BuildRlpbwtVCF*";
+    ::testing::GTEST_FLAG(filter) = "BuildBiRlpbwtVCF*";
 
     return RUN_ALL_TESTS();
 }

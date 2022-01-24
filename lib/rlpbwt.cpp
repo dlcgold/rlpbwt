@@ -263,6 +263,7 @@ rlpbwt::lf(unsigned int col_index, unsigned int row_index, char symbol,
     if (verbose) {
         std::cout << uv.first << ", " << uv.second << "\n";
     }
+    // fix for the last index that's "outside" the column
     if (this->cols[col_index].rows[row_index].p + offset == this->heigth) {
         if (get_next_char(this->cols[col_index].zero_first, row_index) == '0') {
             uv.second--;
@@ -385,11 +386,8 @@ rlpbwt::external_match(const std::string &query, unsigned int min_len,
             }
 
             // update e
-            // TODO check correctness
             if (curr_tmp == this->cols[i + 1].lcp.size()) {
                 curr_beg = i + 1;
-            } else if ((int) i - (int) this->cols[i + 1].lcp[curr_tmp] < 0) {
-                curr_beg = 0;
             } else {
                 curr_beg = i - this->cols[i + 1].lcp[curr_tmp];
             }
@@ -839,8 +837,8 @@ void rlpbwt::external_match_vcf(const char *filename, unsigned int min_len,
     std::string tmpq;
     std::cout << queries_tmp.size() << " " << queries_tmp[0].size() << "\n";
     for (unsigned int i = 0; i < queries_tmp[0].size(); i++) {
-        for (unsigned int j = 0; j < queries_tmp.size(); j++) {
-            tmpq.push_back(queries_tmp[j][i]);
+        for (auto & j : queries_tmp) {
+            tmpq.push_back(j[i]);
         }
         queries.push_back(tmpq);
         tmpq.clear();
