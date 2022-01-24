@@ -38,7 +38,7 @@ birlpbwt::birlpbwt(const char *filename, bool vcf, bool verbose) {
             getline(ss, line, '\t');
         }
         std::vector<unsigned int> pref(tmp_height);
-        sdsl::int_vector<> div(tmp_height);
+        std::vector<unsigned int> div(tmp_height);
         for (int i = 0; i < tmp_height; i++) {
             pref[i] = i;
             div[i] = 0;
@@ -46,6 +46,7 @@ birlpbwt::birlpbwt(const char *filename, bool vcf, bool verbose) {
         std::string new_column;
         std::vector<column> tmp_cols(tmp_width);
         std::list<std::string> revrows;
+
         for (int k = 0; k < tmp_width; k++) {
             if (verbose) {
                 std::cout << "\nnew_column " << k << "\n";
@@ -123,7 +124,7 @@ birlpbwt::birlpbwt(const char *filename, bool vcf, bool verbose) {
             input_matrix.clear();
             input_matrix.seekg(0, std::ios::beg);
             std::vector<unsigned int> pref(tmp_height);
-            sdsl::int_vector<> div(tmp_height);
+            std::vector<unsigned int> div(tmp_height);
             for (unsigned int i = 0; i < tmp_height; i++) {
                 pref[i] = i;
                 div[i] = 0;
@@ -198,6 +199,7 @@ std::vector<match>
 birlpbwt::external_match(const std::string &query, unsigned int min_len,
                          bool verbose) {
     std::vector<match> matches;
+
     std::vector<match> fm = this->frlpbwt.end_external_match(query, true,
                                                              verbose);
     if (verbose) {
@@ -216,6 +218,8 @@ birlpbwt::external_match(const std::string &query, unsigned int min_len,
             std::cout << m << "\n";
         }
     }
+
+    // TODO this not work
     unsigned int begin = 0;
     unsigned int end = 0;
     unsigned int nhaplo = 0;
@@ -301,6 +305,7 @@ void birlpbwt::external_match_vcf(const char *filename, unsigned int min_len,
     std::vector<std::string> queries;
     std::string tmpq;
     std::cout << queries_tmp.size() << " " << queries_tmp[0].size() << "\n";
+    std::ofstream out;
     for (unsigned int i = 0; i < queries_tmp[0].size(); i++) {
         for (unsigned int j = 0; j < queries_tmp.size(); j++) {
             tmpq.push_back(queries_tmp[j][i]);
@@ -315,7 +320,7 @@ void birlpbwt::external_match_vcf(const char *filename, unsigned int min_len,
         }
         auto matches = external_match(s, min_len, verbose);
         if (!matches.empty()) {
-            std::cout << "matches with " << qIDs[count] << "\n";
+            std::cout << "matches with " << count << " " << qIDs[count] << "\n";
             for (const auto &m: matches) {
                 std::cout << m << "\n";
             }

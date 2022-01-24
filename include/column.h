@@ -8,6 +8,9 @@
 #include <vector>
 #include <ostream>
 #include <sdsl/vectors.hpp>
+#include <boost/archive/text_iarchive.hpp>
+#include <boost/archive/text_oarchive.hpp>
+#include <boost/serialization/vector.hpp>
 #include "rlrow.h"
 
 /**
@@ -35,7 +38,7 @@ public:
     /**
      * @brief lcp array saved as a sdsl::int_vector
      */
-    sdsl::int_vector<> lcp;
+    std::vector<unsigned int> lcp;
 
     /**
      * @brief default constructor
@@ -62,7 +65,18 @@ public:
     friend std::ostream &
     operator<<(std::ostream &os, const column &column);
 
+private:
+    friend class boost::serialization::access;
 };
 
+namespace boost {
+    namespace serialization {
+        template<class Archive>
+        void serialize(Archive &a, column &e,
+                       const unsigned version){
+            a & e.count_0 & e.zero_first & e.lcp & e.rows;
+        }
+    }
+}
 
 #endif //RLPBWT_COLUMN_H

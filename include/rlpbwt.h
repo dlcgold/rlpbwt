@@ -16,6 +16,9 @@
 #include <sstream>
 #include <algorithm>
 #include <list>
+#include <boost/archive/text_iarchive.hpp>
+#include <boost/archive/text_oarchive.hpp>
+#include <boost/serialization/vector.hpp>
 #include "column.h"
 #include "utils.h"
 #include "exceptions.h"
@@ -97,7 +100,7 @@ public:
      */
     static column
     build_column(std::string &column, std::vector<unsigned int> &pref,
-                 sdsl::int_vector<> &div);
+                 std::vector<unsigned int> &div);
 
     /**
      * @brief utility to compute prefix and divergence array
@@ -107,7 +110,7 @@ public:
      */
     static void
     update(std::string &column, std::vector<unsigned int> &pref,
-           sdsl::int_vector<> &div);
+           std::vector<unsigned int> &div);
 
     /**
      * @brief function to compute end matches between the panel and a new query
@@ -124,6 +127,7 @@ public:
 
 
 private:
+    friend class boost::serialization::access;
 
     /**
     * @brief function to compute the lf mapping, w(i, s) function in Durbin
@@ -161,6 +165,14 @@ private:
 
 };
 
-
+namespace boost {
+    namespace serialization {
+        template<class Archive>
+        void serialize(Archive &a, rlpbwt &e,
+                       const unsigned version){
+            a & e.width & e.heigth & e.cols;
+        }
+    }
+}
 #endif //RLPBWT_RLPBWT_H
 
