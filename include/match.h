@@ -8,6 +8,9 @@
 
 #include <ostream>
 
+/**
+ * @brief class to rapresent a maximal match
+ */
 class match {
 public:
     /**
