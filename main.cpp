@@ -105,6 +105,7 @@ TEST (BuildRlpbwtVCF, TestBuildAndQuery) {
     EXPECT_EQ(rlpbwt.heigth, 900);
     EXPECT_EQ(rlpbwt.width, 500);
     clock_t START = clock();
+    // TODO add test check for matches
     rlpbwt.external_match_vcf("../input/sample_query.vcf", 255);
     std::cout << clock() - START << " time\n";
     //std::cout << rlpbwt.cols[4] << "\n";
@@ -160,6 +161,7 @@ TEST (BuildBiRlpbwtVCF, TestQuery) {
     EXPECT_EQ(birlpbwt.frlpbwt.heigth, 900);
     EXPECT_EQ(birlpbwt.frlpbwt.width, 500);
     clock_t START = clock();
+    // TODO add test check for matches
     birlpbwt.external_match_vcf("../input/sample_query.vcf", 255, false);
     std::cout << clock() - START << " time\n";
 
