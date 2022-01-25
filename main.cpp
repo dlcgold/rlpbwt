@@ -160,7 +160,7 @@ TEST (BuildBiRlpbwtVCF, TestQuery) {
     EXPECT_EQ(birlpbwt.frlpbwt.heigth, 900);
     EXPECT_EQ(birlpbwt.frlpbwt.width, 500);
     clock_t START = clock();
-    birlpbwt.external_match_vcf("../input/sample_query.vcf", 255);
+    birlpbwt.external_match_vcf("../input/sample_query.vcf", 255, false);
     std::cout << clock() - START << " time\n";
 
 }

@@ -219,7 +219,6 @@ birlpbwt::external_match(const std::string &query, unsigned int min_len,
         }
     }
 
-    // TODO this not work
     unsigned int begin = 0;
     unsigned int end = 0;
     unsigned int nhaplo = 0;
