@@ -35,8 +35,9 @@ public:
      */
     std::vector<rlrow> rows;
 
+    // TODO think about lcp saved as a sdsl::int_vector<> with compression
     /**
-     * @brief lcp array saved as a sdsl::int_vector
+     * @brief lcp array
      */
     std::vector<unsigned int> lcp;
 
