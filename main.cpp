@@ -108,7 +108,6 @@ TEST (BuildRlpbwtVCF, TestBuildAndQuery) {
     // TODO add test check for matches
     rlpbwt.external_match_vcf("../input/sample_query.vcf", 255);
     std::cout << clock() - START << " time\n";
-    //std::cout << rlpbwt.cols[4] << "\n";
 }
 
 TEST (BuildBiRlpbwtVCF, TestBuild) {
