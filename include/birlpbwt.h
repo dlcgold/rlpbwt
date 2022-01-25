@@ -15,6 +15,10 @@
 #include "rlpbwt.h"
 #include "match.h"
 
+/**
+ * @brief class to rappresent a double RLPBWT in order to identify maximal
+ * matches without saving lcp arrays
+ */
 class birlpbwt {
 public:
 
