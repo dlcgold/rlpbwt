@@ -7,7 +7,7 @@
 
 #include <vector>
 #include <ostream>
-#include <sdsl/vectors.hpp>
+//#include <sdsl/vectors.hpp>
 #include <boost/archive/text_iarchive.hpp>
 #include <boost/archive/text_oarchive.hpp>
 #include <boost/serialization/vector.hpp>
@@ -29,6 +29,7 @@ public:
      * @brief total number of zeros in the column
      */
     unsigned int count_0;
+
     /**
      * @brief vector with the quadruple for every run in the column in PBWT
      * matrix (assuming biallelic)

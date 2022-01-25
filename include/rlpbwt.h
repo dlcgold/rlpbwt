@@ -29,12 +29,12 @@
  */
 class rlpbwt {
 public:
+
     /**
      * @brief vector with all the structs for every column in run-length encoded
      * PBWT matrix
      */
     std::vector<column> cols;
-
 
     /**
      * @brief heigth of the original panel

@@ -5,20 +5,43 @@
 #ifndef RLPBWT_RLROW_H
 #define RLPBWT_RLROW_H
 
-
 #include <ostream>
 #include <boost/archive/text_iarchive.hpp>
 #include <boost/archive/text_oarchive.hpp>
 #include <boost/serialization/vector.hpp>
 
+/**
+ * @brief class to rappresent a single row in a column of RLPBWT
+ */
 class rlrow {
 public:
+    /**
+     * @brief index of the head of the run
+     */
+    unsigned int p;
+
+    /**
+    * @brief value of u or v (in biallelic case we can extract both based on
+    * the status of the column (first symbol and even/odd index for the row)
+    */
+    unsigned int uv;
+
+    /**
+     * Constrcutor for a single row
+     *
+     * @param p index of head run
+     * @param uv value for u or v
+     */
     rlrow(unsigned int p, unsigned int uv);
 
-    unsigned int p;
-    unsigned int uv;
+    /**
+     * @brief ostream overload to print the struct for a row
+     */
     friend std::ostream &operator<<(std::ostream &os, const rlrow &rlrow);
 
+    /**
+    * @brief default destructor
+    */
     virtual ~rlrow();
 
 private:
@@ -30,7 +53,7 @@ namespace boost {
     namespace serialization {
         template<class Archive>
         void serialize(Archive &a, rlrow &e,
-                       const unsigned version){
+                       const unsigned version) {
             a & e.p & e.uv;
         }
     }

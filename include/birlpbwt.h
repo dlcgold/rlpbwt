@@ -17,9 +17,25 @@
 
 class birlpbwt {
 public:
+
+    /**
+     * @brief regular RLPBWT (forward) builded from left to right
+     */
     rlpbwt frlpbwt = rlpbwt();
+
+    /**
+     * @brief reverdse RLPBWT (backward) builded from right to left
+     * (this will be queried with rhe reverse of the query)
+     */
     rlpbwt brlpbwt = rlpbwt();
 
+    /**
+     * Constructor for BIRLPWBT
+     *
+     * @param filename file for the input
+     * @param vcf bool to identify that the input file is a vcf file
+     * @param verbose bool for extra print
+     */
     explicit birlpbwt(const char *filename, bool vcf, bool verbose = false);
 
     /**
@@ -45,6 +61,9 @@ public:
                             bool verbose = false);
 
 
+    /**
+     * utility to print both forward and backward RLPBWT
+     */
     void print();
 
 private:

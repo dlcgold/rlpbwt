@@ -327,6 +327,8 @@ rlpbwt::external_match(const std::string &query, unsigned int min_len,
         curr_len = (end_index - curr_index);
         curr_offset = curr_index - this->cols[i].rows[curr_run].p;
         end_offset = end_index - this->cols[i].rows[end_run].p;
+
+        // check to undoing the offsets
         if (query[i] == '0') {
             if (get_next_char(this->cols[i].zero_first,
                               curr_run) == '1') {
@@ -356,10 +358,6 @@ rlpbwt::external_match(const std::string &query, unsigned int min_len,
         if (end_tmp > this->heigth) {
             end_tmp -= end_offset;
         }
-        /*curr_run = index_to_run(curr_tmp, i);
-        end_run = index_to_run(end_tmp, i);
-        curr_index = this->cols[i].rows[curr_run].p;
-        end_index = this->cols[i].rows[end_run].p;*/
         if (verbose) {
             std::cout << "middle at " << i << " from " << curr_tmp << " to "
                       << end_tmp
@@ -640,6 +638,7 @@ rlpbwt::end_external_match(const std::string &query, bool forward,
         curr_offset = curr_index - this->cols[i].rows[curr_run].p;
         end_offset = end_index - this->cols[i].rows[end_run].p;
 
+        // check for undoing offsets
         if (query[i] == '0') {
             if (get_next_char(this->cols[i].zero_first,
                               curr_run) == '1') {

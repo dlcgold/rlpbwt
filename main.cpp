@@ -2,6 +2,7 @@
 #include <gtest/gtest.h>
 #include <gperftools/heap-profiler.h>
 #include <boost/archive/text_oarchive.hpp>
+#include <sdsl/int_vector.hpp>
 #include "include/exceptions.h"
 #include "include/rlpbwt.h"
 #include "include/birlpbwt.h"
@@ -95,7 +96,6 @@ TEST (BuildBiRlpbwtTest, TestBuildAndQuery) {
 
 TEST (BuildRlpbwtVCF, TestBuildAndQuery) {
     rlpbwt rlpbwt("../input/sample_panel.vcf", true);
-
     std::ofstream outfile("rlpbwt.ser");
     boost::archive::text_oarchive archive(outfile);
     archive << rlpbwt;
