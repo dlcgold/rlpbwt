@@ -6,6 +6,7 @@
 
 rlpbwt::rlpbwt() : cols(), heigth(0), width(0) {}
 
+// VCF code thanks to https://github.com/ZhiGroup/Syllable-PBWT
 rlpbwt::rlpbwt(const char *filename, bool vcf, bool verbose) {
     if (vcf) {
         std::string line;
@@ -585,6 +586,7 @@ unsigned int rlpbwt::prev_run(unsigned int col_index, unsigned int index,
     return 0;
 }
 
+
 std::pair<unsigned int, unsigned int>
 rlpbwt::uvtrick(unsigned int col_index, unsigned int row_index) const {
     unsigned int u;
@@ -730,7 +732,7 @@ rlpbwt::end_external_match(const std::string &query, bool forward,
         } else {
             if (curr_len > 0) {
                 unsigned int rev_beg = query.size() - (query.size() - 1) - 1;
-                unsigned int rev_end = query.size() - curr_beg;
+                unsigned int rev_end = query.size() - curr_beg - 1;
                 matches.emplace_back(rev_beg, rev_end, curr_len);
             }
         }
@@ -836,7 +838,7 @@ void rlpbwt::external_match_vcf(const char *filename, unsigned int min_len,
     std::string tmpq;
     std::cout << queries_tmp.size() << " " << queries_tmp[0].size() << "\n";
     for (unsigned int i = 0; i < queries_tmp[0].size(); i++) {
-        for (auto & j : queries_tmp) {
+        for (auto &j: queries_tmp) {
             tmpq.push_back(j[i]);
         }
         queries.push_back(tmpq);
@@ -859,11 +861,3 @@ void rlpbwt::external_match_vcf(const char *filename, unsigned int min_len,
         count++;
     }
 }
-
-
-
-
-
-
-
-

@@ -4,6 +4,7 @@
 
 #include "../include/birlpbwt.h"
 
+// VCF code thanks to https://github.com/ZhiGroup/Syllable-PBWT
 birlpbwt::birlpbwt(const char *filename, bool vcf, bool verbose) {
     if (vcf) {
         std::string line;
@@ -199,7 +200,6 @@ std::vector<match>
 birlpbwt::external_match(const std::string &query, unsigned int min_len,
                          bool verbose) {
     std::vector<match> matches;
-
     std::vector<match> fm = this->frlpbwt.end_external_match(query, true,
                                                              verbose);
     if (verbose) {

@@ -76,6 +76,7 @@ public:
     external_match(const std::string &query, unsigned int min_len = 1,
                    bool verbose = false);
 
+
     /**
      * @brief function to compute matches between the panel and a new query
      * from a vcf file
@@ -86,6 +87,7 @@ public:
      */
     void external_match_vcf(const char *filename, unsigned int min_len = 1,
                             bool verbose = false);
+
 
     /**
      * @brief function to get the run in previous column which come from the
@@ -131,6 +133,7 @@ public:
     std::vector<match>
     end_external_match(const std::string &query, bool forward = true,
                        bool verbose = false);
+
 
     void print();
 
@@ -178,7 +181,7 @@ namespace boost {
     namespace serialization {
         template<class Archive>
         void serialize(Archive &a, rlpbwt &e,
-                       const unsigned version){
+                       const unsigned version) {
             a & e.width & e.heigth & e.cols;
         }
     }

@@ -37,7 +37,6 @@ TEST (BuildRlpbwtTest, TestBuildAndQuery) {
     auto rlsize = sizeof(rlpbwt.width) * 10E-6;
     rlsize += sizeof(rlpbwt.heigth) * 10E-6;
     auto rlsizeb = rlsize;
-    std::cout << rlsize << "\n";
     for (const auto &c: rlpbwt.cols) {
         rlsize += sizeof(bool) * 10E-6;
         rlsize += sizeof(unsigned int) * 10E-6;
@@ -95,7 +94,11 @@ TEST (BuildBiRlpbwtTest, TestBuildAndQuery) {
 }
 
 TEST (BuildRlpbwtVCF, TestBuildAndQuery) {
+    //HeapProfilerStart("heaprlp2.prof");
+    //std::cout << IsHeapProfilerRunning() << "\n";
     rlpbwt rlpbwt("../input/sample_panel.vcf", true);
+    //HeapProfilerDump("end construction");
+    //HeapProfilerStop();
     std::ofstream outfile("rlpbwt.ser");
     boost::archive::text_oarchive archive(outfile);
     archive << rlpbwt;
@@ -110,8 +113,14 @@ TEST (BuildRlpbwtVCF, TestBuildAndQuery) {
     std::cout << clock() - START << " time\n";
 }
 
+
 TEST (BuildBiRlpbwtVCF, TestBuild) {
+    //HeapProfilerStart("birlpbwtheap.prof");
+    //std::cout << IsHeapProfilerRunning() << "\n";
     birlpbwt birlpbwt("../input/sample_panel.vcf", true);
+    //HeapProfilerDump("end construction");
+    //HeapProfilerStop();
+
     std::cout << birlpbwt.frlpbwt.width << " " << birlpbwt.frlpbwt.heigth
               << "\n";
     EXPECT_EQ(birlpbwt.frlpbwt.heigth, 900);
@@ -171,7 +180,7 @@ int main(int argc, char **argv) {
     //::testing::GTEST_FLAG(filter) = "BuildRlpbwtTest*";
     //::testing::GTEST_FLAG(filter) = "BuildBiRlpbwtTest*";
     //::testing::GTEST_FLAG(filter) = "BuildRlpbwtVCF*";
-    ::testing::GTEST_FLAG(filter) = "BuildBiRlpbwtVCF*";
+    //::testing::GTEST_FLAG(filter) = "BuildBiRlpbwtVCF*";
 
     return RUN_ALL_TESTS();
 }
