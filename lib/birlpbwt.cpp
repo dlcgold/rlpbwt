@@ -4,6 +4,7 @@
 
 #include "../include/birlpbwt.h"
 
+// VCF code thanks to https://github.com/ZhiGroup/Syllable-PBWT
 birlpbwt::birlpbwt(const char *filename, bool vcf, bool verbose) {
     if (vcf) {
         std::string line;
@@ -130,6 +131,7 @@ birlpbwt::birlpbwt(const char *filename, bool vcf, bool verbose) {
                 div[i] = 0;
             }
             unsigned int count = 0;
+            std::string last_col;
             while (getline(input_matrix, new_column)) {
                 if (verbose) {
                     std::cout << "\nnew_column " << count << "\n";
@@ -152,8 +154,9 @@ birlpbwt::birlpbwt(const char *filename, bool vcf, bool verbose) {
                 tmp_cols[count] = col;
                 rlpbwt::update(new_column, pref, div);
                 count++;
+                last_col = new_column;
             }
-            auto col = rlpbwt::build_column(new_column, pref, div);
+            auto col = rlpbwt::build_column(last_col, pref, div);
             tmp_cols.push_back(col);
             this->frlpbwt.cols = tmp_cols;
             this->frlpbwt.width = tmp_width;
@@ -199,20 +202,19 @@ std::vector<match>
 birlpbwt::external_match(const std::string &query, unsigned int min_len,
                          bool verbose) {
     std::vector<match> matches;
-
-    std::vector<match> fm = this->frlpbwt.end_external_match(query, true,
+    std::vector<match_end> fm = this->frlpbwt.end_external_match(query, true,
                                                              verbose);
-    if (verbose) {
+    if (true) {
         std::cout << "forward matches:\n";
         for (const auto &m: fm) {
             std::cout << m << "\n";
         }
     }
     std::string query_rev(query.rbegin(), query.rend());
-    std::vector<match> bm = this->brlpbwt.end_external_match(query_rev, false,
+    std::vector<match_end> bm = this->brlpbwt.end_external_match(query_rev, false,
                                                              verbose);
 
-    if (verbose) {
+    if (true) {
         std::cout << "backward matches:\n";
         for (const auto &m: bm) {
             std::cout << m << "\n";
@@ -222,14 +224,14 @@ birlpbwt::external_match(const std::string &query, unsigned int min_len,
     unsigned int begin = 0;
     unsigned int end = 0;
     unsigned int nhaplo = 0;
-    for (unsigned int i = 0; i < fm.size(); ++i) {
+    /*for (unsigned int i = 0; i < fm.size(); ++i) {
         begin = std::min(fm[i].begin, bm[i].begin);
         end = std::max(fm[i].end, bm[i].end);
         nhaplo = std::min(fm[i].nhaplo, bm[i].nhaplo);
         if (end - begin != 0 && end - begin >= min_len && nhaplo > 0) {
             matches.emplace_back(begin, end, nhaplo);
         }
-    }
+    }*/
     return matches;
 }
 

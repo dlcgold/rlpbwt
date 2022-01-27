@@ -23,6 +23,7 @@
 #include "utils.h"
 #include "exceptions.h"
 #include "match.h"
+#include "match_end.h"
 
 /**
  * @brief class to rappresent the run-length encoded PBWT matrix
@@ -76,6 +77,7 @@ public:
     external_match(const std::string &query, unsigned int min_len = 1,
                    bool verbose = false);
 
+
     /**
      * @brief function to compute matches between the panel and a new query
      * from a vcf file
@@ -86,6 +88,7 @@ public:
      */
     void external_match_vcf(const char *filename, unsigned int min_len = 1,
                             bool verbose = false);
+
 
     /**
      * @brief function to get the run in previous column which come from the
@@ -128,9 +131,10 @@ public:
      * @param verbose bool for extra print
      * @return a vector of matches (begin, end, number of matches)
      */
-    std::vector<match>
+    std::vector<match_end>
     end_external_match(const std::string &query, bool forward = true,
                        bool verbose = false);
+
 
     void print();
 
@@ -178,7 +182,7 @@ namespace boost {
     namespace serialization {
         template<class Archive>
         void serialize(Archive &a, rlpbwt &e,
-                       const unsigned version){
+                       const unsigned version) {
             a & e.width & e.heigth & e.cols;
         }
     }

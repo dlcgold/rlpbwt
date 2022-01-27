@@ -3,8 +3,10 @@
 #include <gperftools/heap-profiler.h>
 #include <boost/archive/text_oarchive.hpp>
 #include <sdsl/int_vector.hpp>
+#include <sdsl/bit_vectors.hpp>
 #include "include/exceptions.h"
 #include "include/rlpbwt.h"
+#include "include/rlpbwtbv.h"
 #include "include/birlpbwt.h"
 
 
@@ -14,6 +16,7 @@ TEST (BuildRlpbwtTest, TestBuildAndQuery) {
     rlpbwt rlpbwt("../input/sample.txt", false);
     //HeapProfilerDump("end construction");
     //HeapProfilerStop();
+    std::cout << rlpbwt.cols[rlpbwt.cols.size() - 1] << "\n";
     EXPECT_EQ(rlpbwt.heigth, 20);
     EXPECT_EQ(rlpbwt.width, 15);
     std::cout << rlpbwt.heigth << " " << rlpbwt.width << "\n";
@@ -37,7 +40,6 @@ TEST (BuildRlpbwtTest, TestBuildAndQuery) {
     auto rlsize = sizeof(rlpbwt.width) * 10E-6;
     rlsize += sizeof(rlpbwt.heigth) * 10E-6;
     auto rlsizeb = rlsize;
-    std::cout << rlsize << "\n";
     for (const auto &c: rlpbwt.cols) {
         rlsize += sizeof(bool) * 10E-6;
         rlsize += sizeof(unsigned int) * 10E-6;
@@ -56,7 +58,7 @@ TEST (BuildRlpbwtTest, TestBuildAndQuery) {
 }
 
 TEST (BuildBiRlpbwtTest, TestBuildAndQuery) {
-    birlpbwt birlpbwt("../input/sample.txt", false);
+    birlpbwt birlpbwt("../input/sample2.txt", false);
     bool verbose = false;
     if (verbose) {
         birlpbwt.print();
@@ -65,7 +67,7 @@ TEST (BuildBiRlpbwtTest, TestBuildAndQuery) {
     for (const auto &m: matches) {
         std::cout << m << "\n";
     }
-    auto match0 = match(0, 5, 4);
+    /*auto match0 = match(0, 5, 4);
     auto match1 = match(3, 9, 1);
     auto match2 = match(7, 11, 1);
     auto match3 = match(11, 14, 3);
@@ -91,11 +93,15 @@ TEST (BuildBiRlpbwtTest, TestBuildAndQuery) {
     double nrlsize = sizeof(unsigned int) * (double) (birlpbwt.frlpbwt.heigth *
                                                       birlpbwt.frlpbwt.width *
                                                       5) * 10E-6;
-    std::cout << rlsizeb << " vs " << nrlsize << "\n";
+    std::cout << rlsizeb << " vs " << nrlsize << "\n";*/
 }
 
 TEST (BuildRlpbwtVCF, TestBuildAndQuery) {
+    //HeapProfilerStart("heaprlp2.prof");
+    //std::cout << IsHeapProfilerRunning() << "\n";
     rlpbwt rlpbwt("../input/sample_panel.vcf", true);
+    //HeapProfilerDump("end construction");
+    //HeapProfilerStop();
     std::ofstream outfile("rlpbwt.ser");
     boost::archive::text_oarchive archive(outfile);
     archive << rlpbwt;
@@ -110,8 +116,14 @@ TEST (BuildRlpbwtVCF, TestBuildAndQuery) {
     std::cout << clock() - START << " time\n";
 }
 
+
 TEST (BuildBiRlpbwtVCF, TestBuild) {
+    //HeapProfilerStart("birlpbwtheap.prof");
+    //std::cout << IsHeapProfilerRunning() << "\n";
     birlpbwt birlpbwt("../input/sample_panel.vcf", true);
+    //HeapProfilerDump("end construction");
+    //HeapProfilerStop();
+
     std::cout << birlpbwt.frlpbwt.width << " " << birlpbwt.frlpbwt.heigth
               << "\n";
     EXPECT_EQ(birlpbwt.frlpbwt.heigth, 900);
@@ -163,15 +175,43 @@ TEST (BuildBiRlpbwtVCF, TestQuery) {
     // TODO add test check for matches
     birlpbwt.external_match_vcf("../input/sample_query.vcf", 255, false);
     std::cout << clock() - START << " time\n";
-
 }
+
+TEST (BuildRlpbwtBVtest, TestBuildQuery) {
+    rlpbwtbv rlpbwtbv("../input/sample.txt", false);
+
+    auto matches = rlpbwtbv.external_match("010010100011101", 1);
+    for (const auto &m: matches) {
+        std::cout << m << "\n";
+    }
+    auto match0 = match(0, 5, 4);
+    auto match1 = match(3, 9, 1);
+    auto match2 = match(7, 11, 1);
+    auto match3 = match(11, 14, 3);
+    EXPECT_EQ(matches[0], match0);
+    EXPECT_EQ(matches[1], match1);
+    EXPECT_EQ(matches[2], match2);
+    EXPECT_EQ(matches[3], match3);
+}
+
+TEST (BuildRlpbwtBVVCF, TestBuildQuery) {
+    rlpbwtbv rlpbwtbv("../input/sample_panel.vcf", true);
+    EXPECT_EQ(rlpbwtbv.heigth, 900);
+    EXPECT_EQ(rlpbwtbv.width, 500);
+    clock_t START = clock();
+    // TODO add test check for matches
+    rlpbwtbv.external_match_vcf("../input/sample_query.vcf", 255, false);
+    std::cout << clock() - START << " time\n";
+}
+
 
 int main(int argc, char **argv) {
     ::testing::InitGoogleTest(&argc, argv);
     //::testing::GTEST_FLAG(filter) = "BuildRlpbwtTest*";
     //::testing::GTEST_FLAG(filter) = "BuildBiRlpbwtTest*";
     //::testing::GTEST_FLAG(filter) = "BuildRlpbwtVCF*";
-    ::testing::GTEST_FLAG(filter) = "BuildBiRlpbwtVCF*";
-
+    //::testing::GTEST_FLAG(filter) = "BuildBiRlpbwtVCF*";
+    //::testing::GTEST_FLAG(filter) = "BuildRlpbwtBVtest*";
+    //::testing::GTEST_FLAG(filter) = "BuildRlpbwtBVVCF*";
     return RUN_ALL_TESTS();
 }
