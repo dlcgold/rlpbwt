@@ -779,7 +779,7 @@
     We save, for every column:
     \begin{itemize}
       \item a bit vector of the same length of the dense PBWT column, with 1 in
-      every position of a head of a run
+      every position before a head of a run
       \item 2 bit vector that can be queried to obtain $u$ and $v$ value. So we
       have a bitvector for zeros that contains 1 in position $i$ iff we have $i$
       zeros at point in the column when we change value anche similar for
@@ -794,7 +794,7 @@
     
     \[c=00001110001111110{\color{nordred}{0}}001111111\]
     We save:
-    \[h=000010010010000010001000000(1)\]
+    \[h=000100100100000100010000000(1)\]
     \[u=00010010001\mbox{ (to rappresent 4,3 and 4 zeros)}\]
     \[v=0010000010000001\mbox{ (to rappresent 3,6 and 7 ones)}\]
   \end{block}

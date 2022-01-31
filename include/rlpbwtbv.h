@@ -123,7 +123,7 @@ public:
 
     /**
      * @brief function to get the run in previous column which come from the
-     * current run
+     * current run, like a "reverse lf-mapping"
      *
      * @param col_index index of the column
      * @param index virtual index of the row of the original panel
@@ -131,8 +131,8 @@ public:
      * @return
      */
     unsigned int
-    backward_index(unsigned int col_index, unsigned int index,
-                   bool verbose) const;
+    reverse_lf(unsigned int col_index, unsigned int index,
+               bool verbose) const;
 
 };
 

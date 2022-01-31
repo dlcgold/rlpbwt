@@ -178,20 +178,22 @@ TEST (BuildBiRlpbwtVCF, TestQuery) {
 }
 
 TEST (BuildRlpbwtBVtest, TestBuildQuery) {
-    rlpbwtbv rlpbwtbv("../input/sample.txt", false);
+    rlpbwtbv rlpbwtbv("../input/sample2.txt", false);
 
     auto matches = rlpbwtbv.external_match("010010100011101", 1);
     for (const auto &m: matches) {
         std::cout << m << "\n";
     }
     auto match0 = match(0, 5, 4);
-    auto match1 = match(3, 9, 1);
-    auto match2 = match(7, 11, 1);
-    auto match3 = match(11, 14, 3);
+    auto match1 = match(2, 8, 1);
+    auto match2 = match(3, 9, 1);
+    auto match3 = match(7, 11, 1);
+    auto match4 = match(11, 14, 3);
     EXPECT_EQ(matches[0], match0);
     EXPECT_EQ(matches[1], match1);
     EXPECT_EQ(matches[2], match2);
     EXPECT_EQ(matches[3], match3);
+    EXPECT_EQ(matches[4], match4);
 }
 
 TEST (BuildRlpbwtBVVCF, TestBuildQuery) {
@@ -211,7 +213,7 @@ int main(int argc, char **argv) {
     //::testing::GTEST_FLAG(filter) = "BuildBiRlpbwtTest*";
     //::testing::GTEST_FLAG(filter) = "BuildRlpbwtVCF*";
     //::testing::GTEST_FLAG(filter) = "BuildBiRlpbwtVCF*";
-    //::testing::GTEST_FLAG(filter) = "BuildRlpbwtBVtest*";
+    ::testing::GTEST_FLAG(filter) = "BuildRlpbwtBVtest*";
     //::testing::GTEST_FLAG(filter) = "BuildRlpbwtBVVCF*";
     return RUN_ALL_TESTS();
 }
