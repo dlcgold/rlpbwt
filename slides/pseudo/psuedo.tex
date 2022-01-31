@@ -1,0 +1,319 @@
+\documentclass[a4paper,12pt, oneside]{book}
+
+% \usepackage{fullpage}
+\usepackage[italian]{babel}
+\usepackage[utf8]{inputenc}
+\usepackage{amssymb}
+\usepackage{amsthm}
+\usepackage{graphics}
+\usepackage{amsfonts}
+\usepackage{listings}
+\usepackage{amsmath}
+\usepackage{amstext}
+\usepackage{colortbl}
+\usepackage{engrec}
+\usepackage{rotating}
+\usepackage{subcaption}
+\usepackage{verbatim}
+\usepackage[safe,extra]{tipa}
+% \usepackage{showkeys}
+\usepackage{multirow}
+\usepackage{hyperref}
+\usepackage{microtype}
+% \usepackage{fontspec}
+\usepackage{enumerate}
+\usepackage{braket}
+\usepackage{relsize}
+\usepackage{marginnote}
+\usepackage{pgfplots}
+\usepackage{cancel}
+\usepackage{polynom}
+\usepackage{booktabs}
+\usepackage{enumitem}
+\usepackage{framed}
+\usepackage{pdfpages}
+\usepackage{pgfplots}
+\usepackage{algorithm}
+\usepackage[backend=biber, backref=true, sorting=none]{biblatex}
+\usepackage{fvextra}
+\usepackage{csquotes}
+% \usepackage{natbib}
+% \usepackage{algpseudocode}
+% \usepackage[cache=false]{minted}
+\usepackage{mathtools}
+\usepackage[noend]{algpseudocode}
+\usepackage{svg}
+\usepackage{graphicx}
+\usepackage{hyperref}
+\usepackage{setspace}
+\usepackage{geometry}
+\usepackage{blindtext}
+\usepackage{titleps}
+\addbibresource{thesis.bib}
+\usepackage{tikz}\usetikzlibrary{er}\tikzset{multi  attribute /.style={attribute
+    ,double  distance =1.5pt}}\tikzset{derived  attribute /.style={attribute
+    ,dashed}}\tikzset{total /.style={double  distance =1.5pt}}\tikzset{every
+  entity /.style={draw=orange , fill=orange!20}}\tikzset{every  attribute
+  /.style={draw=MediumPurple1, fill=MediumPurple1!20}}\tikzset{every
+  relationship /.style={draw=Chartreuse2,
+    fill=Chartreuse2!20}}\newcommand{\key}[1]{\underline{#1}}
+\usetikzlibrary{arrows.meta}
+\usetikzlibrary{decorations.markings}
+\usetikzlibrary{arrows,shapes,backgrounds,petri} 
+\usetikzlibrary{automata,positioning}
+\usetikzlibrary{matrix}
+%\renewcommand{\chaptermark}[1]{\markboth{#1}{}}
+\usepackage{fancyhdr}
+\pagestyle{fancy}
+
+\fancyhead[LO,RE]{\slshape \leftmark}
+%\fancyhead[CO,CE]{\slshape\rightmark}
+\fancyhead[LE,RO]{\slshape\rightmark}
+\fancyfoot[C]{\thepage}
+% \fancyhf{}
+% \fancyhead[LO,RE]{\slshape \leftmark}
+% %\fancyhead[CO,CE]{\slshape\rightmark}
+% \fancyhead[LE,RO]{\slshape\thepage}
+% \renewcommand{\footrulewidth}{0pt}
+%\fancyfoot[C]{\thepage}
+% \title{Relazione}
+% \fancypagestyle{plain}{% \fancyhf{} % clear all header and footer fields
+%   \fancyhead[RO,RE]{\thepage}%RO=right odd, RE=right even
+%   \renewcommand{\headrulewidth}{0pt}
+%\renewcommand{\footrulewidth}{0.3pt}}
+
+
+\pgfplotsset{compat=1.13}
+
+\begin{document}
+\restoregeometry
+\definecolor{shadecolor}{gray}{0.80}
+\setlist{leftmargin = 2cm}
+\newtheorem{teorema}{Teorema}
+\newtheorem{definizione}{Definizione}
+\newtheorem{esempio}{Esempio}
+\newtheorem{corollario}{Corollario}
+\newtheorem{lemma}{Lemma}
+\newtheorem{osservazione}{Osservazione}
+\newtheorem{nota}{Nota}
+\newtheorem{esercizio}{Esercizio}
+
+\algdef{SE}[DOWHILE]{Do}{doWhile}{\algorithmicdo}[1]{\algorithmicwhile\ #1}
+
+\renewcommand{\chaptermark}[1]{%
+  \markboth{\chaptername
+    \ \thechapter.\ #1}{}}
+\renewcommand{\sectionmark}[1]{\markright{\thesection.\ #1}}
+\newcommand{\floor}[1]{\lfloor #1 \rfloor}
+
+\newcommand{\MYhref}[3][blue]{\href{#2}{\color{#1}{#3}}}%
+\newcommand{\hiddenchapter}[1]{
+  \stepcounter{chapter*}
+  \chapter*{\arabic{chapter}\hspace{1em}{#1}}
+}
+% \pagenumbering{roman}
+
+\newpage
+\subsection*{RLPBWT con bitvectors}
+\begin{algorithm}[H]
+  \footnotesize
+  \begin{algorithmic}[1]
+    \Function{get\_symbol}{$s, r$}
+    \Comment $s=\top$ iff column start with 0, $r$ run index
+    \If{$s$}
+    \State \textbf{if} $r\bmod 2 = 0$ \textbf{then} \textbf{return} '0'
+    \textbf{else} \textbf{return} '1'
+    \Else
+    \State \textbf{if} $r\bmod 2 = 0$ \textbf{then} \textbf{return} '1'
+    \textbf{else} \textbf{return} '0'
+    \EndIf
+    \EndFunction
+  \end{algorithmic}
+  \caption{Algoritmo per estrazione simbolo da una run in una colonna}
+\end{algorithm}
+
+\begin{algorithm}[H]
+  \footnotesize
+  \begin{algorithmic}[1]
+    \Function{uvtrick}{$k, i$}
+    \Comment $k$ is column index, $i$ row index
+    \If{$i = 0$}
+    \State \textbf{return} $(0,\,\,0)$
+    \EndIf
+    \State $run \gets rank_h^{k}(i)$
+    \If{$run=0$}
+    \If{$rlpbwt[k].start$}
+    \State \textbf{return} $(index,\,\, 0)$
+    \Else
+    \State \textbf{return} $(0, \,\,index)$
+    \EndIf
+    \ElsIf{$run=1$}
+    \If{$rlpbwt[k].start$}
+    \State \textbf{return} $(select_h^{k}(run)+1,\,\, i-(select_h^{k}(run)+1))$
+    \Else
+    \State \textbf{return} $(i-(select_h^{k}(run)+1),\,\, select_h^{k}(run)+1)$
+    \EndIf
+    \Else
+    \If{$run\bmod 2 = 0$}
+    \State $pre_u\gets select_u^{k}(\frac{run}{2})+1$
+    \State $pre_v\gets select_v^{k}(\frac{run}{2})+1$
+    \State $offset \gets i -(select_h^{k}(run)+1)$
+    \If{$rlpbwt[k].start$}
+    \State \textbf{return} $(pre_u+offset,\,\, pre_v)$
+    \Else
+    \State \textbf{return} $(pre_u, \,\,pre_v+offset)$
+    \EndIf
+    \Else
+    \State $run_u\gets (\frac{run}{2})+1$
+    \State $run_v\gets \frac{run}{2}$
+    \If{$\neg rlpbwt[k].start$}
+    \State $swap(run_u, run_v)$
+    \EndIf
+    \State $pre_u\gets select_u^{k}(run_u)+1$
+    \State $pre_v\gets select_v^{k}(run_v)+1$
+    \State $offset \gets i -(select_h^{k}(run)+1)$
+    \If{$rlpbwt[k].start$}
+    \State \textbf{return} $(pre_u, \,\,pre_v+offset)$
+    \Else
+    \State \textbf{return} $(pre_u+offset, \,\,pre_v)$
+    \EndIf
+    \EndIf
+    \EndIf
+    \EndFunction
+  \end{algorithmic}
+  \caption{Algoritmo per uvtrick}
+\end{algorithm}
+
+\begin{algorithm}[H]
+  \begin{algorithmic}[1]
+    \Function{lf}{$k, i, s$}
+    \Comment $k$ is column index, $i$ row index, $s$ symbol
+    \State $c\gets rlpbwt[k].c$
+    \State $(u, v) \gets uvtrick(k,\,\,i)$
+    \If{$s = 0$}
+    \State \textbf{return} $u$
+    \Else
+    \State \textbf{return} $c+v$
+    \EndIf
+    \EndFunction
+  \end{algorithmic}
+  \caption{Algoritmo per lf-mapping}
+\end{algorithm}
+
+\begin{algorithm}[H]
+  \begin{algorithmic}[1]
+    \Function{reverse\_lf}{$k, i$}
+    \Comment $k$ is column index, $i$ row index
+    \If{$k=0$}
+    \Comment by design
+    \State \textbf{return} $0$
+    \EndIf
+    \State $k\gets k-1$
+    \State $c\gets rlpbwt[k].c$
+    \If{$i<c$}
+    \If{$rlpbwt[k].start$}
+    \State $run\gets rank_u^{k}(i)\cdot 2$
+    \Else
+    \State $run\gets rank_u^{k}(i)\cdot 2+1$
+    \EndIf
+    \State $i_{run}\gets 0$
+    \If{$run\neq 0$}
+    \State $i_{run}\gets select_h^{k}(run)+1$
+    \EndIf
+    \State $(prev_0,\,\,\_)\gets uvtrick(k,\,\,i_{run})$
+    \State \textbf{return} $i_{run}+(i-prev_0)$
+    \Else
+    \If{$rlpbwt[k].start$}
+    \State $run\gets rank_v^{k}(i)\cdot 2+1$
+    \Else
+    \State $run\gets rank_v^{k}(i)\cdot 2$
+    \EndIf
+    \State $i_{run}\gets 0$
+    \If{$run\neq 0$}
+    \State $i_{run}\gets select_h^{k}(run)+1$
+    \EndIf
+    \State $(\_,\,\,prev_1)\gets uvtrick(k,\,\,i_{run})$
+    \State \textbf{return} $i_{run}+(i-(c+prev_1))$
+    \EndIf
+    \EndFunction
+  \end{algorithmic}
+  \caption{Algoritmo per lf-mapping inverso}
+\end{algorithm}
+
+\begin{algorithm}
+  \footnotesize
+  \begin{algorithmic}[1]
+    \Function{external\_matches}{$z$}
+    \Comment assuming $|z|=rlpbwt.width$
+    \State $f\gets 0,\,\,f_{run}\gets 0,\,\,f'\gets 0$
+    \State $g\gets 0,\,\,g_{run}\gets 0,\,\,g'\gets 0$
+    \State $e\gets 0,\,\,l\gets 0$
+    \For {\textit{every} $k\in\left[0,\,\, |z|\right)$}
+    \State $f_{run}\gets rank_h^k(f),\,\,g_{run}\gets rank_h^k(g)$
+    \State $f'\gets lf(k,\,\, f,\,\, z[k]),\,\,g'\gets lf(k,\,\, g,\,\, z[k])$
+    \State $l\gets g-f$
+    \If{$f'<g'$}
+    \State $f\gets f',\,\,g\gets g'$
+    \Else
+    \If{$k\neq 0$}
+    \State \textbf{report} \textit{matches in} $[e,\,\, k-1]$ \textit{with} $l$
+    haplotypes   
+    \EndIf
+    \If{$f'=|lcp^{k+1}|$}
+    \State $e\gets k+1$
+    \Else
+    \State $e\gets lcp^{k+1}[f']$
+    \EndIf
+    
+    \If{$(z[e]=0\land f'>0)\lor f'=height$}
+    \State $f'\gets g'-1$
+    \If{$e\geq 1$}
+    \State $f_{rev}\gets f',\,\,k'\gets k+1$
+    \While {$k'\neq e-1$}
+    \State $f_{rev}\gets reverse\_lf(k', \,\,f_{rev}),\,\,k'\gets k'-1$
+    \EndWhile
+    \State $run\gets rank_h^{k'}(f_{rev}),\,\,symb\gets get\_symbol(start^{k'},
+    run)$ 
+    \While {$e>0\land z[e-1]=symb$}
+    \State $f_{rev}\gets reverse\_lf(e, \,\,f_{rev})$
+    \State $run\gets rank_h^{e-1}(f_{rev})$
+    \State $symb\gets get\_symbol(start^{e-1}, run)$
+    \EndWhile
+    \EndIf
+    \State \textbf{while} $f'>0\land (k+1)-lcp^{k+1}[f]\leq e$ \textbf{do}
+    $e\gets e-1$ 
+    \State $f\gets f',\,\,g\gets g'$
+    \Else
+    \State $g'\gets f'-1$
+    \If{$e\geq 1$}
+    \State $f_{rev}\gets f',\,\,k'\gets k+1$
+    \While {$k'\neq e-1$}
+    \State $f_{rev}\gets reverse\_lf(k', \,\,f_{rev}),\,\,k'\gets k'-1$
+    \EndWhile
+    \State $run\gets rank_h^{k'}(f_{rev}),\,\,symb\gets get\_symbol(start^{k'},
+    run)$ 
+    \While {$e>0\land z[e-1]=symb$}
+    \State $f_{rev}\gets reverse\_lf(e, \,\,f_{rev})$
+    \State $run\gets rank_h^{e-1}(f_{rev})$
+    \State $symb\gets get\_symbol(start^{e-1}, run)$
+    \EndWhile
+    \EndIf
+    \State \textbf{while} $e<height\land (k+1)-lcp^{k+1}[e]\leq e$ \textbf{do}
+    $e\gets e+1$  
+    \State $f\gets f',\,\,g\gets g'$
+    \EndIf
+    \EndIf
+    \EndFor
+    \If{$f<g$}
+    \State $l\gets g-f$
+    \State \textbf{report} \textit{matches in} $[e,\,\, |z|-1]$ \textit{with} $l$
+    haplotypes   
+    \EndIf
+    \EndFunction
+  \end{algorithmic}
+  \caption{Algoritmo per match con aplotipo esterno con panel $width\times
+  height$} 
+\end{algorithm}
+\end{document}
+
+% LocalWords:  divergence prefix
