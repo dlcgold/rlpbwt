@@ -813,9 +813,23 @@
       \item remain zeros in the run to compute are given by $i-(select_h(4)+1)$
     \end{itemize}
   \end{block}
-  \begin{alertblock}{TODO}
-    Re-implement the algorithm using bitvectors, \textit{rank} and
-    \textit{select} instead of run head indices and $uv$ values.
+\end{frame}
+\begin{frame}{Idea to change the use of whole lcp array}
+  \begin{block}{}
+    When we have an ending match, disovered in $k+1$, with $f$ and $g$ in $k$,
+    we could: 
+    \begin{itemize}
+      \item take maximum lcp between $f$ and first $0/1$ above $f$
+      \item take maximum lcp between $g$ and first $0/1$ below $g$
+      \item take maximum between these two values, we call it $x$
+      \item new interval is $[psv[x],\,\, nsv[x]-1]$ and we use this value to
+      obtain new $e$
+    \end{itemize}
+  \end{block}
+  \begin{alertblock}{}
+    We could obtain $psv$ and $nsv$ array using \textit{RMQ} of
+    \textit{sdsl-lite}. \\
+    In future we will use thresholds.
   \end{alertblock}
 \end{frame}
 % \begin{frame}[allowframebreaks]{References} 

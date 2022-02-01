@@ -115,17 +115,84 @@
 
 \newpage
 \subsection*{RLPBWT con bitvectors}
+
 \begin{algorithm}[H]
   \footnotesize
   \begin{algorithmic}[1]
-    \Function{get\_symbol}{$s, r$}
+    \Function{build}{$col,\,\, pref,\,\, div$}
+    \State $c\gets 0,\,\,u\gets 0,\,\,v\gets 0$
+    \State $u'\gets 0,\,\, v'\gets 0$
+    \State $start \gets \top$
+    \For {\textit{every} $k\in\left[0,\,\, height\right)$}
+    \If{$k=0\land col[pref[k]]=1$}
+    \State $start \gets \bot$
+    \EndIf
+    \If{$col[k]=0$}
+    \State $c\gets c+1$
+    \EndIf
+    \EndFor
+    \State $runs\gets[0..0]$
+    \Comment sparse bitvector for runs of length $height+1$
+    \State $zeros\gets[0..0]$
+    \Comment sparse bitvector for zeros of length $c$
+    \State $ones\gets[0..0]$
+    \Comment sparse bitvector for ones of length $height-c$
+    \State $beg_{run}\gets \top,\,\,push_{zero}\gets \bot,\,\,push_{one}\gets
+    \bot$ 
+    \If{$start$}
+    \State $push_{one}\gets \top$
+    \Else
+    \State $push_{zero}\gets \top$
+    \EndIf
+    \For {\textit{every} $k\in\left[0,\,\, height\right)$}
+    \If{$beg_{run}$}
+    \State $u\gets u',\,\,v\gets v'$
+    \State $beg_{run}\gets \bot$
+    \EndIf
+    \If{$col[pref[k]]=1$}
+    \State $v'\gets v'+1$
+    \Else
+    \State $u'\gets u'+1$
+    \EndIf
+    \If{$k=height-1\lor col[pref[k]]\neq col[pref[k+1]]$}
+    \State $runs[k]\gets 1$
+    \If{$push_{one}$}
+    \If{$v\neq 0$}
+    \State $ones[k-1]=1$
+    \EndIf
+    \State $swap(push_{zero},\,\,push_{one})$
+    \Else
+    \If{$u\neq 0$}
+    \State $zeros[k-1]=1$
+    \EndIf
+    \State $swap(push_{zero},\,\,push_{one})$
+    \EndIf
+    \State $beg_{run}\gets \top$
+    \EndIf
+    \EndFor
+    \If{$|zeros|\neq 0$}
+    \State $zeros[|zeros|-1]\gets 1$
+    \EndIf
+    \If{$|ones|\neq 0$}
+    \State $ones[|ones|-1]\gets 1$
+    \EndIf
+    \State \textit{build rank/select for the three bitvectors}
+    \State \textbf{return} $(start,\,\,c,\,\,runs,\,\,zeros,\,\,ones,\,\,div)$
+    \EndFunction
+  \end{algorithmic}
+  \caption{{\footnotesize{Algoritmo per la costruzione di una colonna della RLPBWT con bitvectors}}}
+\end{algorithm}
+\begin{algorithm}[H]
+  \footnotesize
+  \begin{algorithmic}[1]
+    \Function{get\_symbol}{$s, \,\,r$}
     \Comment $s=\top$ iff column start with 0, $r$ run index
     \If{$s$}
-    \State \textbf{if} $r\bmod 2 = 0$ \textbf{then} \textbf{return} '0'
-    \textbf{else} \textbf{return} '1'
+    \State \textbf{if} $r\bmod 2 = 0$ \textbf{then} \textbf{return} $0$
+    \textbf{else} \textbf{return} $1$
     \Else
-    \State \textbf{if} $r\bmod 2 = 0$ \textbf{then} \textbf{return} '1'
-    \textbf{else} \textbf{return} '0'
+    \State \textbf{if} $r\bmod 2 = 0$ \textbf{then} \textbf{return} $1$
+    \textbf{else} \textbf{return} $0$
     \EndIf
     \EndFunction
   \end{algorithmic}
@@ -135,7 +202,7 @@
 \begin{algorithm}[H]
   \footnotesize
   \begin{algorithmic}[1]
-    \Function{uvtrick}{$k, i$}
+    \Function{uvtrick}{$k,\,\, i$}
     \Comment $k$ is column index, $i$ row index
     \If{$i = 0$}
     \State \textbf{return} $(0,\,\,0)$
@@ -186,7 +253,7 @@
 
 \begin{algorithm}[H]
   \begin{algorithmic}[1]
-    \Function{lf}{$k, i, s$}
+    \Function{lf}{$k,\,\, i, \,\,s$}
     \Comment $k$ is column index, $i$ row index, $s$ symbol
     \State $c\gets rlpbwt[k].c$
     \State $(u, v) \gets uvtrick(k,\,\,i)$
@@ -202,7 +269,7 @@
 
 \begin{algorithm}[H]
   \begin{algorithmic}[1]
-    \Function{reverse\_lf}{$k, i$}
+    \Function{reverse\_lf}{$k, \,\,i$}
     \Comment $k$ is column index, $i$ row index
     \If{$k=0$}
     \Comment by design
