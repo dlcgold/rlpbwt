@@ -8,6 +8,7 @@
 #include "include/rlpbwt.h"
 #include "include/rlpbwtbv.h"
 #include "include/birlpbwt.h"
+#include "include/rlpbwt_thr.h"
 
 
 TEST (BuildRlpbwtTest, TestBuildAndQuery) {
@@ -76,7 +77,7 @@ TEST (BuildBiRlpbwtTest, TestBuildAndQuery) {
     EXPECT_EQ(matches[2], match2);
     EXPECT_EQ(matches[3], match3);
     auto rlsizeb = sizeof(birlpbwt.frlpbwt.width) * 10E-6;
-    rlsizeb += sizeof(birlpbwt.frlpbwt.heigth) * 10E-6;
+    rlsizeb += sizeof(birlpbwt.frlpbwt.height) * 10E-6;
     rlsizeb *= 2;
     for (const auto &c: birlpbwt.frlpbwt.cols) {
         rlsizeb += sizeof(bool) * 10E-6;
@@ -90,7 +91,7 @@ TEST (BuildBiRlpbwtTest, TestBuildAndQuery) {
         rlsizeb += sizeof(unsigned int) * (double) c.rows.size() * 10E-6;
         rlsizeb += sizeof(unsigned int) * (double) c.rows.size() * 10E-6;
     }
-    double nrlsize = sizeof(unsigned int) * (double) (birlpbwt.frlpbwt.heigth *
+    double nrlsize = sizeof(unsigned int) * (double) (birlpbwt.frlpbwt.height *
                                                       birlpbwt.frlpbwt.width *
                                                       5) * 10E-6;
     std::cout << rlsizeb << " vs " << nrlsize << "\n";*/
@@ -198,12 +199,25 @@ TEST (BuildRlpbwtBVtest, TestBuildQuery) {
 
 TEST (BuildRlpbwtBVVCF, TestBuildQuery) {
     rlpbwtbv rlpbwtbv("../input/sample_panel.vcf", true);
-    EXPECT_EQ(rlpbwtbv.heigth, 900);
+    EXPECT_EQ(rlpbwtbv.height, 900);
     EXPECT_EQ(rlpbwtbv.width, 500);
     clock_t START = clock();
     // TODO add test check for matches
     rlpbwtbv.external_match_vcf("../input/sample_query.vcf", 255, false);
     std::cout << clock() - START << " time\n";
+}
+
+TEST (BuildRlpbwtThr, TestBuildQuery) {
+    rlpbwt_thr rlpbwt_thr("../input/sample.txt", false);
+    unsigned int count = 0;
+    for (const auto &c: rlpbwt_thr.cols) {
+        std::cout << "column " << count << ":\n";
+        std::cout << c;
+        count++;
+        std::cout << "--------------------\n";
+    }
+
+    rlpbwt_thr.match_thr("010010100011101");
 }
 
 
@@ -213,7 +227,8 @@ int main(int argc, char **argv) {
     //::testing::GTEST_FLAG(filter) = "BuildBiRlpbwtTest*";
     //::testing::GTEST_FLAG(filter) = "BuildRlpbwtVCF*";
     //::testing::GTEST_FLAG(filter) = "BuildBiRlpbwtVCF*";
-    ::testing::GTEST_FLAG(filter) = "BuildRlpbwtBVtest*";
+    //::testing::GTEST_FLAG(filter) = "BuildRlpbwtBVtest*";
     //::testing::GTEST_FLAG(filter) = "BuildRlpbwtBVVCF*";
+    ::testing::GTEST_FLAG(filter) = "BuildRlpbwtThr*";
     return RUN_ALL_TESTS();
 }

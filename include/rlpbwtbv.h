@@ -35,9 +35,9 @@ public:
     std::vector<columnbv> cols;
 
     /**
-     * @brief heigth of the original panel
+     * @brief height of the original panel
      */
-    unsigned int heigth;
+    unsigned int height;
 
     /**
      * @brief width of the original panel

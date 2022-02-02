@@ -123,7 +123,7 @@ rlpbwtbv::rlpbwtbv(const char *filename, bool vcf, bool verbose) {
         this->cols[k].select_v = sdsl::sd_vector<>::select_1_type(
                 &this->cols[k].v);
         this->width = tmp_width;
-        this->heigth = tmp_height;
+        this->height = tmp_height;
     } else {
         // same as for vcf files but using raw matrix input files
         std::ifstream input_matrix(filename);
@@ -183,6 +183,7 @@ rlpbwtbv::rlpbwtbv(const char *filename, bool vcf, bool verbose) {
 
             auto col = rlpbwtbv::build_column(last_col, pref, div);
             this->cols[count] = col;
+
             this->cols[count].rank_runs = sdsl::sd_vector<>::rank_1_type(
                     &this->cols[count].runs);
             this->cols[count].select_runs = sdsl::sd_vector<>::select_1_type(
@@ -197,7 +198,7 @@ rlpbwtbv::rlpbwtbv(const char *filename, bool vcf, bool verbose) {
                     &this->cols[count].v);
 
             this->width = tmp_width;
-            this->heigth = tmp_height;
+            this->height = tmp_height;
             input_matrix.close();
         } else {
             throw FileNotFoundException{};
@@ -275,6 +276,7 @@ rlpbwtbv::build_column(std::string &column, std::vector<unsigned int> &pref,
         }
         if (div[i] < lcs) {
             lcs = div[i];
+
         }*/
 
         if ((i == height - 1) || (column[pref[i]] != column[pref[i + 1]])) {
@@ -444,12 +446,13 @@ rlpbwtbv::external_match(const std::string &query, unsigned int min_len,
 
             // now two cases in order to update the indices:
             // - we read a 0 from query and curr index is not at the beginning
-            //   of the column. In this case end index won't be updated while
-            //   curr index will be decreased
+            //   of the column or curr index is at the end of the column.
+            //   In this case end index won't be updated while curr index will
+            //   be decreased
             // - every other situation. In this case curr index won't be updated
             //   while end index will be inreased
             if ((query[curr_beg] == '0' && curr_tmp > 0) ||
-                curr_tmp == this->heigth) {
+                curr_tmp == this->height) {
                 if (verbose) {
                     std::cout << "begin case 2 curr run " << curr_run
                               << ", curr index " << curr_index << "\n";
@@ -462,9 +465,9 @@ rlpbwtbv::external_match(const std::string &query, unsigned int min_len,
 
                 // we look back to update index of begin of matches
                 // (iff it's not already at the minimum possible, 0)
-                // we don't have neither the panel or the prefix array in memory
-                // so we have to proceed reversing the permutations
-                if (curr_beg > 1) {
+                // we don't have both the panel and the prefix array in
+                // memory, so we have to proceed reversing the permutations
+                if (curr_beg >= 1) {
                     // as in Durbin we have to look at next column
                     unsigned int i_tmp = i + 1;
                     // we use a temporary index
@@ -484,7 +487,7 @@ rlpbwtbv::external_match(const std::string &query, unsigned int min_len,
                                                    tmp_run);
 
                     // we virtually follow the row of the temporary index
-                    // in order to update the begin index
+                    // in order to update the beginning index
                     while (curr_beg > 0 && query[curr_beg - 1] == curr_elem) {
                         curr_beg -= 1;
                         if (curr_beg > 0) {
@@ -498,8 +501,8 @@ rlpbwtbv::external_match(const std::string &query, unsigned int min_len,
                         }
                     }
                 }
-                // after the computation of the new begin of a match we use lcp
-                // array in order to calculate how many rows are matching at
+                // after the computation of the new beginning of a match we use
+                // lcp array in order to calculate how many rows are matching at
                 // this point of the query, updating the curr index
                 while (curr_tmp > 0 &&
                        (i + 1) - this->cols[i + 1].lcp[curr_tmp] <= curr_beg) {
@@ -525,9 +528,9 @@ rlpbwtbv::external_match(const std::string &query, unsigned int min_len,
 
                 // we look back to update index of begin of matches
                 // (iff it's not already at the minimum possible, 0)
-                // we don't have neither the panel or the prefix array in memory
-                // so we have to proceed reversing the permutations
-                if (curr_beg > 1) {
+                // we don't have both the panel and the prefix array in
+                // memory, so we have to proceed reversing the permutations
+                if (curr_beg >= 1) {
                     // as in Durbin we have to look at next column
                     unsigned int i_tmp = i + 1;
                     // we use a temporary index
@@ -548,7 +551,7 @@ rlpbwtbv::external_match(const std::string &query, unsigned int min_len,
                             tmp_run);
 
                     // we virtually follow the row of the temporary index
-                    // in order to update the begin index
+                    // in order to update the beginning index
                     while (curr_beg > 0 && query[curr_beg - 1] == curr_elem) {
                         curr_beg -= 1;
                         if (curr_beg > 0) {
@@ -566,10 +569,10 @@ rlpbwtbv::external_match(const std::string &query, unsigned int min_len,
                 if (verbose) {
                     std::cout << "end curr beg: " << curr_beg << "\n";
                 }
-                // after the computation of the new begin of a match we use lcp
-                // array in order to calculate how many rows are matching at
+                // after the computation of the new beginnoing of a match we use
+                // lcp array in order to calculate how many rows are matching at
                 // this point of the query, updating the end index
-                while (end_tmp < this->heigth &&
+                while (end_tmp < this->height &&
                        (i + 1) - this->cols[i + 1].lcp[end_tmp] <= curr_beg) {
                     end_tmp++;
                 }
@@ -893,5 +896,4 @@ void rlpbwtbv::external_match_vcf(const char *filename, unsigned int min_len,
         }
         count++;
     }
-
 }

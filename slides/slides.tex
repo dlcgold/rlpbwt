@@ -618,7 +618,7 @@
   \only<1>{
     \begin{figure}[H]
       \centering
-      \includegraphics[scale = 0.3]{graph/fgtravis.pdf}
+      \includegraphics[scale = 0.3]{graph/fgtravis2.pdf}
     \end{figure}
   }
   \only<2>{
@@ -718,48 +718,48 @@
       array} and I'm thinking how to do it.   
   \end{block}
 \end{frame}
-\begin{frame}{Two Pass on RLPBWT}
-  \begin{block}{}
-    In order to not save the \textit{divergence/LCP array} we could make two
-    \textit{RLPBWT}, one for the normal order and one for the reverse order.
-  \end{block}
-  \begin{block}{}
-    Instead of use the \textit{divergence/LCP array} to retrieve matches
-    that are overlapped in the panel we look for non overlapped matches only.\\
-    To do this when we find a match we continue the search updating $f$ and $g$
-    based only on $c$ and $h$, the total number of haplotypes in the panel:
-    \[(f,g)=
-      \begin{cases}
-        (0, c) & \mbox{if } \sigma=0\\
-        (c, h) & \mbox{if } \sigma=1
-      \end{cases}
-    \]
-  \end{block}
-  \begin{block}{}
-    We query in this way the first one with the haplotype and the second one
-    with the reverse of the haplotype. Than we intersect the results.
-  \end{block}
-\end{frame}
-\begin{frame}{Two Pass on RLPBWT}
-  \only<1>{
-    \begin{figure}[H]
-      \centering
-      \includegraphics[scale = 0.3]{graph/bifronttravis.pdf}
-    \end{figure}
-  }
-  \only<2>{
-    \begin{figure}[H]
-      \centering
-      \includegraphics[scale = 0.3]{graph/bibacktravis.pdf}
-    \end{figure}
-  }
-  \only<3>{
-    \begin{figure}[H]
-      \centering
-      \includegraphics[scale = 0.3]{graph/bitravismatch.pdf}
-    \end{figure}
-  }
-\end{frame}
+% \begin{frame}{Two Pass on RLPBWT}
+%   \begin{block}{}
+%     In order to not save the \textit{divergence/LCP array} we could make two
+%     \textit{RLPBWT}, one for the normal order and one for the reverse order.
+%   \end{block}
+%   \begin{block}{}
+%     Instead of use the \textit{divergence/LCP array} to retrieve matches
+%     that are overlapped in the panel we look for non overlapped matches only.\\
+%     To do this when we find a match we continue the search updating $f$ and $g$
+%     based only on $c$ and $h$, the total number of haplotypes in the panel:
+%     \[(f,g)=
+%       \begin{cases}
+%         (0, c) & \mbox{if } \sigma=0\\
+%         (c, h) & \mbox{if } \sigma=1
+%       \end{cases}
+%     \]
+%   \end{block}
+%   \begin{block}{}
+%     We query in this way the first one with the haplotype and the second one
+%     with the reverse of the haplotype. Than we intersect the results.
+%   \end{block}
+% \end{frame}
+% \begin{frame}{Two Pass on RLPBWT}
+%   \only<1>{
+%     \begin{figure}[H]
+%       \centering
+%       \includegraphics[scale = 0.3]{graph/bifronttravis.pdf}
+%     \end{figure}
+%   }
+%   \only<2>{
+%     \begin{figure}[H]
+%       \centering
+%       \includegraphics[scale = 0.3]{graph/bibacktravis.pdf}
+%     \end{figure}
+%   }
+%   \only<3>{
+%     \begin{figure}[H]
+%       \centering
+%       \includegraphics[scale = 0.3]{graph/bitravismatch.pdf}
+%     \end{figure}
+%   }
+% \end{frame}
 \begin{frame}{Testing}
   \begin{block}{Benchmark}
     At the moment I'm testing the implementation using the sample data (VCF
@@ -816,11 +816,11 @@
 \end{frame}
 \begin{frame}{Idea to change the use of whole lcp array}
   \begin{block}{}
-    When we have an ending match, disovered in $k+1$, with $f$ and $g$ in $k$,
+    When we have an ending match, discovered in $k+1$, with $f$ and $g-1$ in $k$,
     we could: 
     \begin{itemize}
       \item take maximum lcp between $f$ and first $0/1$ above $f$
-      \item take maximum lcp between $g$ and first $0/1$ below $g$
+      \item take maximum lcp between $g$ and first $0/1$ below $g-1$
       \item take maximum between these two values, we call it $x$
       \item new interval is $[psv[x],\,\, nsv[x]-1]$ and we use this value to
       obtain new $e$

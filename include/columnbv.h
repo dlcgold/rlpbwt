@@ -36,19 +36,6 @@ public:
 
     sdsl::int_vector<> lcp;
 
-/*
-    columnbv(bool zeroFirst, unsigned int count0,
-             sdsl::sd_vector<> runs,
-             sdsl::sd_vector<>::rank_1_type rankRuns,
-             sdsl::sd_vector<>::select_1_type selectRuns,
-             sdsl::sd_vector<> u,
-             sdsl::sd_vector<>::rank_1_type rankU,
-             sdsl::sd_vector<>::select_1_type selectU,
-             sdsl::sd_vector<> v,
-             sdsl::sd_vector<>::rank_1_type rankV,
-             sdsl::sd_vector<>::select_1_type selectV,
-             std::vector<unsigned int> lcp);
-    */
     columnbv(bool zeroFirst, unsigned int count0,
              const sdsl::bit_vector& runs,
              const sdsl::bit_vector& u,

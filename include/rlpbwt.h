@@ -38,7 +38,7 @@ public:
     std::vector<column> cols;
 
     /**
-     * @brief heigth of the original panel
+     * @brief height of the original panel
      */
     unsigned int heigth{};
 
