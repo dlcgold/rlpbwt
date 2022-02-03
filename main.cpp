@@ -208,7 +208,7 @@ TEST (BuildRlpbwtBVVCF, TestBuildQuery) {
 }
 
 TEST (BuildRlpbwtThr, TestBuildQuery) {
-    rlpbwt_thr rlpbwt_thr("../input/sample.txt", false);
+    rlpbwt_thr rlpbwt_thr("../input/sample2.txt", false);
     unsigned int count = 0;
     for (const auto &c: rlpbwt_thr.cols) {
         std::cout << "column " << count << ":\n";

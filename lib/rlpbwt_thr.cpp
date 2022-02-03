@@ -374,35 +374,62 @@ void rlpbwt_thr::match_thr(const std::string &query, bool verbose) {
     unsigned int curr_run = this->cols[0].rank_runs(curr_index);
     char symbol = get_next_char(this->cols[0].zero_first, curr_run);
     for (unsigned int i = 0; i < query.size(); i++) {
+
+        std::cout << i << ": " << curr_run << " "
+                  << this->cols[i].rank_thr(curr_index) << "\n";
+        std::cout << curr_index << " " << curr_run << " " << curr_pos << " "
+                  << symbol << "\n";
+
         if (query[i] == symbol) {
+            std::cout << "match: ";
             // save in matching statistics pos vector
             ms_row[i] = curr_pos;
             // update index, run, symbol
             curr_index = lf(i, curr_index, query[i]);
             curr_run = this->cols[i + 1].rank_runs(curr_index);
             symbol = get_next_char(this->cols[i + 1].zero_first, curr_run);
+            std::cout << "new: " << curr_index << " " << curr_run << " "
+                      << curr_pos << " "
+                      << symbol << "\n";
         } else {
             //auto run = this->cols[i].rank_runs(curr_index);
             auto thr = this->cols[i].rank_thr(curr_index);
-            if ((curr_run != 0 && curr_run == thr) ||
+            bool single = false;
+            if (this->cols[i].rows[curr_run].first ==
+                this->cols[i].rows[curr_run].second) {
+                single = true;
+            }
+            if ((curr_run != 0 && !single && curr_run == thr) ||
                 curr_run == this->cols[i].rows.size()) {
+                std::cout << "mismatch_up: ";
                 // threshold below index so we go up
-                curr_index = this->cols[i].select_runs(curr_run) - 1;
+                curr_index = (this->cols[i].select_runs(curr_run) + 1) - 1;
                 curr_prefs = this->cols[i].rows[curr_run - 1];
                 curr_pos = curr_prefs.second;
+                std::cout << "update: " << curr_index << " " << curr_pos << " "
+                          << symbol << "\n";
                 ms_row[i] = curr_pos;
                 curr_index = lf(i, curr_index, query[i]);
                 curr_run = this->cols[i + 1].rank_runs(curr_index);
                 symbol = get_next_char(this->cols[i + 1].zero_first, curr_run);
+                std::cout << "new: " << curr_index << " " << curr_run << " "
+                          << curr_pos << " " << symbol << "\n";
+
             } else {
+                std::cout << "mismatch_up: ";
                 // threshold above index so we go down
-                curr_index = this->cols[i].select_runs(curr_run + 1);
+                curr_index = (this->cols[i].select_runs(curr_run + 1) + 1);
                 curr_prefs = this->cols[i].rows[curr_run + 1];
                 curr_pos = curr_prefs.first;
                 ms_row[i] = curr_pos;
+                std::cout << "update: " << curr_index << " " << curr_pos << " "
+                          << symbol << "\n";
                 curr_index = lf(i, curr_index, query[i]);
                 curr_run = this->cols[i + 1].rank_runs(curr_index);
                 symbol = get_next_char(this->cols[i + 1].zero_first, curr_run);
+                std::cout << "new: " << curr_index << " " << curr_run << " "
+                          << curr_pos << " " << symbol << "\n";
+
             }
         }
     }
@@ -424,16 +451,16 @@ void rlpbwt_thr::match_thr(const std::string &query, bool verbose) {
                 ms_len[i] = 0;
             }
         } else {*/
-            tmp_index = i;
-            while (tmp_index > 0 &&
-                   query[tmp_index] == panel[tmp_index][ms_row[i]]) {
-                tmp_index--;
-            }
-            if (tmp_index == 0) {
-                tmp_index--;
-            }
-            ms_len[i] = i - tmp_index;
+        tmp_index = i;
+        while (tmp_index > 0 &&
+               query[tmp_index] == panel[tmp_index][ms_row[i]]) {
+            tmp_index--;
         }
+        if (tmp_index == 0) {
+            tmp_index--;
+        }
+        ms_len[i] = i - tmp_index;
+    }
     //}
     for (auto e: ms_len) {
         std::cout << e << "\t";
