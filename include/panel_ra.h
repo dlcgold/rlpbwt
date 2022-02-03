@@ -23,6 +23,9 @@ public:
     char getElem(unsigned int i, unsigned int j) const;
 
     friend std::ostream &operator<<(std::ostream &os, const panel_ra &ra);
+    size_t serialize(std::ostream &out, sdsl::structure_tree_node *v = nullptr,
+            const std::string& name = "");
+    void load(std::istream &in);
 };
 
 

@@ -6,9 +6,11 @@
 #define RLPBWT_COLUMN_THR_H
 
 #include <vector>
+#include <ostream>
+#include <utility>
 #include <sdsl/int_vector.hpp>
 #include <sdsl/bit_vectors.hpp>
-#include <ostream>
+#include "utils.h"
 
 class column_thr {
 public:
@@ -56,6 +58,9 @@ public:
     virtual ~column_thr();
 
     friend std::ostream &operator<<(std::ostream &os, const column_thr &thr);
+    size_t serialize(std::ostream &out, sdsl::structure_tree_node *v = nullptr,
+                     const std::string& name = "");
+    void load(std::istream &in);
 };
 
 

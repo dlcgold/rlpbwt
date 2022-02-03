@@ -35,6 +35,8 @@ public:
      */
     explicit rlpbwt_thr(const char *filename, bool vcf, bool verbose = false);
 
+    rlpbwt_thr();
+
     /**
      * @brief function to obtain the struct for the run-length encoded PBWT
      * column, except for next_perm values
@@ -80,6 +82,10 @@ public:
     std::pair<unsigned int, unsigned int>
     uvtrick(unsigned int col_index, unsigned int index) const;
     void match_thr(const std::string &query, bool verbose = false);
+
+    size_t serialize(std::ostream &out, sdsl::structure_tree_node *v = nullptr,
+                     const std::string& name = "");
+    void load(std::istream &in);
 };
 
 

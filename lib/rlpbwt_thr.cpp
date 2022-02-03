@@ -513,8 +513,11 @@ void rlpbwt_thr::match_thr(const std::string &query, bool verbose) {
                           << symbol << "\n";
             }
         } else {
-            //auto run = this->cols[i].rank_runs(curr_index);
+
             auto thr = this->cols[i].rank_thr(curr_index);
+            /* TODO if index is in the position of a thresholds
+             * understand what to do
+             */
             bool in_thr = false;
             if (this->cols[i].rows[curr_run].first ==
                 this->cols[i].rows[curr_run].second) {
@@ -593,10 +596,48 @@ void rlpbwt_thr::match_thr(const std::string &query, bool verbose) {
         }
         ms_len[i] = i - tmp_index;
     }
-    //}
-    for (auto e: ms_len) {
-        std::cout << e << "\t";
+    std::vector<std::pair<unsigned int, unsigned int>> ms_match;
+    for (unsigned int i = 0; i < ms_len.size(); i++) {
+        std::cout << ms_len[i] << "\t";
+        // TODO check if for last match
+        if (i > 0 && ms_len[i] >= ms_len[i - 1] &&
+            (i == ms_len.size() - 1 || ms_len[i] >= ms_len[i + 1])) {
+            ms_match.emplace_back(i, ms_len[i]);
+        }
+    }
+    std::cout << "\nmatches:\t";
+    for (auto e: ms_match) {
+        std::cout << "(" << e.first << ", " << e.second << ")\t";
     }
     std::cout << "\n";
 
 }
+
+size_t rlpbwt_thr::serialize(std::ostream &out, sdsl::structure_tree_node *v,
+                             const std::string &name) {
+    sdsl::structure_tree_node *child =
+            sdsl::structure_tree::add_child(v, name,
+                                            sdsl::util::class_name(
+                                                    *this));
+    size_t written_bytes = 0;
+    written_bytes += this->panelbv.serialize(out, child, "panel");
+
+    for (unsigned int i = 0; i < this->cols.size(); i++) {
+        std::string label = "col_" + std::to_string(i);
+        written_bytes += this->cols[i].serialize(out, child, label);
+    }
+
+    sdsl::structure_tree::add_size(child, written_bytes);
+    return written_bytes;
+}
+
+void rlpbwt_thr::load(std::istream &in) {
+    this->panelbv.load(in);
+    auto c = new column_thr();
+    for(unsigned int i = 0; i <= this->panelbv.w; i++){
+        c->load(in);
+        this->cols.emplace_back(*c);
+    }
+}
+
+rlpbwt_thr::rlpbwt_thr() = default;

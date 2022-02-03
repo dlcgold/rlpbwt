@@ -209,21 +209,60 @@ TEST (BuildRlpbwtBVVCF, TestBuildQuery) {
 
 TEST (BuildRlpbwtThr, TestBuildQuery) {
     rlpbwt_thr rlpbwt_thr("../input/sample2.txt", false);
-   /*
-    unsigned int count = 0;
-    for (const auto &c: rlpbwt_thr.cols) {
-        std::cout << "column " << count << ":\n";
-        std::cout << c;
-        count++;
-        std::cout << "--------------------\n";
-    }
+    /*
+     unsigned int count = 0;
+     for (const auto &c: rlpbwt_thr.cols) {
+         std::cout << "column " << count << ":\n";
+         std::cout << c;
+         count++;
+         std::cout << "--------------------\n";
+     }
+     */
+    rlpbwt_thr.match_thr("010010100011101", false);
 
-    rlpbwt_thr.match_thr("010010100011101", false);
-    */
-    rlpbwt_thr.match_thr("010010100011101", false);
-    std::cout << rlpbwt_thr.panelbv;
 }
 
+TEST (BuildRlpbwtSerThr, TestSer) {
+    auto rlpbwt_t = new rlpbwt_thr("../input/sample2.txt", false);
+
+    auto filename = "../output/sample2_panel.ser";
+    std::ofstream file_o;
+    file_o.open(filename);
+    auto size = rlpbwt_t->panelbv.serialize(file_o);
+    std::cout << size << "\n";
+    file_o.close();
+    auto panel = new panel_ra();
+    std::ifstream file_i;
+    file_i.open(filename);
+    panel->load(file_i);
+    std::cout << panel->panel << "\n";
+    file_i.close();
+
+    filename = "../output/sample2_col.ser";
+    file_o.open(filename);
+    size = rlpbwt_t->cols[0].serialize(file_o);
+    std::cout << size << "\n";
+    file_o.close();
+    file_i.open(filename);
+    auto col = new column_thr();
+    col->load(file_i);
+    std::cout << col->runs << "\n";
+    std::cout << col->rank_runs(18) << " " << col->select_runs(2) << "\n";
+    file_i.close();
+
+    filename = "../output/sample2_pbwt.ser";
+    file_o.open(filename);
+    size = rlpbwt_t->serialize(file_o);
+    std::cout << size << "\n";
+    file_o.close();
+    file_i.open(filename);
+    auto rlpbwt = new rlpbwt_thr();
+    rlpbwt->load(file_i);
+    std::cout << rlpbwt->panelbv << "\n";
+    std::cout << rlpbwt->cols[13] << "\n";
+    std::cout << rlpbwt->cols.size() << " vs " << rlpbwt_t->cols.size() << "\n";
+    file_i.close();
+}
 
 int main(int argc, char **argv) {
     ::testing::InitGoogleTest(&argc, argv);
@@ -233,6 +272,7 @@ int main(int argc, char **argv) {
     //::testing::GTEST_FLAG(filter) = "BuildBiRlpbwtVCF*";
     //::testing::GTEST_FLAG(filter) = "BuildRlpbwtBVtest*";
     //::testing::GTEST_FLAG(filter) = "BuildRlpbwtBVVCF*";
-    ::testing::GTEST_FLAG(filter) = "BuildRlpbwtThr*";
+    //::testing::GTEST_FLAG(filter) = "BuildRlpbwtThr*";
+    ::testing::GTEST_FLAG(filter) = "BuildRlpbwtSerThr*";
     return RUN_ALL_TESTS();
 }

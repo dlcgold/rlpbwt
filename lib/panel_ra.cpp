@@ -29,3 +29,27 @@ std::ostream &operator<<(std::ostream &os, const panel_ra &ra) {
 }
 
 panel_ra::panel_ra() = default;
+
+size_t panel_ra::serialize(std::ostream &out, sdsl::structure_tree_node *v,
+                           const std::string &name) {
+    sdsl::structure_tree_node *child =
+            sdsl::structure_tree::add_child(v, name,
+                                            sdsl::util::class_name(
+                                                    *this));
+    size_t written_bytes = 0;
+
+    out.write((char *) &this->h, sizeof(this->h));
+    written_bytes += sizeof(this->h);
+
+    out.write((char *) &this->w, sizeof(this->w));
+    written_bytes += sizeof(this->w);
+    written_bytes += this->panel.serialize(out, child, "panel");
+    sdsl::structure_tree::add_size(child, written_bytes);
+    return written_bytes;
+}
+
+void panel_ra::load(std::istream &in) {
+    in.read((char *) &this->h, sizeof(this->h));
+    in.read((char *) &this->w, sizeof(this->w));
+    this->panel.load(in);
+}
