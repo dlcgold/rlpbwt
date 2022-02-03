@@ -209,6 +209,7 @@ TEST (BuildRlpbwtBVVCF, TestBuildQuery) {
 
 TEST (BuildRlpbwtThr, TestBuildQuery) {
     rlpbwt_thr rlpbwt_thr("../input/sample2.txt", false);
+   /*
     unsigned int count = 0;
     for (const auto &c: rlpbwt_thr.cols) {
         std::cout << "column " << count << ":\n";
@@ -217,7 +218,10 @@ TEST (BuildRlpbwtThr, TestBuildQuery) {
         std::cout << "--------------------\n";
     }
 
-    rlpbwt_thr.match_thr("010010100011101");
+    rlpbwt_thr.match_thr("010010100011101", false);
+    */
+    rlpbwt_thr.match_thr("010010100011101", false);
+    std::cout << rlpbwt_thr.panelbv;
 }
 
 

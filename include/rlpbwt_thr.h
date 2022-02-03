@@ -19,12 +19,14 @@
 #include "column_thr.h"
 #include "utils.h"
 #include "exceptions.h"
+#include "panel_ra.h"
 
 class rlpbwt_thr {
 public:
     std::vector<column_thr> cols;
-    std::vector<std::string> panel;
 
+    // panel saved as one sd_vector
+    panel_ra panelbv;
     /**
      * @brief constructor for run-length encoded PBWT matrix
      * @param filename path of the file with the panel, every row of the file is

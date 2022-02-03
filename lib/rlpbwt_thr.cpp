@@ -6,44 +6,185 @@
 #include "../include/rlpbwt_thr.h"
 
 rlpbwt_thr::rlpbwt_thr(const char *filename, bool vcf, bool verbose) {
-    std::ifstream input_matrix(filename);
-    if (input_matrix.is_open()) {
-        std::string new_column;
-        getline(input_matrix, new_column);
-        new_column.erase(
-                std::remove(new_column.begin(), new_column.end(), ' '),
-                new_column.end());
-        const unsigned int tmp_height = new_column.size();
-        unsigned int tmp_width = std::count(
-                std::istreambuf_iterator<char>(input_matrix),
-                std::istreambuf_iterator<char>(), '\n') + 1;
-        std::vector<column_thr> tmp_cols(tmp_width);
-        this->cols = std::vector<column_thr>(tmp_width + 1);
-        input_matrix.clear();
-        input_matrix.seekg(0, std::ios::beg);
+    if (vcf) {
+        // read vcf file from https://github.com/ZhiGroup/Syllable-PBWT
+        std::string line;
+        std::ifstream input(filename);
+        if (!input.is_open()) {
+            throw FileNotFoundException{};
+        }
+        while (std::getline(input, line)) {
+            if (line[0] != '#' || line[1] != '#') {
+                break;
+            }
+        }
+        std::stringstream ss(line);
+        int tmp_height = -9;
+        int tmp_width = 0;
+        while (getline(ss, line, '\t')) {
+            tmp_height++;
+        }
+        tmp_height <<= 1;
+        while (std::getline(input, line)) {
+            tmp_width++;
+        }
+        input.clear();
+        input.seekg(0);
+        while (std::getline(input, line)) {
+            if (line[0] != '#' || line[1] != '#') {
+                break;
+            }
+        }
+        ss = std::stringstream(line);
+        for (int i = 0; i < 9; i++) {
+            getline(ss, line, '\t');
+        }
+        // initialize prefix and divergence arrays (latter as sdsl int_vector)
         std::vector<unsigned int> pref(tmp_height);
         sdsl::int_vector<> div(tmp_height);
-        for (unsigned int i = 0; i < tmp_height; i++) {
+        for (int i = 0; i < tmp_height; i++) {
             pref[i] = i;
             div[i] = 0;
         }
-        unsigned int count = 0;
-        std::string last_col;
-        while (getline(input_matrix, new_column)) {
+        std::string new_column;
+        this->panelbv = panel_ra(tmp_height, tmp_width);
+        // initialize vector for the column
+        this->cols = std::vector<column_thr>(tmp_width + 1);
+        int k = 0;
+        for (k = 0; k < tmp_width; k++) {
             if (verbose) {
-                std::cout << "\nnew_column " << count << "\n";
-                std::cout << new_column << "\n" << this->cols[count].runs
-                          << "\n"
-                          << this->cols[count].u << "\n"
-                          << this->cols[count].v
-                          << "\n-------------------------------\n";
+                std::cout << "\nnew_column " << k << "\n";
+                for (auto e: pref) {
+                    std::cout << e << " ";
+                }
+                std::cout << "\n";
+                for (auto e: div) {
+                    std::cout << e << " ";
+                }
+                std::cout << "\n";
             }
+
+            // read column as in https://github.com/ZhiGroup/Syllable-PBWT
+            new_column.clear();
+            std::getline(input, line);
+            ss = std::stringstream(line);
+            for (int i = 0; i < 9; i++) {
+                getline(ss, line, '\t');
+            }
+            //int index = 0;
+            while (getline(ss, line, '\t')) {
+                new_column.push_back(line[0]);
+                new_column.push_back(line[2]);
+            }
+
+            // create column with the bitvectors (but not rank/select) and add
+            // to columns vector
+            auto col = rlpbwt_thr::build_column(new_column, pref, div);
+            for (unsigned int j = 0; j < new_column.size(); j++) {
+                if (new_column[j] != '0') {
+                    this->panelbv.panel[k + (j * tmp_width)] = true;
+                }
+            }
+            this->cols[k] = col;
+            // create rank/select (here because of some problems using sdsl)
+            this->cols[k].rank_runs = sdsl::sd_vector<>::rank_1_type(
+                    &this->cols[k].runs);
+            this->cols[k].select_runs = sdsl::sd_vector<>::select_1_type(
+                    &this->cols[k].runs);
+            this->cols[k].rank_u = sdsl::sd_vector<>::rank_1_type(
+                    &this->cols[k].u);
+            this->cols[k].select_u = sdsl::sd_vector<>::select_1_type(
+                    &this->cols[k].u);
+            this->cols[k].rank_v = sdsl::sd_vector<>::rank_1_type(
+                    &this->cols[k].v);
+            this->cols[k].select_v = sdsl::sd_vector<>::select_1_type(
+                    &this->cols[k].v);
+            rlpbwt_thr::update(new_column, pref, div);
+        }
+        // build another column with last prefix and divergence arrays
+        auto col = rlpbwt_thr::build_column(new_column, pref, div);
+        this->cols[k] = col;
+        this->cols[k].rank_runs = sdsl::sd_vector<>::rank_1_type(
+                &this->cols[k].runs);
+        this->cols[k].select_runs = sdsl::sd_vector<>::select_1_type(
+                &this->cols[k].runs);
+        this->cols[k].rank_u = sdsl::sd_vector<>::rank_1_type(
+                &this->cols[k].u);
+        this->cols[k].select_u = sdsl::sd_vector<>::select_1_type(
+                &this->cols[k].u);
+        this->cols[k].rank_v = sdsl::sd_vector<>::rank_1_type(
+                &this->cols[k].v);
+        this->cols[k].select_v = sdsl::sd_vector<>::select_1_type(
+                &this->cols[k].v);
+    } else {
+        std::ifstream input_matrix(filename);
+        if (input_matrix.is_open()) {
+            std::string new_column;
+            getline(input_matrix, new_column);
             new_column.erase(
                     std::remove(new_column.begin(), new_column.end(), ' '),
                     new_column.end());
-            auto col = rlpbwt_thr::build_column(new_column, pref, div);
-            this->panel.push_back(new_column);
+            const unsigned int tmp_height = new_column.size();
+            unsigned int tmp_width = std::count(
+                    std::istreambuf_iterator<char>(input_matrix),
+                    std::istreambuf_iterator<char>(), '\n') + 1;
+            std::vector<column_thr> tmp_cols(tmp_width);
+            this->cols = std::vector<column_thr>(tmp_width + 1);
+            input_matrix.clear();
+            input_matrix.seekg(0, std::ios::beg);
+            std::vector<unsigned int> pref(tmp_height);
+            sdsl::int_vector<> div(tmp_height);
+            for (unsigned int i = 0; i < tmp_height; i++) {
+                pref[i] = i;
+                div[i] = 0;
+            }
+            sdsl::bit_vector bv(tmp_height * tmp_width, 0);
+            this->panelbv = panel_ra(tmp_height, tmp_width);
+            unsigned int count = 0;
+            std::string last_col;
+            while (getline(input_matrix, new_column)) {
+                if (verbose) {
+                    std::cout << "\nnew_column " << count << "\n";
+                    std::cout << new_column << "\n" << this->cols[count].runs
+                              << "\n"
+                              << this->cols[count].u << "\n"
+                              << this->cols[count].v
+                              << "\n-------------------------------\n";
+                }
+                new_column.erase(
+                        std::remove(new_column.begin(), new_column.end(), ' '),
+                        new_column.end());
+                auto col = rlpbwt_thr::build_column(new_column, pref, div);
+                for (unsigned int k = 0; k < new_column.size(); k++) {
+                    if (new_column[k] != '0') {
+                        this->panelbv.panel[count + (k * tmp_width)] = true;
+                    }
+                }
+                this->cols[count] = col;
+                this->cols[count].rank_runs = sdsl::sd_vector<>::rank_1_type(
+                        &this->cols[count].runs);
+                this->cols[count].select_runs = sdsl::sd_vector<>::select_1_type(
+                        &this->cols[count].runs);
+                this->cols[count].rank_u = sdsl::sd_vector<>::rank_1_type(
+                        &this->cols[count].u);
+                this->cols[count].select_u = sdsl::sd_vector<>::select_1_type(
+                        &this->cols[count].u);
+                this->cols[count].rank_v = sdsl::sd_vector<>::rank_1_type(
+                        &this->cols[count].v);
+                this->cols[count].select_v = sdsl::sd_vector<>::select_1_type(
+                        &this->cols[count].v);
+                this->cols[count].rank_thr = sdsl::sd_vector<>::rank_1_type(
+                        &this->cols[count].thr);
+                this->cols[count].select_thr = sdsl::sd_vector<>::select_1_type(
+                        &this->cols[count].thr);
+                rlpbwt_thr::update(new_column, pref, div);
+                count++;
+                last_col = new_column;
+            }
+
+            auto col = rlpbwt_thr::build_column(last_col, pref, div);
             this->cols[count] = col;
+
             this->cols[count].rank_runs = sdsl::sd_vector<>::rank_1_type(
                     &this->cols[count].runs);
             this->cols[count].select_runs = sdsl::sd_vector<>::select_1_type(
@@ -60,34 +201,10 @@ rlpbwt_thr::rlpbwt_thr(const char *filename, bool vcf, bool verbose) {
                     &this->cols[count].thr);
             this->cols[count].select_thr = sdsl::sd_vector<>::select_1_type(
                     &this->cols[count].thr);
-            rlpbwt_thr::update(new_column, pref, div);
-            count++;
-            last_col = new_column;
+            input_matrix.close();
+        } else {
+            throw FileNotFoundException{};
         }
-
-        auto col = rlpbwt_thr::build_column(last_col, pref, div);
-        this->cols[count] = col;
-
-        this->cols[count].rank_runs = sdsl::sd_vector<>::rank_1_type(
-                &this->cols[count].runs);
-        this->cols[count].select_runs = sdsl::sd_vector<>::select_1_type(
-                &this->cols[count].runs);
-        this->cols[count].rank_u = sdsl::sd_vector<>::rank_1_type(
-                &this->cols[count].u);
-        this->cols[count].select_u = sdsl::sd_vector<>::select_1_type(
-                &this->cols[count].u);
-        this->cols[count].rank_v = sdsl::sd_vector<>::rank_1_type(
-                &this->cols[count].v);
-        this->cols[count].select_v = sdsl::sd_vector<>::select_1_type(
-                &this->cols[count].v);
-        this->cols[count].rank_thr = sdsl::sd_vector<>::rank_1_type(
-                &this->cols[count].thr);
-        this->cols[count].select_thr = sdsl::sd_vector<>::select_1_type(
-                &this->cols[count].thr);
-
-        input_matrix.close();
-    } else {
-        throw FileNotFoundException{};
     }
 }
 
@@ -374,61 +491,83 @@ void rlpbwt_thr::match_thr(const std::string &query, bool verbose) {
     unsigned int curr_run = this->cols[0].rank_runs(curr_index);
     char symbol = get_next_char(this->cols[0].zero_first, curr_run);
     for (unsigned int i = 0; i < query.size(); i++) {
-
-        std::cout << i << ": " << curr_run << " "
-                  << this->cols[i].rank_thr(curr_index) << "\n";
-        std::cout << curr_index << " " << curr_run << " " << curr_pos << " "
-                  << symbol << "\n";
-
+        if (verbose) {
+            std::cout << i << ": " << curr_run << " "
+                      << this->cols[i].rank_thr(curr_index) << "\n";
+            std::cout << curr_index << " " << curr_run << " " << curr_pos << " "
+                      << symbol << "\n";
+        }
         if (query[i] == symbol) {
-            std::cout << "match: ";
+            if (verbose) {
+                std::cout << "match: ";
+            }
             // save in matching statistics pos vector
             ms_row[i] = curr_pos;
             // update index, run, symbol
             curr_index = lf(i, curr_index, query[i]);
             curr_run = this->cols[i + 1].rank_runs(curr_index);
             symbol = get_next_char(this->cols[i + 1].zero_first, curr_run);
-            std::cout << "new: " << curr_index << " " << curr_run << " "
-                      << curr_pos << " "
-                      << symbol << "\n";
+            if (verbose) {
+                std::cout << "new: " << curr_index << " " << curr_run << " "
+                          << curr_pos << " "
+                          << symbol << "\n";
+            }
         } else {
             //auto run = this->cols[i].rank_runs(curr_index);
             auto thr = this->cols[i].rank_thr(curr_index);
-            bool single = false;
+            bool in_thr = false;
             if (this->cols[i].rows[curr_run].first ==
                 this->cols[i].rows[curr_run].second) {
-                single = true;
+                in_thr = true;
             }
-            if ((curr_run != 0 && !single && curr_run == thr) ||
-                curr_run == this->cols[i].rows.size()) {
-                std::cout << "mismatch_up: ";
+
+            if ((curr_run != 0 && !in_thr && curr_run == thr) ||
+                curr_run == this->cols[i].rows.size() - 1) {
+                if (verbose) {
+                    std::cout << "mismatch_up: ";
+                }
                 // threshold below index so we go up
                 curr_index = (this->cols[i].select_runs(curr_run) + 1) - 1;
                 curr_prefs = this->cols[i].rows[curr_run - 1];
                 curr_pos = curr_prefs.second;
-                std::cout << "update: " << curr_index << " " << curr_pos << " "
-                          << symbol << "\n";
+                if (verbose) {
+                    std::cout << "update: " << curr_index << " " << curr_pos
+                              << " "
+                              << symbol << "\n";
+                }
                 ms_row[i] = curr_pos;
                 curr_index = lf(i, curr_index, query[i]);
                 curr_run = this->cols[i + 1].rank_runs(curr_index);
-                symbol = get_next_char(this->cols[i + 1].zero_first, curr_run);
-                std::cout << "new: " << curr_index << " " << curr_run << " "
-                          << curr_pos << " " << symbol << "\n";
-
+                symbol = get_next_char(this->cols[i + 1].zero_first,
+                                       curr_run);
+                if (verbose) {
+                    std::cout << "new: " << curr_index << " " << curr_run
+                              << " "
+                              << curr_pos << " " << symbol << "\n";
+                }
             } else {
-                std::cout << "mismatch_up: ";
+                if (verbose) {
+                    std::cout << "mismatch_down: ";
+                }
                 // threshold above index so we go down
                 curr_index = (this->cols[i].select_runs(curr_run + 1) + 1);
                 curr_prefs = this->cols[i].rows[curr_run + 1];
                 curr_pos = curr_prefs.first;
                 ms_row[i] = curr_pos;
-                std::cout << "update: " << curr_index << " " << curr_pos << " "
-                          << symbol << "\n";
+                if (verbose) {
+                    std::cout << "update: " << curr_index << " " << curr_pos
+                              << " "
+                              << symbol << "\n";
+                }
                 curr_index = lf(i, curr_index, query[i]);
                 curr_run = this->cols[i + 1].rank_runs(curr_index);
-                symbol = get_next_char(this->cols[i + 1].zero_first, curr_run);
-                std::cout << "new: " << curr_index << " " << curr_run << " "
-                          << curr_pos << " " << symbol << "\n";
+                symbol = get_next_char(this->cols[i + 1].zero_first,
+                                       curr_run);
+                if (verbose) {
+                    std::cout << "new: " << curr_index << " " << curr_run
+                              << " "
+                              << curr_pos << " " << symbol << "\n";
+                }
 
             }
         }
@@ -444,16 +583,9 @@ void rlpbwt_thr::match_thr(const std::string &query, bool verbose) {
     std::cout << "\nlen:\t";
     int tmp_index = 0;
     for (int i = (int) ms_row.size() - 1; i >= 0; i--) {
-        /*if (i != (int) ms_row.size() - 1 && ms_row[i] == ms_row[i + 1]) {
-            if (ms_len[i + 1] != 0) {
-                ms_len[i] = ms_len[i + 1] - 1;
-            } else {
-                ms_len[i] = 0;
-            }
-        } else {*/
         tmp_index = i;
         while (tmp_index > 0 &&
-               query[tmp_index] == panel[tmp_index][ms_row[i]]) {
+               query[tmp_index] == panelbv.getElem(ms_row[i], tmp_index)) {
             tmp_index--;
         }
         if (tmp_index == 0) {
