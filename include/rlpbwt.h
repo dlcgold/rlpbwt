@@ -16,6 +16,7 @@
 #include <sstream>
 #include <algorithm>
 #include <list>
+#include <sdsl/structure_tree.hpp>
 #include <boost/archive/text_iarchive.hpp>
 #include <boost/archive/text_oarchive.hpp>
 #include <boost/serialization/vector.hpp>
@@ -40,7 +41,7 @@ public:
     /**
      * @brief height of the original panel
      */
-    unsigned int heigth{};
+    unsigned int height{};
 
     /**
      * @brief width of the original panel
@@ -137,7 +138,10 @@ public:
 
 
     void print();
+    size_t serialize(std::ostream &out, sdsl::structure_tree_node *v = nullptr,
+                     const std::string &name = "");
 
+    void load(std::istream &in);
 
 private:
     friend class boost::serialization::access;
@@ -175,7 +179,6 @@ private:
     std::pair<unsigned int, unsigned int>
     uvtrick(unsigned int col_index, unsigned int row_index) const;
 
-
 };
 
 namespace boost {
@@ -183,7 +186,7 @@ namespace boost {
         template<class Archive>
         void serialize(Archive &a, rlpbwt &e,
                        const unsigned version) {
-            a & e.width & e.heigth & e.cols;
+            a & e.width & e.height & e.cols;
         }
     }
 }

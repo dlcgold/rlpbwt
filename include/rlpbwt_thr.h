@@ -27,13 +27,19 @@ public:
 
     // panel saved as one sd_vector
     panel_ra panelbv;
+
     /**
      * @brief constructor for run-length encoded PBWT matrix
      * @param filename path of the file with the panel, every row of the file is
      * one column of the panel
      * @param verbose bool for extra print
      */
-    explicit rlpbwt_thr(const char *filename, bool vcf, bool verbose = false);
+    explicit rlpbwt_thr(const char *filename, bool vcf, bool verbose);
+
+    explicit rlpbwt_thr(const char *filename, unsigned int w, unsigned int h,
+                        bool verbose);
+
+    explicit rlpbwt_thr(const char *filename, bool verbose);
 
     rlpbwt_thr();
 
@@ -81,10 +87,12 @@ public:
     */
     std::pair<unsigned int, unsigned int>
     uvtrick(unsigned int col_index, unsigned int index) const;
+
     void match_thr(const std::string &query, bool verbose = false);
 
     size_t serialize(std::ostream &out, sdsl::structure_tree_node *v = nullptr,
-                     const std::string& name = "");
+                     const std::string &name = "");
+
     void load(std::istream &in);
 };
 

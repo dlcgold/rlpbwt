@@ -79,7 +79,7 @@ birlpbwt::birlpbwt(const char *filename, bool vcf, bool verbose) {
         tmp_cols.push_back(col);
         this->frlpbwt.cols = tmp_cols;
         this->frlpbwt.width = tmp_width;
-        this->frlpbwt.heigth = tmp_height;
+        this->frlpbwt.height = tmp_height;
         std::vector<column> tmp_colsb(tmp_width);
         for (int i = 0; i < tmp_height; i++) {
             pref[i] = i;
@@ -107,7 +107,7 @@ birlpbwt::birlpbwt(const char *filename, bool vcf, bool verbose) {
         tmp_colsb.push_back(colb);
         this->brlpbwt.cols = tmp_colsb;
         this->brlpbwt.width = tmp_width;
-        this->brlpbwt.heigth = tmp_height;
+        this->brlpbwt.height = tmp_height;
     } else {
         std::ifstream input_matrix(filename);
         std::list<std::string> revrows;
@@ -160,7 +160,7 @@ birlpbwt::birlpbwt(const char *filename, bool vcf, bool verbose) {
             tmp_cols.push_back(col);
             this->frlpbwt.cols = tmp_cols;
             this->frlpbwt.width = tmp_width;
-            this->frlpbwt.heigth = tmp_height;
+            this->frlpbwt.height = tmp_height;
             input_matrix.close();
 
             std::vector<column> tmp_colsb(tmp_width);
@@ -190,7 +190,7 @@ birlpbwt::birlpbwt(const char *filename, bool vcf, bool verbose) {
             tmp_colsb.push_back(colb);
             this->brlpbwt.cols = tmp_colsb;
             this->brlpbwt.width = tmp_width;
-            this->brlpbwt.heigth = tmp_height;
+            this->brlpbwt.height = tmp_height;
         } else {
             throw FileNotFoundException{};
         }

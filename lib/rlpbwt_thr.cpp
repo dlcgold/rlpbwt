@@ -5,6 +5,130 @@
 #include <list>
 #include "../include/rlpbwt_thr.h"
 
+
+rlpbwt_thr::rlpbwt_thr(const char *filename, unsigned int w, unsigned int h,
+                       bool verbose) {
+    std::ifstream input_matrix(filename);
+    if (input_matrix.is_open()) {
+        std::string header1;
+        std::string header2;
+        std::string line;
+        std::string garbage;
+        std::string new_column;
+        /*
+        getline(input_matrix, header1);
+        getline(input_matrix, header2);
+        getline(input_matrix, line);
+        std::istringstream is(line);
+        is >> garbage >> garbage >> garbage >> garbage >> new_column;
+        unsigned int tmp_height = new_column.size();
+        unsigned int tmp_width = std::count(
+                std::istreambuf_iterator<char>(input_matrix),
+                std::istreambuf_iterator<char>(), '\n') + 1;
+        if(tmp_width >= w){
+            tmp_width = w;
+        }else{
+            std::cout << "warn: set width to max\n";
+        }
+        if(tmp_height >= h){
+            tmp_height = h;
+        }else{
+            std::cout << "warn: set height to max\n";
+        }
+         input_matrix.clear();
+        input_matrix.seekg(0, std::ios::beg);
+         */
+        unsigned int tmp_width = w;
+        unsigned int tmp_height = h;
+        this->cols = std::vector<column_thr>(tmp_width + 1);
+        std::vector<unsigned int> pref(tmp_height);
+        sdsl::int_vector<> div(tmp_height);
+        for (unsigned int i = 0; i < tmp_height; i++) {
+            pref[i] = i;
+            div[i] = 0;
+        }
+
+        sdsl::bit_vector bv(tmp_height * tmp_width, 0);
+        this->panelbv = panel_ra(tmp_height, tmp_width);
+        unsigned int count = 0;
+        std::string last_col;
+        getline(input_matrix, line);
+        getline(input_matrix, line);
+        while (getline(input_matrix, line) && !line.empty()) {
+            std::istringstream is_col(line);
+            is_col >> garbage >> garbage >> garbage >> garbage >> new_column;
+            if (verbose) {
+                std::cout << "\nnew_column " << count << "\n";
+                std::cout << new_column << "\n" << this->cols[count].runs
+                          << "\n"
+                          << this->cols[count].u << "\n"
+                          << this->cols[count].v
+                          << "\n-------------------------------\n";
+            }
+            auto col = rlpbwt_thr::build_column(new_column, pref, div);
+            /*
+            for (unsigned int k = 0; k < new_column.size(); k++) {
+                if (new_column[k] != '0') {
+                    this->panelbv.panel[count + (k * tmp_width)] = true;
+                }
+            }
+            */
+            for (unsigned int k = 0; k < tmp_height; k++) {
+                if (new_column[k] != '0') {
+                    this->panelbv.panel[count + (k * tmp_width)] = true;
+                }
+            }
+            this->cols[count] = col;
+            this->cols[count].rank_runs = sdsl::sd_vector<>::rank_1_type(
+                    &this->cols[count].runs);
+            this->cols[count].select_runs = sdsl::sd_vector<>::select_1_type(
+                    &this->cols[count].runs);
+            this->cols[count].rank_u = sdsl::sd_vector<>::rank_1_type(
+                    &this->cols[count].u);
+            this->cols[count].select_u = sdsl::sd_vector<>::select_1_type(
+                    &this->cols[count].u);
+            this->cols[count].rank_v = sdsl::sd_vector<>::rank_1_type(
+                    &this->cols[count].v);
+            this->cols[count].select_v = sdsl::sd_vector<>::select_1_type(
+                    &this->cols[count].v);
+            this->cols[count].rank_thr = sdsl::sd_vector<>::rank_1_type(
+                    &this->cols[count].thr);
+            this->cols[count].select_thr = sdsl::sd_vector<>::select_1_type(
+                    &this->cols[count].thr);
+            rlpbwt_thr::update(new_column, pref, div);
+            last_col = new_column;
+            if (count == tmp_width) {
+                break;
+            }
+            count++;
+
+        }
+
+        auto col = rlpbwt_thr::build_column(last_col, pref, div);
+
+        this->cols[count] = col;
+        this->cols[count].rank_runs = sdsl::sd_vector<>::rank_1_type(
+                &this->cols[count].runs);
+        this->cols[count].select_runs = sdsl::sd_vector<>::select_1_type(
+                &this->cols[count].runs);
+        this->cols[count].rank_u = sdsl::sd_vector<>::rank_1_type(
+                &this->cols[count].u);
+        this->cols[count].select_u = sdsl::sd_vector<>::select_1_type(
+                &this->cols[count].u);
+        this->cols[count].rank_v = sdsl::sd_vector<>::rank_1_type(
+                &this->cols[count].v);
+        this->cols[count].select_v = sdsl::sd_vector<>::select_1_type(
+                &this->cols[count].v);
+        this->cols[count].rank_thr = sdsl::sd_vector<>::rank_1_type(
+                &this->cols[count].thr);
+        this->cols[count].select_thr = sdsl::sd_vector<>::select_1_type(
+                &this->cols[count].thr);
+        input_matrix.close();
+    } else {
+        throw FileNotFoundException{};
+    }
+}
+
 rlpbwt_thr::rlpbwt_thr(const char *filename, bool vcf, bool verbose) {
     if (vcf) {
         // read vcf file from https://github.com/ZhiGroup/Syllable-PBWT
@@ -128,6 +252,7 @@ rlpbwt_thr::rlpbwt_thr(const char *filename, bool vcf, bool verbose) {
             unsigned int tmp_width = std::count(
                     std::istreambuf_iterator<char>(input_matrix),
                     std::istreambuf_iterator<char>(), '\n') + 1;
+            std::cout << tmp_height << ", " << tmp_width << "\n";
             std::vector<column_thr> tmp_cols(tmp_width);
             this->cols = std::vector<column_thr>(tmp_width + 1);
             input_matrix.clear();
@@ -205,6 +330,104 @@ rlpbwt_thr::rlpbwt_thr(const char *filename, bool vcf, bool verbose) {
         } else {
             throw FileNotFoundException{};
         }
+    }
+}
+
+rlpbwt_thr::rlpbwt_thr(const char *filename, bool verbose) {
+    std::ifstream input_matrix(filename);
+    if (input_matrix.is_open()) {
+        std::string header1;
+        std::string header2;
+        std::string line;
+        std::string garbage;
+        std::string new_column;
+
+        getline(input_matrix, header1);
+        getline(input_matrix, header2);
+        getline(input_matrix, line);
+        std::istringstream is(line);
+        is >> garbage >> garbage >> garbage >> garbage >> new_column;
+        unsigned int tmp_height = new_column.size();
+        unsigned int tmp_width = std::count(
+                std::istreambuf_iterator<char>(input_matrix),
+                std::istreambuf_iterator<char>(), '\n') + 1;
+        input_matrix.clear();
+        input_matrix.seekg(0, std::ios::beg);
+        this->cols = std::vector<column_thr>(tmp_width + 1);
+        std::vector<unsigned int> pref(tmp_height);
+        sdsl::int_vector<> div(tmp_height);
+        for (unsigned int i = 0; i < tmp_height; i++) {
+            pref[i] = i;
+            div[i] = 0;
+        }
+
+        sdsl::bit_vector bv(tmp_height * tmp_width, 0);
+        this->panelbv = panel_ra(tmp_height, tmp_width);
+        unsigned int count = 0;
+        std::string last_col;
+        getline(input_matrix, line);
+        getline(input_matrix, line);
+        while (getline(input_matrix, line) && !line.empty()) {
+            std::istringstream is_col(line);
+            is_col >> garbage >> garbage >> garbage >> garbage >> new_column;
+            if (verbose) {
+                std::cout << "\nnew_column " << count << "\n";
+                std::cout << new_column << "\n" << this->cols[count].runs
+                          << "\n"
+                          << this->cols[count].u << "\n"
+                          << this->cols[count].v
+                          << "\n-------------------------------\n";
+            }
+            auto col = rlpbwt_thr::build_column(new_column, pref, div);
+            for (unsigned int k = 0; k < new_column.size(); k++) {
+                if (new_column[k] != '0') {
+                    this->panelbv.panel[count + (k * tmp_width)] = true;
+                }
+            }
+
+            this->cols[count] = col;
+            this->cols[count].rank_runs = sdsl::sd_vector<>::rank_1_type(
+                    &this->cols[count].runs);
+            this->cols[count].select_runs = sdsl::sd_vector<>::select_1_type(
+                    &this->cols[count].runs);
+            this->cols[count].rank_u = sdsl::sd_vector<>::rank_1_type(
+                    &this->cols[count].u);
+            this->cols[count].select_u = sdsl::sd_vector<>::select_1_type(
+                    &this->cols[count].u);
+            this->cols[count].rank_v = sdsl::sd_vector<>::rank_1_type(
+                    &this->cols[count].v);
+            this->cols[count].select_v = sdsl::sd_vector<>::select_1_type(
+                    &this->cols[count].v);
+            this->cols[count].rank_thr = sdsl::sd_vector<>::rank_1_type(
+                    &this->cols[count].thr);
+            this->cols[count].select_thr = sdsl::sd_vector<>::select_1_type(
+                    &this->cols[count].thr);
+            rlpbwt_thr::update(new_column, pref, div);
+            last_col = new_column;
+            count++;
+
+        }
+        auto col = rlpbwt_thr::build_column(last_col, pref, div);
+        this->cols[count] = col;
+        this->cols[count].rank_runs = sdsl::sd_vector<>::rank_1_type(
+                &this->cols[count].runs);
+        this->cols[count].select_runs = sdsl::sd_vector<>::select_1_type(
+                &this->cols[count].runs);
+        this->cols[count].rank_u = sdsl::sd_vector<>::rank_1_type(
+                &this->cols[count].u);
+        this->cols[count].select_u = sdsl::sd_vector<>::select_1_type(
+                &this->cols[count].u);
+        this->cols[count].rank_v = sdsl::sd_vector<>::rank_1_type(
+                &this->cols[count].v);
+        this->cols[count].select_v = sdsl::sd_vector<>::select_1_type(
+                &this->cols[count].v);
+        this->cols[count].rank_thr = sdsl::sd_vector<>::rank_1_type(
+                &this->cols[count].thr);
+        this->cols[count].select_thr = sdsl::sd_vector<>::select_1_type(
+                &this->cols[count].thr);
+        input_matrix.close();
+    } else {
+        throw FileNotFoundException{};
     }
 }
 
@@ -344,7 +567,6 @@ void rlpbwt_thr::update(std::string &column, std::vector<unsigned int> &pref,
 
     int count1 = 0;
     lcs = -1;
-
     for (unsigned int i = 0; i < height; i++) {
         lcs = std::min(lcs, static_cast<unsigned int> (div[i]));
         if (column[pref[i]] == '1') {
@@ -355,7 +577,9 @@ void rlpbwt_thr::update(std::string &column, std::vector<unsigned int> &pref,
         }
     }
     new_div[0] = 0;
-    new_div[count0] = 0;
+    if (count0 != height) {
+        new_div[count0] = 0;
+    }
     div = new_div;
     pref = new_pref;
 }
@@ -483,6 +707,9 @@ rlpbwt_thr::uvtrick(unsigned int col_index, unsigned int index) const {
 }
 
 void rlpbwt_thr::match_thr(const std::string &query, bool verbose) {
+    if (query.size() != this->panelbv.w) {
+        throw NotEqualLengthException{};
+    }
     std::vector<unsigned int> ms_row(query.size(), 0);
     std::vector<unsigned int> ms_len(query.size(), 0);
     auto curr_prefs = this->cols[0].rows[this->cols[0].rows.size() - 1];
@@ -492,7 +719,7 @@ void rlpbwt_thr::match_thr(const std::string &query, bool verbose) {
     char symbol = get_next_char(this->cols[0].zero_first, curr_run);
     for (unsigned int i = 0; i < query.size(); i++) {
         if (verbose) {
-            std::cout << i << ": " << curr_run << " "
+            std::cout << "at " << i << ": " << curr_run << " "
                       << this->cols[i].rank_thr(curr_index) << "\n";
             std::cout << curr_index << " " << curr_run << " " << curr_pos << " "
                       << symbol << "\n";
@@ -513,7 +740,6 @@ void rlpbwt_thr::match_thr(const std::string &query, bool verbose) {
                           << symbol << "\n";
             }
         } else {
-
             auto thr = this->cols[i].rank_thr(curr_index);
             /* TODO if index is in the position of a thresholds
              * understand what to do
@@ -523,9 +749,28 @@ void rlpbwt_thr::match_thr(const std::string &query, bool verbose) {
                 this->cols[i].rows[curr_run].second) {
                 in_thr = true;
             }
+            if (this->cols[i].rows.size() == 1) {
+                if (verbose) {
+                    std::cout << "complete mismatch\n";
+                }
+                ms_row[i] = this->panelbv.h;
+                curr_prefs = this->cols[i].rows[
+                        this->cols[i].rows.size() - 1];
+                curr_pos = curr_prefs.second;
+                //curr_index = curr_pos;
 
-            if ((curr_run != 0 && !in_thr && curr_run == thr) ||
-                curr_run == this->cols[i].rows.size() - 1) {
+                curr_prefs = this->cols[0].rows[this->cols[0].rows.size() - 1];
+                curr_pos = curr_prefs.second;
+                curr_index = curr_pos;
+                curr_run = this->cols[i + 1].rank_runs(curr_index);
+                symbol = get_next_char(this->cols[i + 1].zero_first, curr_run);
+                if (verbose) {
+                    std::cout << "update: " << curr_index << " " << curr_pos
+                              << " "
+                              << symbol << "\n";
+                }
+            } else if ((curr_run != 0 && !in_thr && curr_run == thr) ||
+                       curr_run == this->cols[i].rows.size() - 1) {
                 if (verbose) {
                     std::cout << "mismatch_up: ";
                 }
@@ -586,6 +831,10 @@ void rlpbwt_thr::match_thr(const std::string &query, bool verbose) {
     std::cout << "\nlen:\t";
     int tmp_index = 0;
     for (int i = (int) ms_row.size() - 1; i >= 0; i--) {
+        if (ms_row[i] == this->panelbv.h) {
+            ms_len[i] = 0;
+            continue;
+        }
         tmp_index = i;
         while (tmp_index > 0 &&
                query[tmp_index] == panelbv.getElem(ms_row[i], tmp_index)) {
@@ -634,10 +883,11 @@ size_t rlpbwt_thr::serialize(std::ostream &out, sdsl::structure_tree_node *v,
 void rlpbwt_thr::load(std::istream &in) {
     this->panelbv.load(in);
     auto c = new column_thr();
-    for(unsigned int i = 0; i <= this->panelbv.w; i++){
+    for (unsigned int i = 0; i <= this->panelbv.w; i++) {
         c->load(in);
         this->cols.emplace_back(*c);
     }
 }
+
 
 rlpbwt_thr::rlpbwt_thr() = default;

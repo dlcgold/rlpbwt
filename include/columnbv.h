@@ -8,6 +8,7 @@
 #include <vector>
 #include <sdsl/int_vector.hpp>
 #include <sdsl/bit_vectors.hpp>
+#include <ostream>
 
 class columnbv {
 public:
@@ -48,6 +49,12 @@ public:
     columnbv();
 
     virtual ~columnbv();
+
+    friend std::ostream &operator<<(std::ostream &os, const columnbv &columnbv);
+
+    size_t serialize(std::ostream &out, sdsl::structure_tree_node *v = nullptr,
+                     const std::string& name = "");
+    void load(std::istream &in);
 };
 
 

@@ -11,6 +11,9 @@
 #include <boost/archive/text_iarchive.hpp>
 #include <boost/archive/text_oarchive.hpp>
 #include <boost/serialization/vector.hpp>
+#include <sdsl/structure_tree.hpp>
+#include <sdsl/util.hpp>
+#include "utils.h"
 #include "rlrow.h"
 
 /**
@@ -66,7 +69,10 @@ public:
      */
     friend std::ostream &
     operator<<(std::ostream &os, const column &column);
+    size_t serialize(std::ostream &out, sdsl::structure_tree_node *v = nullptr,
+                     const std::string &name = "");
 
+    void load(std::istream &in);
 private:
     friend class boost::serialization::access;
 };

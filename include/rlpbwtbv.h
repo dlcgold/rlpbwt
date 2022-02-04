@@ -37,12 +37,12 @@ public:
     /**
      * @brief height of the original panel
      */
-    unsigned int height;
+    unsigned int height{};
 
     /**
      * @brief width of the original panel
      */
-    unsigned int width;
+    unsigned int width{};
 
     /**
      * @brief constructor for run-length encoded PBWT matrix
@@ -51,6 +51,8 @@ public:
      * @param verbose bool for extra print
      */
     explicit rlpbwtbv(const char *filename, bool vcf, bool verbose = false);
+
+    rlpbwtbv();
 
     /**
      * @brief function to obtain the struct for the run-length encoded PBWT
@@ -134,6 +136,10 @@ public:
     reverse_lf(unsigned int col_index, unsigned int index,
                bool verbose) const;
 
+    size_t serialize(std::ostream &out, sdsl::structure_tree_node *v = nullptr,
+                     const std::string &name = "");
+
+    void load(std::istream &in);
 };
 
 

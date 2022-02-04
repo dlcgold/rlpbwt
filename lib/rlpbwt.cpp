@@ -4,7 +4,7 @@
 
 #include "../include/rlpbwt.h"
 
-rlpbwt::rlpbwt() : cols(), heigth(0), width(0) {}
+rlpbwt::rlpbwt() : cols(), height(0), width(0) {}
 
 // VCF code thanks to https://github.com/ZhiGroup/Syllable-PBWT
 rlpbwt::rlpbwt(const char *filename, bool vcf, bool verbose) {
@@ -92,7 +92,7 @@ rlpbwt::rlpbwt(const char *filename, bool vcf, bool verbose) {
         tmp_cols.push_back(col);
         this->cols = tmp_cols;
         this->width = tmp_width;
-        this->heigth = tmp_height;
+        this->height = tmp_height;
     } else {
         std::ifstream input_matrix(filename);
         if (input_matrix.is_open()) {
@@ -147,7 +147,7 @@ rlpbwt::rlpbwt(const char *filename, bool vcf, bool verbose) {
             tmp_cols.push_back(col);
             this->cols = tmp_cols;
             this->width = tmp_width;
-            this->heigth = tmp_height;
+            this->height = tmp_height;
             input_matrix.close();
         } else {
             throw FileNotFoundException{};
@@ -270,7 +270,7 @@ rlpbwt::lf(unsigned int col_index, unsigned int row_index, char symbol,
         std::cout << uv.first << ", " << uv.second << "\n";
     }
     // fix for the last index that's "outside" the column
-    if (this->cols[col_index].rows[row_index].p + offset == this->heigth) {
+    if (this->cols[col_index].rows[row_index].p + offset == this->height) {
         if (get_next_char(this->cols[col_index].zero_first, row_index) == '0') {
             uv.second--;
         } else {
@@ -358,10 +358,10 @@ rlpbwt::external_match(const std::string &query, unsigned int min_len,
         curr_tmp = lf(i, curr_run, query[i], curr_offset);
         end_tmp = lf(i, end_run, query[i], end_offset);
 
-        if (curr_tmp > this->heigth) {
+        if (curr_tmp > this->height) {
             curr_tmp -= curr_offset;
         }
-        if (end_tmp > this->heigth) {
+        if (end_tmp > this->height) {
             end_tmp -= end_offset;
         }
         if (verbose) {
@@ -400,7 +400,7 @@ rlpbwt::external_match(const std::string &query, unsigned int min_len,
             }
 
             if ((query[curr_beg] == '0' && curr_tmp > 0) ||
-                curr_tmp == this->heigth) {
+                curr_tmp == this->height) {
                 if (verbose) {
                     std::cout << "begin case 2 curr run " << curr_run
                               << ", curr index " << curr_index << "\n";
@@ -482,7 +482,7 @@ rlpbwt::external_match(const std::string &query, unsigned int min_len,
                 if (verbose) {
                     std::cout << "end curr beg: " << curr_beg << "\n";
                 }
-                while (end_tmp < this->heigth &&
+                while (end_tmp < this->height &&
                        (i + 1) - this->cols[i + 1].lcp[end_tmp] <= curr_beg) {
                     end_tmp++;
                 }
@@ -670,10 +670,10 @@ rlpbwt::end_external_match(const std::string &query, bool forward,
         curr_tmp = lf(i, curr_run, query[i], curr_offset);
         end_tmp = lf(i, end_run, query[i], end_offset);
 
-        if (curr_tmp > this->heigth) {
+        if (curr_tmp > this->height) {
             curr_tmp -= curr_offset;
         }
-        if (end_tmp > this->heigth) {
+        if (end_tmp > this->height) {
             end_tmp -= end_offset;
         }
 
@@ -728,7 +728,7 @@ rlpbwt::end_external_match(const std::string &query, bool forward,
                 end_index = this->cols[i].count_0;
             } else {
                 curr_index = this->cols[i].count_0;
-                end_index = this->heigth;
+                end_index = this->height;
             }
         }
         if (verbose) {
@@ -879,5 +879,38 @@ void rlpbwt::external_match_vcf(const char *filename, unsigned int min_len,
             }
         }
         count++;
+    }
+}
+
+size_t rlpbwt::serialize(std::ostream &out, sdsl::structure_tree_node *v,
+                         const std::string &name) {
+    sdsl::structure_tree_node *child =
+            sdsl::structure_tree::add_child(v, name,
+                                            sdsl::util::class_name(
+                                                    *this));
+    size_t written_bytes = 0;
+
+    out.write((char *) &this->height, sizeof(this->height));
+    written_bytes += sizeof(this->height);
+
+    out.write((char *) &this->width, sizeof(this->width));
+    written_bytes += sizeof(this->width);
+
+    for (unsigned int i = 0; i < this->cols.size(); i++) {
+        std::string label = "col_" + std::to_string(i);
+        written_bytes += this->cols[i].serialize(out, child, label);
+    }
+
+    sdsl::structure_tree::add_size(child, written_bytes);
+    return written_bytes;
+}
+
+void rlpbwt::load(std::istream &in) {
+    in.read((char *) &this->height, sizeof(this->height));
+    in.read((char *) &this->width, sizeof(this->width));
+    auto c = new column();
+    for (unsigned int i = 0; i <= this->width; i++) {
+        c->load(in);
+        this->cols.emplace_back(*c);
     }
 }
