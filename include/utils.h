@@ -11,8 +11,6 @@
 #include <sdsl/structure_tree.hpp>
 #include <sdsl/io.hpp>
 #include <climits>
-#include "column.h"
-
 /**
  * @brief function to get the char (in bialleic case with 0 and 1) at certain
  * run index
