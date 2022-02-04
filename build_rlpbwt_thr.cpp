@@ -18,7 +18,7 @@ int main(int argc, char **argv) {
 
     std::string in_filename("../input/sample_new.txt");
     std::string out_filename("../output/sample2.txt.pbwt");
-    
+
 
     build<rlpbwt_thr>(in_filename, out_filename);
 

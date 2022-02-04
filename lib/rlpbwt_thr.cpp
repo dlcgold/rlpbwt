@@ -368,6 +368,7 @@ rlpbwt_thr::rlpbwt_thr(const char *filename, bool verbose) {
         getline(input_matrix, line);
         getline(input_matrix, line);
         while (getline(input_matrix, line) && !line.empty()) {
+            std::cout << count << "\r";
             std::istringstream is_col(line);
             is_col >> garbage >> garbage >> garbage >> garbage >> new_column;
             if (verbose) {
