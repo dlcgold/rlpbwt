@@ -15,8 +15,8 @@ public:
     unsigned int h{};
     unsigned int w{};
 
-    sdsl::bit_vector panel;
-
+    //sdsl::bit_vector panel;
+    std::vector<sdsl::bit_vector > panel;
     panel_ra(unsigned int h, unsigned int w);
     panel_ra();
 

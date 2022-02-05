@@ -66,16 +66,10 @@ rlpbwt_thr::rlpbwt_thr(const char *filename, unsigned int w, unsigned int h,
                           << "\n-------------------------------\n";
             }
             auto col = rlpbwt_thr::build_column(new_column, pref, div);
-            /*
-            for (unsigned int k = 0; k < new_column.size(); k++) {
-                if (new_column[k] != '0') {
-                    this->panelbv.panel[count + (k * tmp_width)] = true;
-                }
-            }
-            */
             for (unsigned int k = 0; k < tmp_height; k++) {
                 if (new_column[k] != '0') {
-                    this->panelbv.panel[count + (k * tmp_width)] = true;
+                    //this->panelbv.panel[count + (k * tmp_width)] = true;
+                    this->panelbv.panel[count][k] = true;
                 }
             }
             this->cols[count] = col;
@@ -206,7 +200,9 @@ rlpbwt_thr::rlpbwt_thr(const char *filename, bool vcf, bool verbose) {
             auto col = rlpbwt_thr::build_column(new_column, pref, div);
             for (unsigned int j = 0; j < new_column.size(); j++) {
                 if (new_column[j] != '0') {
-                    this->panelbv.panel[k + (j * tmp_width)] = true;
+                    //this->panelbv.panel[k + (j * tmp_width)] = true;
+                    this->panelbv.panel[k][j] = true;
+
                 }
             }
             this->cols[k] = col;
@@ -282,7 +278,8 @@ rlpbwt_thr::rlpbwt_thr(const char *filename, bool vcf, bool verbose) {
                 auto col = rlpbwt_thr::build_column(new_column, pref, div);
                 for (unsigned int k = 0; k < new_column.size(); k++) {
                     if (new_column[k] != '0') {
-                        this->panelbv.panel[count + (k * tmp_width)] = true;
+                        //this->panelbv.panel[count + (k * tmp_width)] = true;
+                        this->panelbv.panel[count][k] = true;
                     }
                 }
                 this->cols[count] = col;
@@ -348,9 +345,11 @@ rlpbwt_thr::rlpbwt_thr(const char *filename, bool verbose) {
         std::istringstream is(line);
         is >> garbage >> garbage >> garbage >> garbage >> new_column;
         unsigned int tmp_height = new_column.size();
+        std::cout << "h: " << tmp_height << "\n";
         unsigned int tmp_width = std::count(
                 std::istreambuf_iterator<char>(input_matrix),
                 std::istreambuf_iterator<char>(), '\n') + 1;
+        std::cout << "w: " << tmp_width << "\n";
         input_matrix.clear();
         input_matrix.seekg(0, std::ios::beg);
         this->cols = std::vector<column_thr>(tmp_width + 1);
@@ -360,8 +359,7 @@ rlpbwt_thr::rlpbwt_thr(const char *filename, bool verbose) {
             pref[i] = i;
             div[i] = 0;
         }
-
-        sdsl::bit_vector bv(tmp_height * tmp_width, 0);
+        //sdsl::bit_vector bv(tmp_height * tmp_width, 0);
         this->panelbv = panel_ra(tmp_height, tmp_width);
         unsigned int count = 0;
         std::string last_col;
@@ -382,7 +380,9 @@ rlpbwt_thr::rlpbwt_thr(const char *filename, bool verbose) {
             auto col = rlpbwt_thr::build_column(new_column, pref, div);
             for (unsigned int k = 0; k < new_column.size(); k++) {
                 if (new_column[k] != '0') {
-                    this->panelbv.panel[count + (k * tmp_width)] = true;
+                    //this->panelbv.panel[count + (k * tmp_width)] = true;
+                    this->panelbv.panel[count][k] = true;
+
                 }
             }
 
