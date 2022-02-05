@@ -144,7 +144,6 @@ public:
     void load(std::istream &in);
 
 private:
-    friend class boost::serialization::access;
 
     /**
     * @brief function to compute the lf mapping, w(i, s) function in Durbin
@@ -181,14 +180,5 @@ private:
 
 };
 
-namespace boost {
-    namespace serialization {
-        template<class Archive>
-        void serialize(Archive &a, rlpbwt &e,
-                       const unsigned version) {
-            a & e.width & e.height & e.cols;
-        }
-    }
-}
 #endif //RLPBWT_RLPBWT_H
 

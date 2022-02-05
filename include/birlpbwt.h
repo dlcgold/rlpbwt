@@ -9,9 +9,6 @@
 #include <sstream>
 #include <vector>
 #include <list>
-#include <boost/archive/text_iarchive.hpp>
-#include <boost/archive/text_oarchive.hpp>
-#include <boost/serialization/vector.hpp>
 #include "rlpbwt.h"
 #include "match.h"
 
@@ -69,21 +66,7 @@ public:
      * utility to print both forward and backward RLPBWT
      */
     void print();
-
-private:
-    friend class boost::serialization::access;
-
 };
 
-
-namespace boost {
-    namespace serialization {
-        template<class Archive>
-        void serialize(Archive &a, birlpbwt &e,
-                       const unsigned version) {
-            a & e.frlpbwt & e.brlpbwt;
-        }
-    }
-}
 
 #endif //RLPBWT_BIRLPBWT_H

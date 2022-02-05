@@ -43,20 +43,7 @@ public:
     * @brief default destructor
     */
     virtual ~rlrow();
-
-private:
-    friend class boost::serialization::access;
-
 };
 
-namespace boost {
-    namespace serialization {
-        template<class Archive>
-        void serialize(Archive &a, rlrow &e,
-                       const unsigned version) {
-            a & e.p & e.uv;
-        }
-    }
-}
 
 #endif //RLPBWT_RLROW_H

@@ -48,6 +48,7 @@ size_t column_thr::serialize(std::ostream &out, sdsl::structure_tree_node *v,
 
     out.write((char *) &this->count_0, sizeof(this->count_0));
     written_bytes += sizeof(this->count_0);
+
     written_bytes += this->runs.serialize(out, child, "runs");
     written_bytes += this->u.serialize(out, child, "u");
     written_bytes += this->v.serialize(out, child, "v");

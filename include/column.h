@@ -8,9 +8,6 @@
 #include <vector>
 #include <ostream>
 //#include <sdsl/vectors.hpp>
-#include <boost/archive/text_iarchive.hpp>
-#include <boost/archive/text_oarchive.hpp>
-#include <boost/serialization/vector.hpp>
 #include <sdsl/structure_tree.hpp>
 #include <sdsl/util.hpp>
 #include "utils.h"
@@ -73,18 +70,7 @@ public:
                      const std::string &name = "");
 
     void load(std::istream &in);
-private:
-    friend class boost::serialization::access;
 };
 
-namespace boost {
-    namespace serialization {
-        template<class Archive>
-        void serialize(Archive &a, column &e,
-                       const unsigned version){
-            a & e.count_0 & e.zero_first & e.lcp & e.rows;
-        }
-    }
-}
 
 #endif //RLPBWT_COLUMN_H
