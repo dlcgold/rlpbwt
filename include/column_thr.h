@@ -41,14 +41,17 @@ public:
     sdsl::sd_vector<>::rank_1_type rank_thr;
     sdsl::sd_vector<>::select_1_type select_thr;
 
-    std::vector<std::pair<unsigned int, unsigned int>> rows;
+    //std::vector<std::pair<unsigned int, unsigned int>> rows;
+    sdsl::int_vector<> sample_beg;
+    sdsl::int_vector<> sample_end;
 
     column_thr(bool zeroFirst, unsigned int count0,
                const sdsl::bit_vector &runs,
                const sdsl::bit_vector &u,
                const sdsl::bit_vector &v,
                const sdsl::bit_vector &thr,
-               std::vector<std::pair<unsigned int, unsigned int>> rows);
+               sdsl::int_vector<> sample_beg,
+               sdsl::int_vector<> sample_end);
 
     /**
      * @brief default constructor

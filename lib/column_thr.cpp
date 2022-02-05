@@ -7,8 +7,13 @@
 column_thr::column_thr(bool zeroFirst, unsigned int count0,
                        const sdsl::bit_vector &runs, const sdsl::bit_vector &u,
                        const sdsl::bit_vector &v, const sdsl::bit_vector &thr,
-                       std::vector<std::pair<unsigned int, unsigned int>> rows)
-        : zero_first(zeroFirst), count_0(count0), rows(std::move(rows)) {
+                       sdsl::int_vector<> sample_beg,
+                       sdsl::int_vector<> sample_end) : zero_first(zeroFirst),
+                                                        count_0(count0),
+                                                        sample_beg(std::move(
+                                                                sample_beg)),
+                                                        sample_end(std::move(
+                                                                sample_end)) {
     this->runs = sdsl::sd_vector<>(runs);
     this->u = sdsl::sd_vector<>(u);
     this->v = sdsl::sd_vector<>(v);
@@ -23,8 +28,8 @@ std::ostream &operator<<(std::ostream &os, const column_thr &thr) {
     os << "zero_first: " << yesno << " c: " << thr.count_0
        << "\nruns: " << thr.runs << "\nu: " << thr.u << "\nv: " << thr.v
        << "\nthr: " << thr.thr << "\n";
-    for (auto e: thr.rows) {
-        std::cout << "(" << e.first << ", " << e.second << ") ";
+    for (unsigned int i = 0; i < thr.sample_beg.size(); i++) {
+        std::cout << "(" << thr.sample_beg[i] << ", " << thr.sample_end[i] << ") ";
     }
     std::cout << "\n";
     return os;
@@ -47,14 +52,9 @@ size_t column_thr::serialize(std::ostream &out, sdsl::structure_tree_node *v,
     written_bytes += this->u.serialize(out, child, "u");
     written_bytes += this->v.serialize(out, child, "v");
     written_bytes += this->thr.serialize(out, child, "thr");
-    std::vector<unsigned int> first(this->rows.size());
-    std::vector<unsigned int> second(this->rows.size());
-    for (unsigned int i = 0; i < this->rows.size(); i++) {
-        first[i] = rows[i].first;
-        second[i] = rows[i].second;
-    }
-    written_bytes += my_serialize(first, out, child, "rows_first");
-    written_bytes += my_serialize(second, out, child, "rows_second");
+
+    written_bytes += this->sample_beg.serialize(out, child, "s_beg");
+    written_bytes += this->sample_end.serialize(out, child, "s_end");
 
     sdsl::structure_tree::add_size(child, written_bytes);
     return written_bytes;
@@ -67,16 +67,8 @@ void column_thr::load(std::istream &in) {
     this->u.load(in);
     this->v.load(in);
     this->thr.load(in);
-    std::vector<unsigned int> first;
-    std::vector<unsigned int> second;
-    my_load(first, in);
-    my_load(second, in);
-    std::vector<std::pair<unsigned int, unsigned int>> pairs;
-    for (unsigned int i = 0; i < first.size(); i++) {
-        pairs.emplace_back(std::make_pair(first[i], second[i]));
-    }
-    this->rows = pairs;
-    pairs.clear();
+    this->sample_beg.load(in);
+    this->sample_end.load(in);
     this->rank_runs = sdsl::sd_vector<>::rank_1_type(&this->runs);
     this->select_runs = sdsl::sd_vector<>::select_1_type(&this->runs);
     this->rank_u = sdsl::sd_vector<>::rank_1_type(&this->u);
@@ -86,6 +78,7 @@ void column_thr::load(std::istream &in) {
     this->rank_thr = sdsl::sd_vector<>::rank_1_type(&this->thr);
     this->select_thr = sdsl::sd_vector<>::select_1_type(&this->thr);
 }
+
 
 column_thr::~column_thr() = default;
 

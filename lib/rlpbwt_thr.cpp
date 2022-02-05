@@ -545,7 +545,16 @@ rlpbwt_thr::build_column(std::string &column, std::vector<unsigned int> &pref,
 
     // compress div array
     sdsl::util::bit_compress(div);
-    return {start, count0, runvec, zerovec, onevec, thr, rows};
+    sdsl::int_vector<> sample_beg(rows.size());
+    sdsl::int_vector<> sample_end(rows.size());
+    for (unsigned int i = 0; i < rows.size(); i++) {
+        sample_beg[i] = rows[i].first;
+        sample_end[i] = rows[i].second;
+    }
+    sdsl::util::bit_compress(sample_beg);
+    sdsl::util::bit_compress(sample_end);
+    return {start, count0, runvec, zerovec, onevec, thr, sample_beg,
+            sample_end};
 }
 
 void rlpbwt_thr::update(std::string &column, std::vector<unsigned int> &pref,
@@ -713,8 +722,10 @@ void rlpbwt_thr::match_thr(const std::string &query, bool verbose) {
     }
     std::vector<unsigned int> ms_row(query.size(), 0);
     std::vector<unsigned int> ms_len(query.size(), 0);
-    auto curr_prefs = this->cols[0].rows[this->cols[0].rows.size() - 1];
-    auto curr_pos = curr_prefs.second;
+    //auto curr_prefs = this->cols[0].rows[this->cols[0].rows.size() - 1];
+    //auto curr_pos = curr_prefs.second;
+    auto curr_pos = static_cast<unsigned int>(this->cols[0].sample_end[
+            this->cols[0].sample_end.size() - 1]);
     auto curr_index = curr_pos;
     unsigned int curr_run = this->cols[0].rank_runs(curr_index);
     char symbol = get_next_char(this->cols[0].zero_first, curr_run);
@@ -746,22 +757,20 @@ void rlpbwt_thr::match_thr(const std::string &query, bool verbose) {
              * understand what to do
              */
             bool in_thr = false;
-            if (this->cols[i].rows[curr_run].first ==
-                this->cols[i].rows[curr_run].second) {
+            if (this->cols[i].sample_beg[curr_run] ==
+                this->cols[i].sample_end[curr_run]) {
                 in_thr = true;
             }
-            if (this->cols[i].rows.size() == 1) {
+            if (this->cols[i].sample_beg.size() == 1) {
                 if (verbose) {
                     std::cout << "complete mismatch\n";
                 }
                 ms_row[i] = this->panelbv.h;
-                curr_prefs = this->cols[i].rows[
-                        this->cols[i].rows.size() - 1];
-                curr_pos = curr_prefs.second;
                 //curr_index = curr_pos;
 
-                curr_prefs = this->cols[0].rows[this->cols[0].rows.size() - 1];
-                curr_pos = curr_prefs.second;
+                //curr_prefs = this->cols[0].rows[this->cols[0].rows.size() - 1];
+                curr_pos = static_cast<unsigned int>(this->cols[0].sample_end[
+                        this->cols[0].sample_end.size() - 1]);
                 curr_index = curr_pos;
                 curr_run = this->cols[i + 1].rank_runs(curr_index);
                 symbol = get_next_char(this->cols[i + 1].zero_first, curr_run);
@@ -771,14 +780,15 @@ void rlpbwt_thr::match_thr(const std::string &query, bool verbose) {
                               << symbol << "\n";
                 }
             } else if ((curr_run != 0 && !in_thr && curr_run == thr) ||
-                       curr_run == this->cols[i].rows.size() - 1) {
+                       curr_run == this->cols[i].sample_beg.size() - 1) {
                 if (verbose) {
                     std::cout << "mismatch_up: ";
                 }
                 // threshold below index so we go up
                 curr_index = (this->cols[i].select_runs(curr_run) + 1) - 1;
-                curr_prefs = this->cols[i].rows[curr_run - 1];
-                curr_pos = curr_prefs.second;
+                //curr_prefs = this->cols[i].rows[curr_run - 1];
+                curr_pos = static_cast<unsigned int>(this->cols[i].sample_end[
+                        curr_run - 1]);
                 if (verbose) {
                     std::cout << "update: " << curr_index << " " << curr_pos
                               << " "
@@ -800,8 +810,8 @@ void rlpbwt_thr::match_thr(const std::string &query, bool verbose) {
                 }
                 // threshold above index so we go down
                 curr_index = (this->cols[i].select_runs(curr_run + 1) + 1);
-                curr_prefs = this->cols[i].rows[curr_run + 1];
-                curr_pos = curr_prefs.first;
+                curr_pos = static_cast<unsigned int>(this->cols[i].sample_beg[
+                        curr_run + 1]);
                 ms_row[i] = curr_pos;
                 if (verbose) {
                     std::cout << "update: " << curr_index << " " << curr_pos
