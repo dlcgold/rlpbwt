@@ -368,7 +368,11 @@ rlpbwt_thr::rlpbwt_thr(const char *filename, bool verbose) {
         while (getline(input_matrix, line) && !line.empty()) {
             std::cout << count << "\r";
             std::istringstream is_col(line);
-            is_col >> garbage >> garbage >> garbage >> garbage >> new_column;
+            is_col >> garbage;
+            if(garbage == "TOTAL_SAMPLES:"){
+                break;
+            }
+            is_col >> garbage >> garbage >> garbage >> new_column;
             if (verbose) {
                 std::cout << "\nnew_column " << count << "\n";
                 std::cout << new_column << "\n" << this->cols[count].runs
