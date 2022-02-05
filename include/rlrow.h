@@ -6,9 +6,6 @@
 #define RLPBWT_RLROW_H
 
 #include <ostream>
-#include <boost/archive/text_iarchive.hpp>
-#include <boost/archive/text_oarchive.hpp>
-#include <boost/serialization/vector.hpp>
 
 /**
  * @brief class to rappresent a single row in a column of RLPBWT
