@@ -15,9 +15,6 @@
 #include <sstream>
 #include <algorithm>
 #include <list>
-#include <boost/archive/text_iarchive.hpp>
-#include <boost/archive/text_oarchive.hpp>
-#include <boost/serialization/vector.hpp>
 #include <sdsl/bit_vectors.hpp>
 #include "column.h"
 #include "utils.h"

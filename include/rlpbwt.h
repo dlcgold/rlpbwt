@@ -17,9 +17,6 @@
 #include <algorithm>
 #include <list>
 #include <sdsl/structure_tree.hpp>
-#include <boost/archive/text_iarchive.hpp>
-#include <boost/archive/text_oarchive.hpp>
-#include <boost/serialization/vector.hpp>
 #include "column.h"
 #include "utils.h"
 #include "exceptions.h"
