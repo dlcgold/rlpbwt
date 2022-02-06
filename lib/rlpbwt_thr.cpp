@@ -874,7 +874,6 @@ rlpbwt_thr::match_thr(const std::string &query, bool verbose) {
         if ((ms_len[i] != 0 && ms_len[i] > ms_len[i + 1]) ||
             (i == ms_len.size() - 1 && ms_len[i] != 0)) {
             ms_match.emplace_back(i, ms_len[i]);
-
         } else if (ms_len[i] != 0 && i < ms_len.size() - 1 &&
                    ms_len[i] == ms_len[i + 1]) {
             unsigned int pos = 0;
@@ -1044,8 +1043,8 @@ size_t rlpbwt_thr::serialize(std::ostream &out, sdsl::structure_tree_node *v,
 
 void rlpbwt_thr::load(std::istream &in) {
     this->panelbv.load(in);
-    auto c = new column_thr();
     for (unsigned int i = 0; i <= this->panelbv.w; i++) {
+        auto c = new column_thr();
         c->load(in);
         this->cols.emplace_back(*c);
     }
