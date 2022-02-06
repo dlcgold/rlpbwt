@@ -24,9 +24,10 @@ template<typename rlpbwt_t>
 void build(std::string in_filename, const std::string &out_filename) {
     rlpbwt_t rlpbwt(in_filename.c_str(), false);
     clock_t START = clock();
-    //auto matches = rlpbwt.match_thr("010010100011101", true);
-    rlpbwt.match_tsv_tr("../input/query_tr.txt", "../output/query_tr_out.txt");
-    rlpbwt.match_tsv("../input/query.txt", "../output/query_out.txt");
+    auto matches = rlpbwt.match_thr("010010100011101", false);
+    //auto matches = rlpbwt.match_thr("111111111111111", true);
+    //rlpbwt.match_tsv_tr("../input/query_tr.txt", "../output/query_tr_out.txt");
+    //rlpbwt.match_tsv("../input/query.txt", "../output/query_out.txt");
     std::cout << clock() - START << " time\n";
     /*
     for (auto m: matches) {
@@ -55,16 +56,20 @@ void print_size(const std::string &out_filename) {
         panel += sdsl::size_in_mega_bytes(i);
         std::cout << i << "\n";
     }
+    unsigned long long thr_count = 0;
+    unsigned long long run_count = 0;
     std::cout << "\n";
     for (auto &c: rlpbwt->cols) {
         thr += sdsl::size_in_mega_bytes(c.thr);
         run += sdsl::size_in_mega_bytes(c.runs);
         u += sdsl::size_in_mega_bytes(c.u);
-        u += sdsl::size_in_mega_bytes(c.rank_u);
         v += sdsl::size_in_mega_bytes(c.v);
         sample += sdsl::size_in_mega_bytes(c.sample_beg);
         sample += sdsl::size_in_mega_bytes(c.sample_end);
-        std::cout << c.thr << "\n";
+        std::cout << c;
+        thr_count += c.rank_thr(c.runs.size()-1);
+        run_count += c.sample_beg.size();
+        std::cout << "runs: " << run_count <<"\nthrs: " << thr_count << "\n-------\n";
     }
 
     std::cout << "panel size: " << panel << " mb\n";
@@ -76,9 +81,8 @@ void print_size(const std::string &out_filename) {
     std::cout << "total size (excluded single value in structure): "
               << panel + run + thr + u + v + sample
               << " mb\n";
+    std::cout << "runs: " << run_count <<"\nthrs: " << thr_count << "\n";
 
-
-    std::cout << rlpbwt->cols[rlpbwt->cols.size() - 1];
 }
 
 int main(int argc, char **argv) {
@@ -160,6 +164,6 @@ int main(int argc, char **argv) {
     std::string out_filename("../output/samplenew.txt.pbwt");
 
     build<rlpbwt_thr>(in_filename, out_filename);
-    //print_size(out_filename);
+    print_size(out_filename);
     return 0;
 }
