@@ -88,7 +88,11 @@ public:
     std::pair<unsigned int, unsigned int>
     uvtrick(unsigned int col_index, unsigned int index) const;
 
-    void match_thr(const std::string &query, bool verbose = false);
+    std::vector<std::pair<unsigned int, unsigned int>>
+    match_thr(const std::string &query, bool verbose = false);
+
+    void match_tsv(const char *filename, const char *out, bool verbose = false);
+    void match_tsv_tr(const char *filename, const char *out, bool verbose = false);
 
     size_t serialize(std::ostream &out, sdsl::structure_tree_node *v = nullptr,
                      const std::string &name = "");

@@ -369,7 +369,7 @@ rlpbwt_thr::rlpbwt_thr(const char *filename, bool verbose) {
             std::cout << count << "\r";
             std::istringstream is_col(line);
             is_col >> garbage;
-            if(garbage == "TOTAL_SAMPLES:"){
+            if (garbage == "TOTAL_SAMPLES:") {
                 break;
             }
             is_col >> garbage >> garbage >> garbage >> new_column;
@@ -720,7 +720,8 @@ rlpbwt_thr::uvtrick(unsigned int col_index, unsigned int index) const {
     }
 }
 
-void rlpbwt_thr::match_thr(const std::string &query, bool verbose) {
+std::vector<std::pair<unsigned int, unsigned int>>
+rlpbwt_thr::match_thr(const std::string &query, bool verbose) {
     if (query.size() != this->panelbv.w) {
         throw NotEqualLengthException{};
     }
@@ -835,15 +836,17 @@ void rlpbwt_thr::match_thr(const std::string &query, bool verbose) {
             }
         }
     }
-    std::cout << "ind:\t";
-    for (unsigned int i = 0; i < ms_row.size(); i++) {
-        std::cout << i << "\t";
+    if (verbose) {
+        std::cout << "ind:\t";
+        for (unsigned int i = 0; i < ms_row.size(); i++) {
+            std::cout << i << "\t";
+        }
+        std::cout << "\npos:\t";
+        for (auto e: ms_row) {
+            std::cout << e << "\t";
+        }
+        std::cout << "\nlen:\t";
     }
-    std::cout << "\npos:\t";
-    for (auto e: ms_row) {
-        std::cout << e << "\t";
-    }
-    std::cout << "\nlen:\t";
     int tmp_index = 0;
     for (int i = (int) ms_row.size() - 1; i >= 0; i--) {
         if (ms_row[i] == this->panelbv.h) {
@@ -851,30 +854,174 @@ void rlpbwt_thr::match_thr(const std::string &query, bool verbose) {
             continue;
         }
         tmp_index = i;
-        while (tmp_index > 0 &&
+        while (tmp_index >= 0 &&
                query[tmp_index] == panelbv.getElem(ms_row[i], tmp_index)) {
-            tmp_index--;
-        }
-        if (tmp_index == 0) {
             tmp_index--;
         }
         ms_len[i] = i - tmp_index;
     }
     std::vector<std::pair<unsigned int, unsigned int>> ms_match;
     for (unsigned int i = 0; i < ms_len.size(); i++) {
-        std::cout << ms_len[i] << "\t";
+        if (verbose) {
+            std::cout << ms_len[i] << "\t";
+        }
         // TODO check if for last match
-        if (i > 0 && ms_len[i] >= ms_len[i - 1] &&
+        /*if (i > 0 && ms_len[i] >= ms_len[i - 1] &&
             (i == ms_len.size() - 1 || ms_len[i] >= ms_len[i + 1])) {
             ms_match.emplace_back(i, ms_len[i]);
+        }*/
+
+        if ((ms_len[i] != 0 && ms_len[i] > ms_len[i + 1]) ||
+            (i == ms_len.size() - 1 && ms_len[i] != 0)) {
+            ms_match.emplace_back(i, ms_len[i]);
+
+        } else if (ms_len[i] != 0 && i < ms_len.size() - 1 &&
+                   ms_len[i] == ms_len[i + 1]) {
+            unsigned int pos = 0;
+            for (unsigned int j = i + 1; j < ms_len.size(); j++) {
+                if (ms_len[j] > ms_len[j + 1]) {
+                    pos = j + 1;
+                    break;
+                } else {
+                    pos = i + 1;
+                    break;
+                }
+            }
+            if (i + 1 != pos) {
+                if(verbose) {
+                    for (unsigned int j = i + 1; j <= pos; j++) {
+                        std::cout << ms_len[j] << "\t";
+                    }
+                }
+                for (unsigned int j = i; j < pos; j++) {
+                    ms_match.emplace_back(j, ms_len[j]);
+                }
+                i = pos;
+            }
+            if (pos == ms_len.size() - 1) {
+                break;
+            }
         }
     }
-    std::cout << "\nmatches:\t";
-    for (auto e: ms_match) {
-        std::cout << "(" << e.first << ", " << e.second << ")\t";
+    if (verbose) {
+        std::cout << "\nmatches:\t";
+        for (auto e: ms_match) {
+            std::cout << "(col: " << e.first << ", len: " << e.second << ")\t";
+        }
+        std::cout << "\n";
     }
-    std::cout << "\n";
+    return ms_match;
+}
 
+void rlpbwt_thr::match_tsv_tr(const char *filename, const char *out,
+                              bool verbose) {
+    std::ifstream input_matrix(filename);
+    std::ofstream out_match(out);
+    if (input_matrix.is_open()) {
+        std::string header1;
+        std::string header2;
+        std::string line;
+        std::string garbage;
+        std::string new_column;
+        getline(input_matrix, line);
+        getline(input_matrix, line);
+        std::vector<std::string> queries_panel;
+        while (getline(input_matrix, line) && !line.empty()) {
+            std::istringstream is_col(line);
+            is_col >> garbage;
+            if (garbage == "TOTAL_SAMPLES:") {
+                break;
+            }
+            is_col >> garbage >> garbage >> garbage >> new_column;
+            queries_panel.push_back(new_column);
+        }
+        input_matrix.close();
+        std::string query;
+        if (out_match.is_open()) {
+            for (unsigned int i = 0; i < queries_panel[0].size(); i++) {
+                for (auto & j : queries_panel) {
+                    query.push_back(j[i]);
+                }
+                auto matches = this->match_thr(query, verbose);
+                if (verbose) {
+                    std::cout << i << ": ";
+                }
+                out_match << i << ": ";
+                for (auto m: matches) {
+                    if (verbose) {
+                        std::cout << "(col: " << m.first << ", len: "
+                                  << m.second << ") ";
+                    }
+                    out_match << "(col: " << m.first << ", len: "
+                              << m.second << ") ";
+                }
+                if (verbose) {
+                    std::cout << "\n";
+                }
+                out_match << "\n";
+                query.clear();
+            }
+            out_match.close();
+        } else {
+            throw FileNotFoundException{};
+        }
+
+    } else {
+        throw FileNotFoundException{};
+    }
+}
+
+void rlpbwt_thr::match_tsv(const char *filename, const char *out,
+                           bool verbose) {
+    std::ifstream input_matrix(filename);
+    std::ofstream out_match(out);
+    if (input_matrix.is_open()) {
+        std::string header1;
+        std::string header2;
+        std::string line;
+        std::string garbage;
+        std::string new_column;
+        getline(input_matrix, line);
+        getline(input_matrix, line);
+        std::vector<std::string> queries_panel;
+        while (getline(input_matrix, line) && !line.empty()) {
+            std::istringstream is_col(line);
+            is_col >> garbage;
+            if (garbage == "TOTAL_SAMPLES:") {
+                break;
+            }
+            is_col >> garbage >> garbage >> garbage >> new_column;
+            queries_panel.push_back(new_column);
+        }
+        input_matrix.close();
+        if (out_match.is_open()) {
+            for (unsigned int i = 0; i < queries_panel.size(); i++) {
+                auto matches = this->match_thr(queries_panel[i], verbose);
+                if (verbose) {
+                    std::cout << i << ": ";
+                }
+                out_match << i << ": ";
+                for (auto m: matches) {
+                    if (verbose) {
+                        std::cout << "(col: " << m.first << ", len: "
+                                  << m.second << ") ";
+                    }
+                    out_match << "(col: " << m.first << ", len: "
+                              << m.second << ") ";
+                }
+                if (verbose) {
+                    std::cout << "\n";
+                }
+                out_match << "\n";
+            }
+            out_match.close();
+        } else {
+            throw FileNotFoundException{};
+        }
+
+    } else {
+        throw FileNotFoundException{};
+    }
 }
 
 size_t rlpbwt_thr::serialize(std::ostream &out, sdsl::structure_tree_node *v,
@@ -905,4 +1052,7 @@ void rlpbwt_thr::load(std::istream &in) {
 }
 
 
-rlpbwt_thr::rlpbwt_thr() = default;
+
+
+rlpbwt_thr::rlpbwt_thr() =
+default;
