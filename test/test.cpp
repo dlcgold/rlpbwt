@@ -3,12 +3,16 @@
 #include <gperftools/heap-profiler.h>
 #include <sdsl/int_vector.hpp>
 #include <sdsl/bit_vectors.hpp>
-//
-#include "include/exceptions.h"
-#include "include/rlpbwt.h"
-#include "include/rlpbwtbv.h"
-#include "include/birlpbwt.h"
-#include "include/rlpbwt_thr.h"
+#include <SelfShapedSlp.hpp>
+#include <DirectAccessibleGammaCode.hpp>
+#include <SelectType.hpp>
+#include <PlainSlp.hpp>
+#include <FixedBitLenCode.hpp>
+#include "../include/exceptions.h"
+#include "../include/rlpbwt.h"
+#include "../include/rlpbwtbv.h"
+#include "../include/birlpbwt.h"
+#include "../include/rlpbwt_thr.h"
 
 
 TEST (BuildRlpbwtTest, TestBuildAndQuery) {
@@ -346,6 +350,26 @@ TEST (BuildRlpbwtSerThr, TestSer) {
     file_i.close();
 }
 
+TEST(Slp, TestLoad) {
+    //using var_t = uint32_t;
+    using SelSd = SelectSdvec<>;
+    using DagcSd = DirectAccessibleGammaCode<SelSd>;
+    using Fblc = FixedBitLenCode<>;
+    using shaped_slp_t = SelfShapedSlp<uint32_t, DagcSd, DagcSd, SelSd>;
+    shaped_slp_t ra;
+    std::ifstream in("../input/sample.slp");
+    ra.load(in);
+    unsigned int h = 20;
+    unsigned int w = 15;
+    for (unsigned int i = 0; i < h; i++) {
+        for (unsigned int j = 0; j < w; j++) {
+            std::cout << ra.charAt(i + (j * h)) << " ";
+        }
+        std::cout << "\n";
+    }
+    in.close();
+}
+
 int main(int argc, char **argv) {
     ::testing::InitGoogleTest(&argc, argv);
     //::testing::GTEST_FLAG(filter) = "BuildRlpbwtTest*";
@@ -356,8 +380,9 @@ int main(int argc, char **argv) {
     //::testing::GTEST_FLAG(filter) = "BuildRlpbwtSerBV*";
     //::testing::GTEST_FLAG(filter) = "BuildRlpbwtBVtest*";
     //::testing::GTEST_FLAG(filter) = "BuildRlpbwtBVVCF*";
-    ::testing::GTEST_FLAG(filter) = "BuildRlpbwtThr*";
+    //::testing::GTEST_FLAG(filter) = "BuildRlpbwtThr*";
     //::testing::GTEST_FLAG(filter) = "BuildRlpbwtSerThr*";
     //::testing::GTEST_FLAG(filter) = "BuildRlpbwtNewThr*";
+    ::testing::GTEST_FLAG(filter) = "Slp*";
     return RUN_ALL_TESTS();
 }

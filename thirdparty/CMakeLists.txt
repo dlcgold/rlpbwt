@@ -79,5 +79,30 @@ set_property(TARGET divsufsort PROPERTY IMPORTED_LOCATION ${DIVSUFSORT_LIB})
 add_library(divsufsort64 STATIC IMPORTED GLOBAL)
 set_property(TARGET divsufsort64 PROPERTY IMPORTED_LOCATION ${DIVSUFSORT64_LIB})
 
+FetchContent_Declare(
+        bigrepair
+        GIT_REPOSITORY https://gitlab.com/maxrossi91/bigrepair.git
+)
 
+FetchContent_GetProperties(bigrepair)
+if(NOT bigrepair_POPULATED)
+    set(DISABLE_PFP ON CACHE BOOL "Build bigrepair without the PFP")
+    FetchContent_Populate(bigrepair)
+    add_subdirectory(${bigrepair_SOURCE_DIR} ${bigrepair_BINARY_DIR})
+endif()
+
+## Add ShapedSlp
+FetchContent_Declare(
+        shaped_slp
+        GIT_REPOSITORY https://github.com/koeppl/ShapedSlp.git
+        GIT_TAG master
+)
+
+FetchContent_GetProperties(shaped_slp)
+if(NOT shaped_slp_POPULATED)
+    FetchContent_Populate(shaped_slp)
+    add_subdirectory(${shaped_slp_SOURCE_DIR} ${shaped_slp_BINARY_DIR})
+    set(FOLCA_SOURCE_DIR ${shaped_slp_SOURCE_DIR}/folca)
+    set(SUX_SOURCE_DIR ${shaped_slp_SOURCE_DIR}/external/sux/sux)
+endif()
   

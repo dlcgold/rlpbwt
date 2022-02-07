@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 3.20)
 project(rlpbwt)
 
-set(CMAKE_CXX_STANDARD 14)
+set(CMAKE_CXX_STANDARD 17)
 add_compile_options(-Wall -Wextra -pedantic -O3)
 
 # Configure thirdparty
@@ -9,6 +9,12 @@ add_compile_options(-Wall -Wextra -pedantic -O3)
 set(CMAKE_INSTALL_INCLUDEDIR "include")
 
 add_subdirectory(thirdparty)
+FetchContent_GetProperties(shaped_slp)
+set(FOLCA_SOURCE_DIR ${shaped_slp_SOURCE_DIR}/folca)
+set(SUX_SOURCE_DIR ${shaped_slp_SOURCE_DIR}/external/sux/sux)
+message(FOLCA_SOURCE_DIR = "${shaped_slp_SOURCE_DIR}/folca")
+message(SUX_SOURCE_DIR = "${shaped_slp_SOURCE_DIR}/external/sux/sux")
+
 option(BUILD_TESTS "Set OFF to not compile the tests" ON)
 if (${BUILD_TESTS})
     enable_testing()
@@ -27,13 +33,20 @@ if (${BUILD_TESTS})
             lib/column_thr.cpp include/column_thr.h
             lib/panel_ra.cpp include/panel_ra.h)
 
+
     find_library(SDSL_lib lsdsl)
     if (NOT SDSL_lib)
         target_link_libraries(rlpbwt_test sdsl divsufsort divsufsort64 -lgtest)
     else ()
         target_link_libraries(rlpbwt_test -lsdsl -ldivsufsort -ldivsufsort64 -lgtest)
     endif ()
-    target_link_libraries(rlpbwt_test -lsdsl -ldivsufsort -ldivsufsort64 -lgtest)
+    target_include_directories(rlpbwt_test PUBLIC
+            "${shaped_slp_SOURCE_DIR}"
+            "${FOLCA_SOURCE_DIR}"
+            "${SUX_SOURCE_DIR}/function"
+            "${SUX_SOURCE_DIR}/support")
+    #target_compile_options(rlpbwt_test PUBLIC "-std=c++17")
+    #target_link_libraries(rlpbwt_test -lsdsl -ldivsufsort -ldivsufsort64 -lgtest)
     add_test(NAME rlpbwt_test COMMAND rlpbwt_test)
 else ()
     add_executable(rlpbwt build_rlpbwt_thr.cpp
@@ -50,6 +63,7 @@ else ()
             lib/rlpbwt_thr.cpp include/rlpbwt_thr.h
             lib/column_thr.cpp include/column_thr.h
             lib/panel_ra.cpp include/panel_ra.h)
+    target_compile_options(rlpbwt PUBLIC "-std=c++17")
 
     if (NOT SDSL_lib)
         target_link_libraries(rlpbwt sdsl divsufsort divsufsort64 -lgtest)
