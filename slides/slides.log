@@ -1,4 +1,4 @@
-This is XeTeX, Version 3.141592653-2.6-0.999993 (TeX Live 2021) (preloaded format=xelatex 2021.11.3)  7 FEB 2022 13:46
+This is XeTeX, Version 3.141592653-2.6-0.999993 (TeX Live 2021) (preloaded format=xelatex 2021.11.3)  7 FEB 2022 13:52
 entering extended mode
  \write18 enabled.
  %&-line parsing enabled.
@@ -1330,9 +1330,9 @@ File: img/logo_unimib.pdf Graphic file (type pdf)
 
 ]
 LaTeX Font Info:    Font shape `T1/lmss/m/it' in size <9> not available
-(Font)              Font shape `T1/lmss/m/sl' tried instead on input line 877.
+(Font)              Font shape `T1/lmss/m/sl' tried instead on input line 880.
 
-Overfull \hbox (3.25658pt too wide) in paragraph at lines 877--877
+Overfull \hbox (3.25658pt too wide) in paragraph at lines 880--880
  [] 
  []
 

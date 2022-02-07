@@ -849,6 +849,9 @@
         \item $panel_{row}[k-(len+)1..k]=z[k-(len+1)..k]$
         \item $z[k-(len+1)..k+1]$ doesn't match with any row in the panel 
       \end{itemize}
+      \item we need random access to the panel. At this time we are using a
+      bitvector for every column of the panbel but we can use a data structure,
+      called \textit{SLP}, with a very low memory cost but with high access times 
     \end{itemize}
   \end{block}
 \end{frame}
