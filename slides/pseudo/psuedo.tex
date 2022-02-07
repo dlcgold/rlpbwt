@@ -117,12 +117,13 @@
 \subsection*{RLPBWT con bitvectors}
 
 \begin{algorithm}[H]
-  \footnotesize
+  \scriptsize
   \begin{algorithmic}[1]
     \Function{build}{$col,\,\, pref,\,\, div$}
-    \State $c\gets 0,\,\,u\gets 0,\,\,v\gets 0$
-    \State $u'\gets 0,\,\, v'\gets 0$
-    \State $start \gets \top$
+    \State $c\gets 0,\,\,u\gets 0,\,\,v\gets 0,\,\,u'\gets 0,\,\, v'\gets
+    0,\,\,curr_{lcs}\gets 0,\,\,tmp_{thr}\gets 0,\,\,tmp_{beg}\gets 0$
+    \State $start \gets \top,\,\,beg_{run}\gets \top,\,\,push_{zero}\gets
+    \bot,\,\,push_{one}\gets \bot$
     \For {\textit{every} $k\in\left[0,\,\, height\right)$}
     \If{$k=0\land col[pref[k]]=1$}
     \State $start \gets \bot$
@@ -133,12 +134,14 @@
     \EndFor
     \State $runs\gets[0..0]$
     \Comment sparse bitvector for runs of length $height+1$
+    \State $thrs\gets[0..0]$
+    \Comment sparse bitvector for thresholds of length $height$
     \State $zeros\gets[0..0]$
     \Comment sparse bitvector for zeros of length $c$
     \State $ones\gets[0..0]$
     \Comment sparse bitvector for ones of length $height-c$
-    \State $beg_{run}\gets \top,\,\,push_{zero}\gets \bot,\,\,push_{one}\gets
-    \bot$ 
+    \State $samples_{beg} \gets [],\,\,samples_{end}\gets []$
+    \Comment couple of vectors for samples of length $r$
     \If{$start$}
     \State $push_{one}\gets \top$
     \Else
@@ -146,7 +149,7 @@
     \EndIf
     \For {\textit{every} $k\in\left[0,\,\, height\right)$}
     \If{$beg_{run}$}
-    \State $u\gets u',\,\,v\gets v'$
+    \State $u\gets u',\,\,v\gets v',\,\,tmp_{beg}\gets pref[k]$
     \State $beg_{run}\gets \bot$
     \EndIf
     \If{$col[pref[k]]=1$}
@@ -154,8 +157,16 @@
     \Else
     \State $u'\gets u'+1$
     \EndIf
+    \If{$k=0\lor col[pref[k]]\neq col[pref[k-1]]$}
+    \State $curr_{lcs}\gets div[i],\,\,tmp_{thr}\gets i$
+    \EndIf
+    \If{$div[i]<curr_{lcs}$}
+    \State $curr_{lcs}\gets div[i],\,\,tmp_{thr}\gets i$
+    \EndIf
     \If{$k=height-1\lor col[pref[k]]\neq col[pref[k+1]]$}
-    \State $runs[k]\gets 1$
+    \State $runs[k]\gets 1,\,\,thrs[tmp_{thr}]\gets 1$
+    \State $push(samples_{beg}, tmp_{beg})$
+    \State $push(samples_{end}, pref[k])$
     \If{$push_{one}$}
     \If{$v\neq 0$}
     \State $ones[k-1]=1$
@@ -176,8 +187,9 @@
     \If{$|ones|\neq 0$}
     \State $ones[|ones|-1]\gets 1$
     \EndIf
-    \State \textit{build rank/select for the three bitvectors}
-    \State \textbf{return} $(start,\,\,c,\,\,runs,\,\,zeros,\,\,ones,\,\,div)$
+    \State \textit{build rank/select for the four bitvectors}
+    \State \textbf{return}
+    $(start,\,\,c,\,\,runs,\,\,zeros,\,\,ones,\,\,samples_{beg},\,\,samples_{end},\,\,div)$ 
     \EndFunction
   \end{algorithmic}
   \caption{{\footnotesize{Algoritmo per la costruzione di una colonna della RLPBWT con bitvectors}}}
@@ -209,13 +221,13 @@
     \EndIf
     \State $run \gets rank_h^{k}(i)$
     \If{$run=0$}
-    \If{$rlpbwt[k].start$}
+    \If{$start^k$}
     \State \textbf{return} $(index,\,\, 0)$
     \Else
     \State \textbf{return} $(0, \,\,index)$
     \EndIf
     \ElsIf{$run=1$}
-    \If{$rlpbwt[k].start$}
+    \If{$start^k$}
     \State \textbf{return} $(select_h^{k}(run)+1,\,\, i-(select_h^{k}(run)+1))$
     \Else
     \State \textbf{return} $(i-(select_h^{k}(run)+1),\,\, select_h^{k}(run)+1)$
@@ -225,7 +237,7 @@
     \State $pre_u\gets select_u^{k}(\frac{run}{2})+1$
     \State $pre_v\gets select_v^{k}(\frac{run}{2})+1$
     \State $offset \gets i -(select_h^{k}(run)+1)$
-    \If{$rlpbwt[k].start$}
+    \If{$start^k$}
     \State \textbf{return} $(pre_u+offset,\,\, pre_v)$
     \Else
     \State \textbf{return} $(pre_u, \,\,pre_v+offset)$
@@ -233,13 +245,13 @@
     \Else
     \State $run_u\gets (\frac{run}{2})+1$
     \State $run_v\gets \frac{run}{2}$
-    \If{$\neg rlpbwt[k].start$}
+    \If{$\neg start^k$}
     \State $swap(run_u, run_v)$
     \EndIf
     \State $pre_u\gets select_u^{k}(run_u)+1$
     \State $pre_v\gets select_v^{k}(run_v)+1$
     \State $offset \gets i -(select_h^{k}(run)+1)$
-    \If{$rlpbwt[k].start$}
+    \If{$start^k$}
     \State \textbf{return} $(pre_u, \,\,pre_v+offset)$
     \Else
     \State \textbf{return} $(pre_u+offset, \,\,pre_v)$
@@ -278,7 +290,7 @@
     \State $k\gets k-1$
     \State $c\gets rlpbwt[k].c$
     \If{$i<c$}
-    \If{$rlpbwt[k].start$}
+    \If{$start^k$}
     \State $run\gets rank_u^{k}(i)\cdot 2$
     \Else
     \State $run\gets rank_u^{k}(i)\cdot 2+1$
@@ -290,7 +302,7 @@
     \State $(prev_0,\,\,\_)\gets uvtrick(k,\,\,i_{run})$
     \State \textbf{return} $i_{run}+(i-prev_0)$
     \Else
-    \If{$rlpbwt[k].start$}
+    \If{$start^k$}
     \State $run\gets rank_v^{k}(i)\cdot 2+1$
     \Else
     \State $run\gets rank_v^{k}(i)\cdot 2$
@@ -380,6 +392,85 @@
   \end{algorithmic}
   \caption{Algoritmo per match con aplotipo esterno con panel $width\times
   height$} 
+\end{algorithm}
+\begin{algorithm}
+  \scriptsize
+  \begin{algorithmic}[1]
+    \Function{matches\_ms}{$z$}
+    \State $ms_{row}\gets [0..0],\,\,ms_{len}\gets [0..0]$
+    \Comment ms vectors with row and len of length $|z|$
+    \State $curr_{row}\gets
+    rlpbwt[0].samples_{end}[|rlpbwt[0].samples_{end}|-1]$
+    \State $curr_{index}\gets curr_{row}$
+    \State $curr_{run}\gets rank_h^0(curr_{index})$
+    \State $symb\gets get\_symbol(start^0, curr_{run})$
+    \Comment \textbf{build matching statistics row}
+    \For {\textit{every} $k\in[0, |z|)$}
+
+    \If{$z[i]=symb$}
+    \State $ms_{row}[k]\gets curr_{row}$
+    \State $curr_{index}\gets lf(k, curr_{index}, z[k])$
+    \State $curr_{run}\gets rank_h^{k+1}(curr_{index})$
+    \State $symb\gets get\_symbol(start^{k+1}, curr_{run})$
+    \Else
+    \State $curr_{thr}\gets rank_t^k(curr_{index}),\,\,single_{run}\gets \bot$
+
+    \If{$samples_{beg}^k[curr_{run}]=samples_{end}^k[curr_{run}]$}
+    \State $single_{run}\gets \top$
+    \EndIf
+    
+    \If{$|samples_{beg}^k|=0$}
+    \State $ms_{row}[k]\gets rlpbwt.height$
+    \State $curr_{row}\gets
+    rlpbwt[0].samples_{end}[|rlpbwt[0].samples_{end}|-1]$ 
+    \State $curr_{index}\gets curr_{row}$
+    \State $curr_{run}\gets rank_h^{k+1}(curr_{index})$
+    \State $symb\gets get\_symbol(start^{k+1}, curr_{run})$
+
+    \ElsIf{$(curr_{run}\neq 0 \land \neg single_{run} \land
+    curr_{run}=curr_{thr})\lor curr_{run}=|samples_{beg}^k|-1$}
+    \State $curr_{index}\gets select_h^{k}(curr_{run})$
+    \State $curr_{row}\gets samples_{end}^k[curr_{run}-1]$
+    \State $ms_{row}[k]\gets curr_{row}$
+    \State $curr_{index}\gets lf(k, curr_{index}, z[k])$
+    \State $curr_{run}\gets rank_h^{k+1}(curr_{index})$
+    \State $symb\gets get\_symbol(start^{k+1}, curr_{run})$
+    \Else
+    \State $curr_{index}\gets select_h^{k}(curr_{run}+1)+1$
+    \State $curr_{row}\gets samples_{beg}^k[curr_{run}+1]$
+    \State $ms_{row}[k]\gets curr_{row}$
+    \State $curr_{index}\gets lf(k, curr_{index}, z[k])$
+    \State $curr_{run}\gets rank_h^{k+1}(curr_{index})$
+    \State $symb\gets get\_symbol(start^{k+1}, curr_{run})$
+    \EndIf
+    
+    \EndIf
+    \EndFor
+    \State $tmp_{index}\gets 0$
+    \Comment \textbf{build matching statistics len}
+    \For {\textit{every} $k\in[0,|ms_{row}|)$}
+    \If{$ms_{row}[k] = rlpbwt.height$}
+    \State $ms_{len}[k]\gets 0$
+    \Else
+    \State $tmp_{index}\gets i$
+    \Comment $ra$ is a data structure for random access over the orginale panel
+    \While {$tmp_{index}\geq 0 \land z[tmp_{index}]=ra(ms_{row}[k],
+    tmp_{index})$}
+    \State $tmp_{index}\gets tmp_{index}-1$
+    \EndWhile
+    \State $ms_{len}[k]\gets k-tmp_{index}$
+    \EndIf
+    \EndFor
+    \For {\textit{every} $k\in[0,|ms_{row}|)$}
+    \Comment \textbf{build matching statistics matches}
+    \State \textit{report match at} $ms_{row}[k]$ \textit{with} $ms_{len}[k]$
+    \textit{iff} $ms_{len}[k]> ms_{len}[k+1]$
+    \State \textit{or} $ms_{len}[k]= ms_{len}[k+j]$, $j\geq 1$ and $\nexists j$
+    \textit{such that}  $ms_{len}[k]< ms_{len}[k+j]$
+    \EndFor
+    \EndFunction
+  \end{algorithmic}
+  \caption{Algoritmo per match con matching-statistics (ms) e thresholds}
 \end{algorithm}
 \end{document}
 

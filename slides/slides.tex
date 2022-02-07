@@ -768,10 +768,10 @@
       \url{https://github.com/ZhiGroup/Syllable-PBWT/tree/master/sample_data}}\\
     (the panel is $900\times 500$ with $100$ queries). 
   \end{block}
-  \begin{alertblock}{Next Work}
-    Trying to implement also non maximal matches with a query, as, for example,
-    in Naseri's paper.
-  \end{alertblock}
+  % \begin{alertblock}{Next Work}
+  %   Trying to implement also non maximal matches with a query, as, for example,
+  %   in Naseri's paper.
+  % \end{alertblock}
 \end{frame}
 \section{BitVector Version}
 \begin{frame}{The column data I}
@@ -814,26 +814,69 @@
     \end{itemize}
   \end{block}
 \end{frame}
-\begin{frame}{Idea to change the use of whole lcp array}
-  \begin{block}{}
-    When we have an ending match, discovered in $k+1$, with $f$ and $g-1$ in $k$,
-    we could: 
+% \begin{frame}{Idea to change the use of whole lcp array}
+%   \begin{block}{}
+%     When we have an ending match, discovered in $k+1$, with $f$ and $g-1$ in $k$,
+%     we could: 
+%     \begin{itemize}
+%       \item take maximum lcp between $f$ and first $0/1$ above $f$
+%       \item take maximum lcp between $g$ and first $0/1$ below $g-1$
+%       \item take maximum between these two values, we call it $x$
+%       \item new interval is $[psv[x],\,\, nsv[x]-1]$ and we use this value to
+%       obtain new $e$
+%     \end{itemize}
+%   \end{block}
+%   \begin{alertblock}{}
+%     We could obtain $psv$ and $nsv$ array using \textit{RMQ} of
+%     \textit{sdsl-lite}. \\
+%     In future we will use thresholds.
+%   \end{alertblock}
+% \end{frame}
+\section{Matching Statistics}
+\begin{frame}{Matching Statistics and RLPBWT}
+  \begin{block}{Some definitions}
     \begin{itemize}
-      \item take maximum lcp between $f$ and first $0/1$ above $f$
-      \item take maximum lcp between $g$ and first $0/1$ below $g-1$
-      \item take maximum between these two values, we call it $x$
-      \item new interval is $[psv[x],\,\, nsv[x]-1]$ and we use this value to
-      obtain new $e$
+      \item for every run in a column of the PBTW with define the
+      \textbf{threshold} as the index of the minimum \textit{lcp value} (and we
+      save it as a sparse bitvector of the same length of a column with 1 in
+      these positions)
+      \item for every run in a column of the PBTW with define the
+      \textbf{prefix array samples} as the prefix array value at the begin of the
+      run and at the end
+      \item we define matching statistics as a two components ($row, len$) vector $MS$ of the
+      same length of the query such that $\forall k\in[0,|z|)$: 
+      \begin{itemize}
+        \item $panel_{row}[k-(len+)1..k]=z[k-(len+1)..k]$
+        \item $z[k-(len+1)..k+1]$ doesn't match with any row in the panel 
+      \end{itemize}
     \end{itemize}
   \end{block}
-  \begin{alertblock}{}
-    We could obtain $psv$ and $nsv$ array using \textit{RMQ} of
-    \textit{sdsl-lite}. \\
-    In future we will use thresholds.
-  \end{alertblock}
 \end{frame}
-% \begin{frame}[allowframebreaks]{References} 
-%   \nocite{*}
+\begin{frame}{Example}
+  \begin{block}{Regarding the example seen above}
+    \begin{table}[H]
+      \footnotesize{}
+      \centering
+      \begin{tabular}{c|ccccccccccccccc}
+        $k$ & 00 & 01 & 02 & 03 & 04 &  {\color{nordred}05} & 06 & 07 & 08
+        &  {\color{nordgreen}09} & 10 &  {\color{nordgreen}11} & 12 & 13
+        &  {\color{nordgreen}14} \\
+        \hline
+        $z$ & 0 & 1 & 0 & 0 & 1 &  {\color{nordgreen}0} & 1 & 0 & 0
+        &  {\color{nordgreen}0} & 1 &  {\color{nordgreen}1} & 1 & 0
+        &  {\color{nordgreen}1} \\
+        $row$ & 19 & 19 & 17 & 17 & 13 &  {\color{nordgreen}13} & 19 & 19 & 19
+        &  {\color{nordgreen}19} & 11 &  {\color{nordgreen}11} & 17 & 17
+        &  {\color{nordgreen}17} \\
+        $len$ & 1 & 2 & 3 & 4 & 5 & {\color{nordgreen}6} & 4 & 5 & 6
+        & {\color{nordgreen}7} & 4 & {\color{nordgreen}5} & 2 & 3
+        & {\color{nordgreen}4}\\
+      \end{tabular}
+    \end{table}
+\end{block}
+\end{frame}
+          %           \begin{frame}[allowframebreaks]{References} 
+          %           \nocite{*}
 %   \bibliographystyle{unsrt}
 %   \bibliography{ref}
 % \end{frame}

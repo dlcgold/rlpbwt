@@ -39,10 +39,17 @@
 \headcommand {\beamer@framepages {19}{19}}
 \headcommand {\slideentry {3}{0}{4}{20/20}{}{0}}
 \headcommand {\beamer@framepages {20}{20}}
-\headcommand {\slideentry {3}{0}{5}{21/21}{}{0}}
+\headcommand {\beamer@sectionpages {17}{20}}
+\headcommand {\beamer@subsectionpages {17}{20}}
+\headcommand {\sectionentry {4}{Matching Statistics}{21}{Matching Statistics}{0}}
+\headcommand {\slideentry {4}{0}{1}{21/21}{}{0}}
 \headcommand {\beamer@framepages {21}{21}}
-\headcommand {\beamer@partpages {1}{21}}
-\headcommand {\beamer@subsectionpages {17}{21}}
-\headcommand {\beamer@sectionpages {17}{21}}
-\headcommand {\beamer@documentpages {21}}
-\headcommand {\gdef \inserttotalframenumber {17}}
+\headcommand {\slideentry {4}{0}{2}{22/22}{}{0}}
+\headcommand {\beamer@framepages {22}{22}}
+\headcommand {\slideentry {4}{0}{3}{23/23}{}{0}}
+\headcommand {\beamer@framepages {23}{23}}
+\headcommand {\beamer@partpages {1}{23}}
+\headcommand {\beamer@subsectionpages {21}{23}}
+\headcommand {\beamer@sectionpages {21}{23}}
+\headcommand {\beamer@documentpages {23}}
+\headcommand {\gdef \inserttotalframenumber {19}}

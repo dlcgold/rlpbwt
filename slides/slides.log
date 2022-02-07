@@ -1,4 +1,4 @@
-This is XeTeX, Version 3.141592653-2.6-0.999993 (TeX Live 2021) (preloaded format=xelatex 2021.11.3)  2 FEB 2022 11:24
+This is XeTeX, Version 3.141592653-2.6-0.999993 (TeX Live 2021) (preloaded format=xelatex 2021.11.3)  7 FEB 2022 13:46
 entering extended mode
  \write18 enabled.
  %&-line parsing enabled.
@@ -1279,8 +1279,6 @@ File: img/logo_unimib.pdf Graphic file (type pdf)
 ]
 Missing character: There is no 4 ("34) in font nullfont!
 Missing character: There is no 1 ("31) in font nullfont!
-Missing character: There is no 4 ("34) in font nullfont!
-Missing character: There is no 7 ("37) in font nullfont!
 Missing character: There is no 2 ("32) in font nullfont!
 File: img/logo_unimib.pdf Graphic file (type pdf)
 <use img/logo_unimib.pdf>
@@ -1293,8 +1291,8 @@ File: img/logo_unimib.pdf Graphic file (type pdf)
 [17
 
 ]
-Missing character: There is no 5 ("35) in font nullfont!
-Missing character: There is no 2 ("32) in font nullfont!
+Missing character: There is no 4 ("34) in font nullfont!
+Missing character: There is no 6 ("36) in font nullfont!
 Missing character: There is no 2 ("32) in font nullfont!
 File: img/logo_unimib.pdf Graphic file (type pdf)
 <use img/logo_unimib.pdf>
@@ -1302,29 +1300,48 @@ File: img/logo_unimib.pdf Graphic file (type pdf)
 
 ]
 Missing character: There is no 5 ("35) in font nullfont!
-Missing character: There is no 7 ("37) in font nullfont!
+Missing character: There is no 1 ("31) in font nullfont!
 Missing character: There is no 2 ("32) in font nullfont!
 File: img/logo_unimib.pdf Graphic file (type pdf)
 <use img/logo_unimib.pdf>
  [19
 
 ]
+Missing character: There is no 5 ("35) in font nullfont!
 Missing character: There is no 6 ("36) in font nullfont!
-Missing character: There is no 2 ("32) in font nullfont!
 Missing character: There is no 2 ("32) in font nullfont!
 File: img/logo_unimib.pdf Graphic file (type pdf)
 <use img/logo_unimib.pdf>
  [20
 
-]
-Missing character: There is no 6 ("36) in font nullfont!
-Missing character: There is no 7 ("37) in font nullfont!
-Missing character: There is no 7 ("37) in font nullfont!
-Missing character: There is no 2 ("32) in font nullfont!
+] (./slides.toc)
 Missing character: There is no 2 ("32) in font nullfont!
 File: img/logo_unimib.pdf Graphic file (type pdf)
 <use img/logo_unimib.pdf>
  [21
+
+]
+Missing character: There is no 6 ("36) in font nullfont!
+Missing character: There is no 1 ("31) in font nullfont!
+Missing character: There is no 2 ("32) in font nullfont!
+File: img/logo_unimib.pdf Graphic file (type pdf)
+<use img/logo_unimib.pdf>
+ [22
+
+]
+LaTeX Font Info:    Font shape `T1/lmss/m/it' in size <9> not available
+(Font)              Font shape `T1/lmss/m/sl' tried instead on input line 877.
+
+Overfull \hbox (3.25658pt too wide) in paragraph at lines 877--877
+ [] 
+ []
+
+Missing character: There is no 6 ("36) in font nullfont!
+Missing character: There is no 6 ("36) in font nullfont!
+Missing character: There is no 2 ("32) in font nullfont!
+File: img/logo_unimib.pdf Graphic file (type pdf)
+<use img/logo_unimib.pdf>
+[23
 
 ]
 \tf@nav=\write6
@@ -1341,12 +1358,12 @@ Package rerunfilecheck Info: File `slides.out' has not changed.
 (rerunfilecheck)             Checksum: D41D8CD98F00B204E9800998ECF8427E;0.
  ) 
 Here is how much of TeX's memory you used:
- 23330 strings out of 476788
- 434483 string characters out of 5822420
+ 23354 strings out of 476788
+ 434595 string characters out of 5822420
  929807 words of memory out of 6000000
- 42905 multiletter control sequences out of 15000+600000
- 459037 words of font info for 78 fonts, out of 8000000 for 9000
+ 42921 multiletter control sequences out of 15000+600000
+ 466177 words of font info for 86 fonts, out of 8000000 for 9000
  1348 hyphenation exceptions out of 8191
  128i,15n,126p,601b,732s stack positions out of 5000i,500n,10000p,200000b,80000s
 
-Output written on slides.pdf (21 pages).
+Output written on slides.pdf (23 pages).
