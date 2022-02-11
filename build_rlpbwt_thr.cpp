@@ -1,12 +1,15 @@
 #include <iostream>
+#include <getopt.h>
 #include <sdsl/int_vector.hpp>
 #include <sdsl/bit_vectors.hpp>
 #include "include/exceptions.h"
 #include "include/rlpbwt_thr.h"
-#include <getopt.h>
+#include "include/rlpbwt_ra.h"
+//#include "include/slp_panel_ra.h"
+
 
 void printHelp() {
-    std::cout << "Usage: RLPBTW [options]\n"
+    std::cout << "Usage: RLPBWT [options]\n"
               << std::endl;
     std::cout << "Options:" << std::endl;
     std::cout << "  -i, --input <path>" << std::endl;
@@ -28,9 +31,9 @@ void build(std::string in_filename, const std::string &out_filename) {
     //auto matches = rlpbwt.match_thr("111111111111111", true);
     //rlpbwt.match_tsv_tr("../input/query_tr.txt", "../output/query_tr_out.txt");
     //rlpbwt.match_tsv("../input/query.txt", "../output/query_out.txt");
-    std::cout << clock() - START << " time\n";
-    /*
-    for (auto m: matches) {
+    //std::cout << clock() - START << " time\n";
+
+    /*for (auto m: matches) {
         std::cout << "(col: " << m.first << ", len:" << m.second << ") ";
     }*/
     std::cout << "\n";
@@ -52,13 +55,13 @@ void print_size(const std::string &out_filename) {
     double v = 0;
     double panel = 0;
     double sample = 0;
+    double sparse = 0;
     for (auto &i: rlpbwt->panelbv.panel) {
         panel += sdsl::size_in_mega_bytes(i);
-        std::cout << i << "\n";
+        sparse += sdsl::size_in_mega_bytes(sdsl::sd_vector<>(i));
     }
     unsigned long long thr_count = 0;
     unsigned long long run_count = 0;
-    std::cout << "\n";
     for (auto &c: rlpbwt->cols) {
         thr += sdsl::size_in_mega_bytes(c.thr);
         run += sdsl::size_in_mega_bytes(c.runs);
@@ -66,13 +69,12 @@ void print_size(const std::string &out_filename) {
         v += sdsl::size_in_mega_bytes(c.v);
         sample += sdsl::size_in_mega_bytes(c.sample_beg);
         sample += sdsl::size_in_mega_bytes(c.sample_end);
-        std::cout << c;
-        thr_count += c.rank_thr(c.runs.size()-1);
+        thr_count += c.rank_thr(c.runs.size() - 1);
         run_count += c.sample_beg.size();
-        std::cout << "runs: " << run_count <<"\nthrs: " << thr_count << "\n-------\n";
     }
 
     std::cout << "panel size: " << panel << " mb\n";
+    std::cout << "panel size sparse: " << sparse << " mb\n";
     std::cout << "run size: " << run << " mb\n";
     std::cout << "thr size: " << thr << " mb\n";
     std::cout << "u size: " << u << " mb\n";
@@ -81,7 +83,7 @@ void print_size(const std::string &out_filename) {
     std::cout << "total size (excluded single value in structure): "
               << panel + run + thr + u + v + sample
               << " mb\n";
-    std::cout << "runs: " << run_count <<"\nthrs: " << thr_count << "\n";
+    std::cout << "runs: " << run_count << "\nthrs: " << thr_count << "\n";
 
 }
 
@@ -160,10 +162,20 @@ int main(int argc, char **argv) {
         }
     }*/
 
-    std::string in_filename("../input/sample_new.txt");
+    std::string in_filename("../input/sample_new2.txt");
     std::string out_filename("../output/samplenew.txt.pbwt");
 
     build<rlpbwt_thr>(in_filename, out_filename);
     print_size(out_filename);
+    rlpbwt_ra<panel_ra> rlpbwtRa("../input/sample_new2.txt", false);
+    auto m = rlpbwtRa.match_thr("010010100011101", true);
+    //auto slp = new slp_panel_ra("../input/sample.slp", 20, 15);
+    //std::cout << slp << "\n";
+
+//    shaped_slp_t panel;
+//    std::ifstream in("../input/sample.slp");
+//    panel.load(in);
+//    std::cout << panel.charAt(0) <<"\n";
+//    in.close();
     return 0;
 }

@@ -2,9 +2,11 @@
 // Created by dlcgold on 02/02/22.
 //
 
-#include <list>
+
 #include "../include/rlpbwt_thr.h"
 
+
+rlpbwt_thr::rlpbwt_thr() = default;
 
 rlpbwt_thr::rlpbwt_thr(const char *filename, unsigned int w, unsigned int h,
                        bool verbose) {
@@ -248,7 +250,7 @@ rlpbwt_thr::rlpbwt_thr(const char *filename, bool vcf, bool verbose) {
             unsigned int tmp_width = std::count(
                     std::istreambuf_iterator<char>(input_matrix),
                     std::istreambuf_iterator<char>(), '\n') + 1;
-            std::cout << tmp_height << ", " << tmp_width << "\n";
+            //std::cout << tmp_height << ", " << tmp_width << "\n";
             std::vector<column_thr> tmp_cols(tmp_width);
             this->cols = std::vector<column_thr>(tmp_width + 1);
             input_matrix.clear();
@@ -352,7 +354,7 @@ rlpbwt_thr::rlpbwt_thr(const char *filename, bool verbose) {
         std::cout << "w: " << tmp_width << "\n";
         input_matrix.clear();
         input_matrix.seekg(0, std::ios::beg);
-        this->cols = std::vector<column_thr>(tmp_width + 1);
+        this->cols = std::vector<column_thr>(tmp_width);
         std::vector<unsigned int> pref(tmp_height);
         sdsl::int_vector<> div(tmp_height);
         for (unsigned int i = 0; i < tmp_height; i++) {
@@ -412,7 +414,7 @@ rlpbwt_thr::rlpbwt_thr(const char *filename, bool verbose) {
             count++;
 
         }
-        auto col = rlpbwt_thr::build_column(last_col, pref, div);
+        /*auto col = rlpbwt_thr::build_column(last_col, pref, div);
         this->cols[count] = col;
         this->cols[count].rank_runs = sdsl::sd_vector<>::rank_1_type(
                 &this->cols[count].runs);
@@ -429,7 +431,7 @@ rlpbwt_thr::rlpbwt_thr(const char *filename, bool verbose) {
         this->cols[count].rank_thr = sdsl::sd_vector<>::rank_1_type(
                 &this->cols[count].thr);
         this->cols[count].select_thr = sdsl::sd_vector<>::select_1_type(
-                &this->cols[count].thr);
+                &this->cols[count].thr);*/
         input_matrix.close();
     } else {
         throw FileNotFoundException{};
@@ -720,6 +722,79 @@ rlpbwt_thr::uvtrick(unsigned int col_index, unsigned int index) const {
     }
 }
 
+unsigned int rlpbwt_thr::reverse_lf(unsigned int col_index, unsigned int index,
+                                    bool verbose) const {
+    // by design if we try to work on first column the function return 0
+    if (col_index == 0) {
+        return 0;
+    }
+    // we extract the "c" value from the previous column
+    unsigned int prev_col = col_index - 1;
+    unsigned int c = this->cols[prev_col].count_0;
+    // index of the run in the previous column
+    unsigned int run = 0;
+
+    // two cases:
+    // - if index is less than previous "c" it means that it comes from a zero
+    //   element, so we will use "u" bitvector
+    // - otherwise it means that it comes from a one element, so we will use "v"
+    //   bitvector
+    if (index < c) {
+        // computing the run using "u" bitvector according to the first
+        // symbol of the column
+        run = this->cols[prev_col].rank_u(index) * 2;
+        if (!this->cols[prev_col].zero_first) {
+            run++;
+        }
+        if (verbose) {
+            std::cout << "run1: " << run << "\n";
+        }
+
+        // compute the index of the run
+        unsigned int index_run = 0;
+        if (run != 0) {
+            index_run = this->cols[prev_col].select_runs(run) + 1;
+        }
+
+        // compute the previous zeros before the run to calculate the offset
+        unsigned int zeros = uvtrick(prev_col, index_run).first;
+        if (verbose) {
+            std::cout << "case 1: " << index_run
+                      << " + " << index << " z: " << zeros << "\n";
+        }
+
+        // return the index of the run plus the offset
+        return index_run + (index - zeros);
+    } else {
+        // computing the run using "v" bitvector according to the first
+        // symbol of the column
+        run = this->cols[prev_col].rank_v(index - c) * 2;
+        if (this->cols[prev_col].zero_first) {
+            run++;
+        }
+        if (verbose) {
+            std::cout << "run2: " << run << "\n";
+        }
+
+        // compute the index of the run
+        unsigned int index_run = 0;
+        if (run != 0) {
+            index_run = this->cols[prev_col].select_runs(run) + 1;
+        }
+
+        // compute the previous ones before the run to calculate the offset
+        unsigned int ones = uvtrick(prev_col, index_run).second;
+        if (verbose) {
+            std::cout << "case 2: " << index_run
+                      << " + " << index - c << "\n";
+        }
+
+        // return the index of the run plus the offset
+        // (calculated using also "c")
+        return index_run + (index - (c + ones));
+    }
+}
+
 std::vector<std::pair<unsigned int, unsigned int>>
 rlpbwt_thr::match_thr(const std::string &query, bool verbose) {
     if (query.size() != this->panelbv.w) {
@@ -734,6 +809,7 @@ rlpbwt_thr::match_thr(const std::string &query, bool verbose) {
     auto curr_index = curr_pos;
     unsigned int curr_run = this->cols[0].rank_runs(curr_index);
     char symbol = get_next_char(this->cols[0].zero_first, curr_run);
+
     for (unsigned int i = 0; i < query.size(); i++) {
         if (verbose) {
             std::cout << "at " << i << ": " << curr_run << " "
@@ -743,18 +819,21 @@ rlpbwt_thr::match_thr(const std::string &query, bool verbose) {
         }
         if (query[i] == symbol) {
             if (verbose) {
-                std::cout << "match: ";
+                std::cout << "match:\n";
             }
             // save in matching statistics pos vector
             ms_row[i] = curr_pos;
-            // update index, run, symbol
-            curr_index = lf(i, curr_index, query[i]);
-            curr_run = this->cols[i + 1].rank_runs(curr_index);
-            symbol = get_next_char(this->cols[i + 1].zero_first, curr_run);
-            if (verbose) {
-                std::cout << "new: " << curr_index << " " << curr_run << " "
-                          << curr_pos << " "
-                          << symbol << "\n";
+            if (i != query.size() - 1) {
+                // update index, run, symbol
+                // TODO maybe make a function for this update
+                curr_index = lf(i, curr_index, query[i]);
+                curr_run = this->cols[i + 1].rank_runs(curr_index);
+                symbol = get_next_char(this->cols[i + 1].zero_first, curr_run);
+                if (verbose) {
+                    std::cout << "new: " << curr_index << " " << curr_run << " "
+                              << curr_pos << " "
+                              << symbol << "\n";
+                }
             }
         } else {
             auto thr = this->cols[i].rank_thr(curr_index);
@@ -773,16 +852,18 @@ rlpbwt_thr::match_thr(const std::string &query, bool verbose) {
                 ms_row[i] = this->panelbv.h;
                 //curr_index = curr_pos;
 
-                //curr_prefs = this->cols[0].rows[this->cols[0].rows.size() - 1];
-                curr_pos = static_cast<unsigned int>(this->cols[0].sample_end[
-                        this->cols[0].sample_end.size() - 1]);
-                curr_index = curr_pos;
-                curr_run = this->cols[i + 1].rank_runs(curr_index);
-                symbol = get_next_char(this->cols[i + 1].zero_first, curr_run);
-                if (verbose) {
-                    std::cout << "update: " << curr_index << " " << curr_pos
-                              << " "
-                              << symbol << "\n";
+                if (i != query.size() - 1) {
+                    curr_pos = static_cast<unsigned int>(this->cols[0].sample_end[
+                            this->cols[0].sample_end.size() - 1]);
+                    curr_index = curr_pos;
+                    curr_run = this->cols[i + 1].rank_runs(curr_index);
+                    symbol = get_next_char(this->cols[i + 1].zero_first,
+                                           curr_run);
+                    if (verbose) {
+                        std::cout << "update: " << curr_index << " " << curr_pos
+                                  << " "
+                                  << symbol << "\n";
+                    }
                 }
             } else if ((curr_run != 0 && !in_thr && curr_run == thr) ||
                        curr_run == this->cols[i].sample_beg.size() - 1) {
@@ -800,14 +881,16 @@ rlpbwt_thr::match_thr(const std::string &query, bool verbose) {
                               << symbol << "\n";
                 }
                 ms_row[i] = curr_pos;
-                curr_index = lf(i, curr_index, query[i]);
-                curr_run = this->cols[i + 1].rank_runs(curr_index);
-                symbol = get_next_char(this->cols[i + 1].zero_first,
-                                       curr_run);
-                if (verbose) {
-                    std::cout << "new: " << curr_index << " " << curr_run
-                              << " "
-                              << curr_pos << " " << symbol << "\n";
+                if (i != query.size() - 1) {
+                    curr_index = lf(i, curr_index, query[i]);
+                    curr_run = this->cols[i + 1].rank_runs(curr_index);
+                    symbol = get_next_char(this->cols[i + 1].zero_first,
+                                           curr_run);
+                    if (verbose) {
+                        std::cout << "new: " << curr_index << " " << curr_run
+                                  << " "
+                                  << curr_pos << " " << symbol << "\n";
+                    }
                 }
             } else {
                 if (verbose) {
@@ -823,16 +906,17 @@ rlpbwt_thr::match_thr(const std::string &query, bool verbose) {
                               << " "
                               << symbol << "\n";
                 }
-                curr_index = lf(i, curr_index, query[i]);
-                curr_run = this->cols[i + 1].rank_runs(curr_index);
-                symbol = get_next_char(this->cols[i + 1].zero_first,
-                                       curr_run);
-                if (verbose) {
-                    std::cout << "new: " << curr_index << " " << curr_run
-                              << " "
-                              << curr_pos << " " << symbol << "\n";
+                if (i != query.size() - 1) {
+                    curr_index = lf(i, curr_index, query[i]);
+                    curr_run = this->cols[i + 1].rank_runs(curr_index);
+                    symbol = get_next_char(this->cols[i + 1].zero_first,
+                                           curr_run);
+                    if (verbose) {
+                        std::cout << "new: " << curr_index << " " << curr_run
+                                  << " "
+                                  << curr_pos << " " << symbol << "\n";
+                    }
                 }
-
             }
         }
     }
@@ -848,6 +932,8 @@ rlpbwt_thr::match_thr(const std::string &query, bool verbose) {
         std::cout << "\nlen:\t";
     }
     int tmp_index = 0;
+
+#pragma omp parallel for
     for (int i = (int) ms_row.size() - 1; i >= 0; i--) {
         if (ms_row[i] == this->panelbv.h) {
             ms_len[i] = 0;
@@ -860,7 +946,9 @@ rlpbwt_thr::match_thr(const std::string &query, bool verbose) {
         }
         ms_len[i] = i - tmp_index;
     }
+
     std::vector<std::pair<unsigned int, unsigned int>> ms_match;
+#pragma omp parallel for
     for (unsigned int i = 0; i < ms_len.size(); i++) {
         if (verbose) {
             std::cout << ms_len[i] << "\t";
@@ -887,7 +975,7 @@ rlpbwt_thr::match_thr(const std::string &query, bool verbose) {
                 }
             }
             if (i + 1 != pos) {
-                if(verbose) {
+                if (verbose) {
                     for (unsigned int j = i + 1; j <= pos; j++) {
                         std::cout << ms_len[j] << "\t";
                     }
@@ -938,7 +1026,7 @@ void rlpbwt_thr::match_tsv_tr(const char *filename, const char *out,
         std::string query;
         if (out_match.is_open()) {
             for (unsigned int i = 0; i < queries_panel[0].size(); i++) {
-                for (auto & j : queries_panel) {
+                for (auto &j: queries_panel) {
                     query.push_back(j[i]);
                 }
                 auto matches = this->match_thr(query, verbose);
@@ -1043,7 +1131,7 @@ size_t rlpbwt_thr::serialize(std::ostream &out, sdsl::structure_tree_node *v,
 
 void rlpbwt_thr::load(std::istream &in) {
     this->panelbv.load(in);
-    for (unsigned int i = 0; i <= this->panelbv.w; i++) {
+    for (unsigned int i = 0; i < this->panelbv.w; i++) {
         auto c = new column_thr();
         c->load(in);
         this->cols.emplace_back(*c);
@@ -1053,5 +1141,4 @@ void rlpbwt_thr::load(std::istream &in) {
 
 
 
-rlpbwt_thr::rlpbwt_thr() =
-default;
+

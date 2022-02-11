@@ -6,13 +6,13 @@
 #include <SelfShapedSlp.hpp>
 #include <DirectAccessibleGammaCode.hpp>
 #include <SelectType.hpp>
-#include <PlainSlp.hpp>
-#include <FixedBitLenCode.hpp>
 #include "../include/exceptions.h"
 #include "../include/rlpbwt.h"
 #include "../include/rlpbwtbv.h"
 #include "../include/birlpbwt.h"
 #include "../include/rlpbwt_thr.h"
+#include "../include/panel_ra.h"
+//#include "../include/slp_panel_ra.h"
 
 
 TEST (BuildRlpbwtTest, TestBuildAndQuery) {
@@ -351,22 +351,15 @@ TEST (BuildRlpbwtSerThr, TestSer) {
 }
 
 TEST(Slp, TestLoad) {
-    //using var_t = uint32_t;
+    //auto slp = new slp_panel_ra("../input/sample.slp", 20, 15);
+   // std::cout << slp << "\n";
     using SelSd = SelectSdvec<>;
     using DagcSd = DirectAccessibleGammaCode<SelSd>;
-    using Fblc = FixedBitLenCode<>;
     using shaped_slp_t = SelfShapedSlp<uint32_t, DagcSd, DagcSd, SelSd>;
-    shaped_slp_t ra;
+    shaped_slp_t panel;
     std::ifstream in("../input/sample.slp");
-    ra.load(in);
-    unsigned int h = 20;
-    unsigned int w = 15;
-    for (unsigned int i = 0; i < h; i++) {
-        for (unsigned int j = 0; j < w; j++) {
-            std::cout << ra.charAt(i + (j * h)) << " ";
-        }
-        std::cout << "\n";
-    }
+    panel.load(in);
+    std::cout << panel.charAt(0) << "\n";
     in.close();
 }
 

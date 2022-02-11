@@ -15,11 +15,14 @@
 #include <fstream>
 #include <sstream>
 #include <algorithm>
+#include <omp.h>
 #include <sdsl/bit_vectors.hpp>
 #include "column_thr.h"
 #include "utils.h"
 #include "exceptions.h"
 #include "panel_ra.h"
+//#include "slp_panel_ra.h"
+
 
 class rlpbwt_thr {
 public:
@@ -87,6 +90,19 @@ public:
     */
     std::pair<unsigned int, unsigned int>
     uvtrick(unsigned int col_index, unsigned int index) const;
+
+    /**
+     * @brief function to get the run in previous column which come from the
+     * current run, like a "reverse lf-mapping"
+     *
+     * @param col_index index of the column
+     * @param index virtual index of the row of the original panel
+     * @param verbose bool for extra print
+     * @return
+     */
+    unsigned int
+    reverse_lf(unsigned int col_index, unsigned int index,
+               bool verbose) const;
 
     std::vector<std::pair<unsigned int, unsigned int>>
     match_thr(const std::string &query, bool verbose = false);

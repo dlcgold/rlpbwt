@@ -62,25 +62,25 @@
 \usetikzlibrary{arrows,shapes,backgrounds,petri} 
 \usetikzlibrary{automata,positioning}
 \usetikzlibrary{matrix}
-%\renewcommand{\chaptermark}[1]{\markboth{#1}{}}
+% \renewcommand{\chaptermark}[1]{\markboth{#1}{}}
 \usepackage{fancyhdr}
 \pagestyle{fancy}
 
 \fancyhead[LO,RE]{\slshape \leftmark}
-%\fancyhead[CO,CE]{\slshape\rightmark}
+% \fancyhead[CO,CE]{\slshape\rightmark}
 \fancyhead[LE,RO]{\slshape\rightmark}
 \fancyfoot[C]{\thepage}
 % \fancyhf{}
 % \fancyhead[LO,RE]{\slshape \leftmark}
-% %\fancyhead[CO,CE]{\slshape\rightmark}
+% % \fancyhead[CO,CE]{\slshape\rightmark}
 % \fancyhead[LE,RO]{\slshape\thepage}
 % \renewcommand{\footrulewidth}{0pt}
-%\fancyfoot[C]{\thepage}
+% \fancyfoot[C]{\thepage}
 % \title{Relazione}
 % \fancypagestyle{plain}{% \fancyhf{} % clear all header and footer fields
-%   \fancyhead[RO,RE]{\thepage}%RO=right odd, RE=right even
-%   \renewcommand{\headrulewidth}{0pt}
-%\renewcommand{\footrulewidth}{0.3pt}}
+% \fancyhead[RO,RE]{\thepage}%RO=right odd, RE=right even
+% \renewcommand{\headrulewidth}{0pt}
+% \renewcommand{\footrulewidth}{0.3pt}}
 
 
 \pgfplotsset{compat=1.13}
@@ -421,27 +421,32 @@
     
     \If{$|samples_{beg}^k|=0$}
     \State $ms_{row}[k]\gets rlpbwt.height$
+    \If{$k\neq |z|-1$}
     \State $curr_{row}\gets
-    rlpbwt[0].samples_{end}[|rlpbwt[0].samples_{end}|-1]$ 
+    rlpbwt[0].samples_{end}[|rlpbwt[0].samples_{end}|-1]$
     \State $curr_{index}\gets curr_{row}$
     \State $curr_{run}\gets rank_h^{k+1}(curr_{index})$
     \State $symb\gets get\_symbol(start^{k+1}, curr_{run})$
-
+    \EndIf
     \ElsIf{$(curr_{run}\neq 0 \land \neg single_{run} \land
     curr_{run}=curr_{thr})\lor curr_{run}=|samples_{beg}^k|-1$}
     \State $curr_{index}\gets select_h^{k}(curr_{run})$
     \State $curr_{row}\gets samples_{end}^k[curr_{run}-1]$
     \State $ms_{row}[k]\gets curr_{row}$
+    \If{$k\neq |z|-1$}
     \State $curr_{index}\gets lf(k, curr_{index}, z[k])$
     \State $curr_{run}\gets rank_h^{k+1}(curr_{index})$
     \State $symb\gets get\_symbol(start^{k+1}, curr_{run})$
+    \EndIf
     \Else
     \State $curr_{index}\gets select_h^{k}(curr_{run}+1)+1$
     \State $curr_{row}\gets samples_{beg}^k[curr_{run}+1]$
     \State $ms_{row}[k]\gets curr_{row}$
+    \If{$k\neq |z|-1$}
     \State $curr_{index}\gets lf(k, curr_{index}, z[k])$
     \State $curr_{run}\gets rank_h^{k+1}(curr_{index})$
     \State $symb\gets get\_symbol(start^{k+1}, curr_{run})$
+    \EndIf
     \EndIf
     
     \EndIf

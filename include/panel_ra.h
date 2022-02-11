@@ -16,15 +16,21 @@ public:
     unsigned int w{};
 
     //sdsl::bit_vector panel;
-    std::vector<sdsl::bit_vector > panel;
+    std::vector<sdsl::bit_vector> panel;
+
     panel_ra(unsigned int h, unsigned int w);
+
     panel_ra();
+
+    virtual ~panel_ra();
 
     char getElem(unsigned int i, unsigned int j) const;
 
     friend std::ostream &operator<<(std::ostream &os, const panel_ra &ra);
+
     size_t serialize(std::ostream &out, sdsl::structure_tree_node *v = nullptr,
-            const std::string& name = "");
+                     const std::string &name = "");
+
     void load(std::istream &in);
 };
 

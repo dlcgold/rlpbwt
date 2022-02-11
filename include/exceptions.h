@@ -26,11 +26,20 @@ class FileNotGoodException: public std::exception {
 };
 
 /**
- * @brief exception file not found
+ * @brief exception query of different length
  */
 class NotEqualLengthException: public std::exception {
     const char* what() const noexcept override {
         return "Query has not the same length of panel";
+    }
+};
+
+/**
+ * @brief exception file not found
+ */
+class SlpNotFoundException: public std::exception {
+    const char* what() const noexcept override {
+        return "SLP file is required";
     }
 };
 

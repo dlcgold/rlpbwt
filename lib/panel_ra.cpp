@@ -67,3 +67,5 @@ void panel_ra::load(std::istream &in) {
         this->panel[i].load(in);
     }
 }
+
+panel_ra::~panel_ra() = default;
