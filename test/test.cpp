@@ -12,6 +12,7 @@
 #include "../include/birlpbwt.h"
 #include "../include/rlpbwt_thr.h"
 #include "../include/panel_ra.h"
+#include "../include/rlpbwt_ra.h"
 //#include "../include/slp_panel_ra.h"
 
 
@@ -351,16 +352,19 @@ TEST (BuildRlpbwtSerThr, TestSer) {
 }
 
 TEST(Slp, TestLoad) {
-    //auto slp = new slp_panel_ra("../input/sample.slp", 20, 15);
-   // std::cout << slp << "\n";
-    using SelSd = SelectSdvec<>;
-    using DagcSd = DirectAccessibleGammaCode<SelSd>;
-    using shaped_slp_t = SelfShapedSlp<uint32_t, DagcSd, DagcSd, SelSd>;
-    shaped_slp_t panel;
-    std::ifstream in("../input/sample.slp");
-    panel.load(in);
-    std::cout << panel.charAt(0) << "\n";
-    in.close();
+    rlpbwt_ra<panel_ra> rlpbwtRa("../input/sample_new.txt", false);
+    auto matches = rlpbwtRa.match_thr("010010100011101", false);
+    for (auto m: matches) {
+        std::cout << "(col: " << m.first << ", len:" << m.second << ") ";
+    }
+    rlpbwt_ra<slp_panel_ra> rlpbwtSlp("../input/sample_new.txt", false,
+                                      "../input/sample.slp");
+    std::cout << *rlpbwtSlp.panelbv;
+
+    matches = rlpbwtRa.match_thr("010010100011101", false);
+    for (auto m: matches) {
+        std::cout << "(col: " << m.first << ", len:" << m.second << ") ";
+    }
 }
 
 int main(int argc, char **argv) {

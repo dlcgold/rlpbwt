@@ -16,16 +16,14 @@ with open('../input/sample_new.txt') as f:
     count = 0
     with open('../output/sample.fa', 'w') as out:
         #out.write("header:\n")
-        tra = []
+        col = []
         for line in f:
             if line.strip().split(" ")[0] == 'TOTAL_SAMPLES:':
                 break
             if count > 1:
                 #out.write(line.strip().split("\t")[4])
-                tra.append(line.strip().split("\t")[4])
+                col.append(line.strip().split("\t")[4])
             count += 1
-        for i in range(0, len(tra[0])):
-            for j in range(0, len(tra)):
-                #print(tra[j][i], end=" ")
-                out.write(tra[j][i])
-            #print()
+        col = col[::-1]
+        for c in col:
+            out.write(c)

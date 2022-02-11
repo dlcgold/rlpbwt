@@ -45,7 +45,6 @@ if (${BUILD_TESTS})
     #target_compile_options(rlpbwt_test PUBLIC "-std=c++17")
     #find_library(SDSL_lib lsdsl)
     #if (NOT SDSL_lib)
-    target_link_libraries(rlpbwt_test sdsl divsufsort divsufsort64 -lgtest -fopenmp -lpthread)
     #else ()
     #    target_link_libraries(rlpbwt_test -lsdsl -ldivsufsort -ldivsufsort64 -lgtest)
     #endif ()
@@ -54,6 +53,8 @@ if (${BUILD_TESTS})
             "${FOLCA_SOURCE_DIR}"
             "${SUX_SOURCE_DIR}/function"
             "${SUX_SOURCE_DIR}/support")
+    target_link_libraries(rlpbwt_test sdsl divsufsort divsufsort64 -lgtest -fopenmp -lpthread)
+
     #target_link_libraries(rlpbwt_test -lsdsl -ldivsufsort -ldivsufsort64 -lgtest)
     add_test(NAME rlpbwt_test COMMAND rlpbwt_test)
 else ()
@@ -82,7 +83,6 @@ else ()
     #   target_link_libraries(rlpbwt -lsdsl -ldivsufsort -ldivsufsort64 -lgtest)
     #endif ()
     target_include_directories(rlpbwt PUBLIC
-            #"include/"
             "${shaped_slp_SOURCE_DIR}"
             "${FOLCA_SOURCE_DIR}"
             "${SUX_SOURCE_DIR}/function"

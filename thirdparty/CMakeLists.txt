@@ -94,7 +94,8 @@ endif()
 ## Add ShapedSlp
 FetchContent_Declare(
         shaped_slp
-        GIT_REPOSITORY https://github.com/koeppl/ShapedSlp.git
+        #GIT_REPOSITORY https://github.com/koeppl/ShapedSlp.git
+        GIT_REPOSITORY https://github.com/dlcgold/ShapedSlp
         GIT_TAG master
 )
 

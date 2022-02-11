@@ -167,15 +167,6 @@ int main(int argc, char **argv) {
 
     build<rlpbwt_thr>(in_filename, out_filename);
     print_size(out_filename);
-    rlpbwt_ra<panel_ra> rlpbwtRa("../input/sample_new2.txt", false);
-    auto m = rlpbwtRa.match_thr("010010100011101", true);
-    //auto slp = new slp_panel_ra("../input/sample.slp", 20, 15);
-    //std::cout << slp << "\n";
 
-//    shaped_slp_t panel;
-//    std::ifstream in("../input/sample.slp");
-//    panel.load(in);
-//    std::cout << panel.charAt(0) <<"\n";
-//    in.close();
     return 0;
 }

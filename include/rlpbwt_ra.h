@@ -14,11 +14,12 @@
 
 template<typename ra_t>
 class rlpbwt_ra {
-private:
+public:
     std::vector<column_thr> cols;
-    // panel saved as one sd_vector
-    ra_t panelbv;
+    // panel saved as requested
+    ra_t* panelbv;
 
+private:
     static column_thr
     build_column(std::string &column, std::vector<unsigned int> &pref,
                  sdsl::int_vector<> &div) {
@@ -308,11 +309,14 @@ private:
 public:
     rlpbwt_ra() = default;
 
-    explicit rlpbwt_ra(const char *filename, bool verbose,
-                       const char *slp_filename = "") {
+    rlpbwt_ra(const char *filename, bool verbose,
+              const char *slp_filename = "") {
+
         std::ifstream input_matrix(filename);
-        if(!std::is_same<ra_t, panel_ra>::value && std::string(slp_filename).empty()){
-            throw SlpNotFoundException{};
+        if constexpr (!std::is_same_v<ra_t, panel_ra>) {
+            if (std::string(slp_filename).empty()) {
+                throw SlpNotFoundException{};
+            }
         }
         if (input_matrix.is_open()) {
             std::string header1;
@@ -341,16 +345,18 @@ public:
                 pref[i] = i;
                 div[i] = 0;
             }
-            if (std::is_same<ra_t, panel_ra>::value) {
-                this->panelbv = panel_ra(tmp_height, tmp_width);
+            if constexpr (std::is_same_v<ra_t, panel_ra>) {
+                this->panelbv = new ra_t(tmp_height, tmp_width);
+            } else if constexpr (std::is_same_v<ra_t, slp_panel_ra>) {
+                this->panelbv = new ra_t(slp_filename, tmp_height, tmp_width);
             } else {
-                //this->panelbv = slp_panel_ra(slp_filename, tmp_height,
-                //                             tmp_width);
+                throw WrongRaTypeException{};
             }
             unsigned int count = 0;
             std::string last_col;
             getline(input_matrix, line);
             getline(input_matrix, line);
+
             while (getline(input_matrix, line) && !line.empty()) {
                 std::cout << count << "\r";
                 std::istringstream is_col(line);
@@ -368,10 +374,10 @@ public:
                               << "\n-------------------------------\n";
                 }
                 auto col = rlpbwt_ra::build_column(new_column, pref, div);
-                if (std::is_same<ra_t, panel_ra>::value) {
+                if constexpr (std::is_same_v<ra_t, panel_ra>) {
                     for (unsigned int k = 0; k < new_column.size(); k++) {
                         if (new_column[k] != '0') {
-                            this->panelbv.panel[count][k] = true;
+                            this->panelbv->panel[count][k] = true;
                         }
                     }
                 }
@@ -395,7 +401,6 @@ public:
                 rlpbwt_ra::update(new_column, pref, div);
                 last_col = new_column;
                 count++;
-
             }
             input_matrix.close();
         } else {
@@ -405,7 +410,7 @@ public:
 
     std::vector<std::pair<unsigned int, unsigned int>>
     match_thr(const std::string &query, bool verbose = false) {
-        if (query.size() != this->panelbv.w) {
+        if (query.size() != this->panelbv->w) {
             throw NotEqualLengthException{};
         }
         std::vector<unsigned int> ms_row(query.size(), 0);
@@ -460,7 +465,7 @@ public:
                     if (verbose) {
                         std::cout << "complete mismatch\n";
                     }
-                    ms_row[i] = this->panelbv.h;
+                    ms_row[i] = this->panelbv->h;
                     //curr_index = curr_pos;
 
                     if (i != query.size() - 1) {
@@ -549,13 +554,13 @@ public:
 
 #pragma omp parallel for
         for (int i = (int) ms_row.size() - 1; i >= 0; i--) {
-            if (ms_row[i] == this->panelbv.h) {
+            if (ms_row[i] == this->panelbv->h) {
                 ms_len[i] = 0;
                 continue;
             }
             tmp_index = i;
             while (tmp_index >= 0 &&
-                   query[tmp_index] == panelbv.getElem(ms_row[i], tmp_index)) {
+                   query[tmp_index] == panelbv->getElem(ms_row[i], tmp_index)) {
                 tmp_index--;
             }
             ms_len[i] = i - tmp_index;
@@ -727,7 +732,7 @@ public:
     }
 
     size_t serialize(std::ostream &out, sdsl::structure_tree_node *v = nullptr,
-                     const std::string &name = ""){
+                     const std::string &name = "") {
         sdsl::structure_tree_node *child =
                 sdsl::structure_tree::add_child(v, name,
                                                 sdsl::util::class_name(
@@ -744,7 +749,7 @@ public:
         return written_bytes;
     }
 
-    void load(std::istream &in){
+    void load(std::istream &in) {
         this->panelbv.load(in);
         for (unsigned int i = 0; i < this->panelbv.w; i++) {
             auto c = new column_thr();
