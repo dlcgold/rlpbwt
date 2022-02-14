@@ -4,6 +4,7 @@ project(RLPBWT)
 set(CMAKE_CXX_STANDARD 17)
 add_compile_options(-Wall -Wextra -pedantic -O3)
 
+find_package(OpenMP)
 
 # Configure thirdparty
 # ------------------------------------------------------------------------------
@@ -53,7 +54,8 @@ if (${BUILD_TESTS})
             "${FOLCA_SOURCE_DIR}"
             "${SUX_SOURCE_DIR}/function"
             "${SUX_SOURCE_DIR}/support")
-    target_link_libraries(rlpbwt_test sdsl divsufsort divsufsort64 -lgtest -fopenmp -lpthread)
+
+    target_link_libraries(rlpbwt_test sdsl divsufsort divsufsort64 -lgtest)
 
     #target_link_libraries(rlpbwt_test -lsdsl -ldivsufsort -ldivsufsort64 -lgtest)
     add_test(NAME rlpbwt_test COMMAND rlpbwt_test)
@@ -88,6 +90,5 @@ else ()
             "${SUX_SOURCE_DIR}/function"
             "${SUX_SOURCE_DIR}/support"
             )
-
-    target_link_libraries(rlpbwt sdsl divsufsort divsufsort64 -fopenmp -lpthread)
+    target_link_libraries(rlpbwt sdsl divsufsort divsufsort64)
 endif ()

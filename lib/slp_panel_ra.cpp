@@ -21,7 +21,7 @@ slp_panel_ra::slp_panel_ra() = default;
 
 char slp_panel_ra::getElem(unsigned int i, unsigned int j) const {
     unsigned rev_col = (this->w - 1) - j;
-    return this->panel.charAt(i + (rev_col * this->h));
+    return this->panel.charAt(rev_col + (i * this->w));
 }
 
 std::ostream &operator<<(std::ostream &os, const slp_panel_ra &ra) {

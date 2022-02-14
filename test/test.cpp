@@ -351,15 +351,14 @@ TEST (BuildRlpbwtSerThr, TestSer) {
     file_i.close();
 }
 
-TEST(Slp, TestLoad) {
+TEST(RlpbwtRaTest, TestBuildQuery) {
     rlpbwt_ra<panel_ra> rlpbwtRa("../input/sample_new.txt", false);
-    auto matches = rlpbwtRa.match_thr("010010100011101", false);
+    auto matches = rlpbwtRa.match_thr("010010100011101", true);
     for (auto m: matches) {
         std::cout << "(col: " << m.first << ", len:" << m.second << ") ";
     }
     rlpbwt_ra<slp_panel_ra> rlpbwtSlp("../input/sample_new.txt", false,
                                       "../input/sample.slp");
-    std::cout << *rlpbwtSlp.panelbv;
 
     matches = rlpbwtRa.match_thr("010010100011101", false);
     for (auto m: matches) {
@@ -367,6 +366,14 @@ TEST(Slp, TestLoad) {
     }
 }
 
+TEST(Lce, Test) {
+    rlpbwt_ra<slp_panel_ra> rlpbwtSlp("../input/sample_new2.txt", false,
+                                      "../input/sample2.slp");
+    auto matches = rlpbwtSlp.match_lce("010010100011101", true);
+    /*for (auto m: matches) {
+        std::cout << "(col: " << m.first << ", len:" << m.second << ") ";
+    }*/
+}
 int main(int argc, char **argv) {
     ::testing::InitGoogleTest(&argc, argv);
     //::testing::GTEST_FLAG(filter) = "BuildRlpbwtTest*";
@@ -380,6 +387,7 @@ int main(int argc, char **argv) {
     //::testing::GTEST_FLAG(filter) = "BuildRlpbwtThr*";
     //::testing::GTEST_FLAG(filter) = "BuildRlpbwtSerThr*";
     //::testing::GTEST_FLAG(filter) = "BuildRlpbwtNewThr*";
-    ::testing::GTEST_FLAG(filter) = "Slp*";
+    //::testing::GTEST_FLAG(filter) = "RlpbwtRaTest*";
+    ::testing::GTEST_FLAG(filter) = "Lce*";
     return RUN_ALL_TESTS();
 }

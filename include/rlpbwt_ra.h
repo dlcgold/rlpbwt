@@ -17,7 +17,7 @@ class rlpbwt_ra {
 public:
     std::vector<column_thr> cols;
     // panel saved as requested
-    ra_t* panelbv;
+    ra_t *panelbv;
 
 private:
     static column_thr
@@ -306,6 +306,7 @@ private:
         }
     }
 
+
 public:
     rlpbwt_ra() = default;
 
@@ -405,6 +406,61 @@ public:
             input_matrix.close();
         } else {
             throw FileNotFoundException{};
+        }
+    }
+
+    std::pair<unsigned int, unsigned int>
+    lce(unsigned int col, unsigned int curr, unsigned int prev,
+        bool verbose = false) {
+        if (col == 0) {
+            return std::make_pair(prev, 0);
+        }
+        unsigned int rev_col = (this->panelbv->w - 1) - col + 1;
+
+        unsigned int pos_curr = rev_col + ((this->panelbv->w) * curr);
+        unsigned int pos_prev = rev_col + ((this->panelbv->w) * prev);
+        if (verbose) {
+            std::cout << "at " << rev_col << ": " << pos_curr << ", "
+                      << pos_prev << "\n";
+        }
+        unsigned int lcp_prev = lceToR(this->panelbv->panel, pos_prev,
+                                       pos_curr);
+        if (lcp_prev >= col) {
+            lcp_prev = col;
+        }
+        return std::make_pair(prev, lcp_prev);
+    }
+
+    std::pair<unsigned int, unsigned int>
+    lce_pair(unsigned int col, unsigned int curr, unsigned int prev,
+             unsigned int next, bool verbose = false) {
+        if (col == 0) {
+            return std::make_pair(next, 0);
+        }
+        unsigned int rev_col = (this->panelbv->w - 1) - col + 1;
+
+        unsigned int pos_curr = rev_col + ((this->panelbv->w) * curr);
+        unsigned int pos_prev = rev_col + ((this->panelbv->w) * prev);
+        unsigned int pos_next = rev_col + ((this->panelbv->w) * next);
+        if (verbose) {
+            std::cout << "at " << rev_col << ": " << pos_curr << ", "
+                      << pos_prev
+                      << ", " << pos_next << "\n";
+        }
+        unsigned int lcp_prev = lceToR(this->panelbv->panel, pos_prev,
+                                       pos_curr);
+        if (lcp_prev >= col) {
+            lcp_prev = col;
+        }
+        unsigned int lcp_next = lceToR(this->panelbv->panel, pos_curr,
+                                       pos_next);
+        if (lcp_next >= col) {
+            lcp_next = col;
+        }
+        if (lcp_prev > lcp_next) {
+            return std::make_pair(prev, lcp_prev);
+        } else {
+            return std::make_pair(next, lcp_next);
         }
     }
 
@@ -552,7 +608,6 @@ public:
         }
         int tmp_index = 0;
 
-#pragma omp parallel for
         for (int i = (int) ms_row.size() - 1; i >= 0; i--) {
             if (ms_row[i] == this->panelbv->h) {
                 ms_len[i] = 0;
@@ -567,7 +622,6 @@ public:
         }
 
         std::vector<std::pair<unsigned int, unsigned int>> ms_match;
-#pragma omp parallel for
         for (unsigned int i = 0; i < ms_len.size(); i++) {
             if (verbose) {
                 std::cout << ms_len[i] << "\t";
@@ -599,6 +653,283 @@ public:
                             std::cout << ms_len[j] << "\t";
                         }
                     }
+                    for (unsigned int j = i; j < pos; j++) {
+                        ms_match.emplace_back(j, ms_len[j]);
+                    }
+                    i = pos;
+                }
+                if (pos == ms_len.size() - 1) {
+                    break;
+                }
+            }
+        }
+        if (verbose) {
+            std::cout << "\nmatches:\t";
+            for (auto e: ms_match) {
+                std::cout << "(col: " << e.first << ", len: " << e.second
+                          << ")\t";
+            }
+            std::cout << "\n";
+        }
+        return ms_match;
+    }
+
+    std::vector<std::pair<unsigned int, unsigned int>>
+    match_lce(const std::string &query, bool verbose = false) {
+        if (query.size() != this->panelbv->w) {
+            throw NotEqualLengthException{};
+        }
+        std::vector<unsigned int> ms_row(query.size(), 0);
+        std::vector<unsigned int> ms_len(query.size(), 0);
+        auto curr_pos = static_cast<unsigned int>(this->cols[0].sample_end[
+                this->cols[0].sample_end.size() - 1]);
+        auto curr_index = curr_pos;
+        unsigned int curr_run = this->cols[0].rank_runs(curr_index);
+        char symbol = get_next_char(this->cols[0].zero_first, curr_run);
+
+        for (unsigned int i = 0; i < query.size(); i++) {
+            std::cout << "\t" << i << "\n";
+            if (verbose) {
+                std::cout << "at " << i << ": " << curr_run << " "
+                          << this->cols[i].rank_thr(curr_index) << "\n";
+                std::cout << curr_index << " " << curr_run << " " << curr_pos
+                          << " "
+                          << symbol << "\n";
+            }
+            if (query[i] == symbol) {
+                if (verbose) {
+                    std::cout << "match:\n";
+                }
+                // save in matching statistics pos vector
+                ms_row[i] = curr_pos;
+                if (i != 0) {
+                    ms_len[i] = ms_len[i - 1] + 1;
+                } else {
+                    ms_len[i] = 1;
+                }
+                if (i != query.size() - 1) {
+                    // update index, run, symbol
+                    // TODO maybe make a function for this update
+                    curr_index = lf(i, curr_index, query[i]);
+                    curr_run = this->cols[i + 1].rank_runs(curr_index);
+                    symbol = get_next_char(this->cols[i + 1].zero_first,
+                                           curr_run);
+                    if (verbose) {
+                        std::cout << "new: " << curr_index << " " << curr_run
+                                  << " "
+                                  << curr_pos << " "
+                                  << symbol << "\n";
+                    }
+                }
+            } else {
+                if (this->cols[i].sample_beg.size() == 1) {
+                    if (verbose) {
+                        std::cout << "complete mismatch\n";
+                    }
+                    ms_row[i] = this->panelbv->h;
+                    ms_len[i] = 0;
+                    if (i != query.size() - 1) {
+                        curr_pos = static_cast<unsigned int>(this->cols[0].sample_end[
+                                this->cols[0].sample_end.size() - 1]);
+                        curr_index = curr_pos;
+                        curr_run = this->cols[i + 1].rank_runs(curr_index);
+                        symbol = get_next_char(this->cols[i + 1].zero_first,
+                                               curr_run);
+                        if (verbose) {
+                            std::cout << "update: " << curr_index << " "
+                                      << curr_pos
+                                      << " "
+                                      << symbol << "\n";
+                        }
+                    }
+                } else {
+                    if (curr_run == this->cols[i].sample_beg.size() - 1) {
+                        curr_index =
+                                (this->cols[i].select_runs(curr_run) + 1) - 1;
+                        auto prev_pos = static_cast<unsigned int>(this->cols[i].sample_end[
+                                curr_run - 1]);
+                        if (verbose) {
+                            std::cout << "end_run with " << curr_pos << ", "
+                                      << prev_pos << "\n";
+                        }
+                        auto lce_value = lce(i, curr_pos, prev_pos, false);
+                        ms_row[i] = prev_pos;
+                        if (i == 0) {
+                            ms_len[i] = 1;
+                        } else {
+                            ms_len[i] =
+                                    std::min(ms_len[i - 1], lce_value.second) +
+                                    1;
+                        }
+                        curr_pos = prev_pos;
+                        if (verbose) {
+                            std::cout << "update: " << curr_index << " "
+                                      << curr_pos
+                                      << " "
+                                      << symbol << "\n";
+                        }
+
+                        if (i != query.size() - 1) {
+                            curr_index = lf(i, curr_index, query[i]);
+                            curr_run = this->cols[i + 1].rank_runs(curr_index);
+                            symbol = get_next_char(this->cols[i + 1].zero_first,
+                                                   curr_run);
+                            if (verbose) {
+                                std::cout << "new: " << curr_index << " "
+                                          << curr_run
+                                          << " "
+                                          << curr_pos << " " << symbol << "\n";
+                            }
+                        }
+                    } else if (curr_run == 0) {
+                        curr_index = (this->cols[i].select_runs(curr_run + 1) +
+                                      1);
+                        auto next_pos = static_cast<unsigned int>(this->cols[i].sample_beg[
+                                curr_run + 1]);
+                        if (verbose) {
+                            std::cout << "first_run with " << curr_pos << ", "
+                                      << next_pos << "\n";
+                        }
+                        auto lce_value = lce(i, curr_pos, next_pos, false);
+                        ms_row[i] = next_pos;
+                        if (i == 0) {
+                            ms_len[i] = 1;
+                        } else {
+                            ms_len[i] =
+                                    std::min(ms_len[i - 1], lce_value.second) +
+                                    1;
+                        }
+                        curr_pos = next_pos;
+                        if (verbose) {
+                            std::cout << "update: " << curr_index << " "
+                                      << curr_pos
+                                      << " "
+                                      << symbol << "\n";
+                        }
+                        if (i != query.size() - 1) {
+                            curr_index = lf(i, curr_index, query[i]);
+                            curr_run = this->cols[i + 1].rank_runs(curr_index);
+                            symbol = get_next_char(this->cols[i + 1].zero_first,
+                                                   curr_run);
+                            if (verbose) {
+                                std::cout << "new: " << curr_index << " "
+                                          << curr_run
+                                          << " "
+                                          << curr_pos << " " << symbol << "\n";
+                            }
+                        }
+                    } else {
+                        auto prev_pos = static_cast<unsigned int>(this->cols[i].sample_end[
+                                curr_run - 1]);
+                        auto next_pos = static_cast<unsigned int>(this->cols[i].sample_beg[
+                                curr_run + 1]);
+                        if (verbose) {
+                            std::cout << "curr: " << curr_pos << ", prev: "
+                                      << prev_pos << ", next: " << next_pos
+                                      << " -> ";
+                        }
+                        auto lce = this->lce_pair(i, curr_pos, prev_pos,
+                                                  next_pos,
+                                                  false);
+                        if (verbose) {
+                            std::cout << lce.first << ", " << lce.second
+                                      << "\n";
+                        }
+                        if (lce.first == next_pos) {
+                            curr_pos = next_pos;
+                            ms_row[i] = curr_pos;
+                            if (i == 0) {
+                                ms_len[i] = 1;
+                            } else {
+                                ms_len[i] =
+                                        std::min(ms_len[i - 1], lce.second) + 1;
+                            }
+                            curr_index = (
+                                    this->cols[i].select_runs(curr_run + 1) +
+                                    1);
+                            if (i != query.size() - 1) {
+                                curr_index = lf(i, curr_index, query[i]);
+                                curr_run = this->cols[i + 1].rank_runs(
+                                        curr_index);
+                                symbol = get_next_char(
+                                        this->cols[i + 1].zero_first,
+                                        curr_run);
+                                if (verbose) {
+                                    std::cout << "new: " << curr_index << " "
+                                              << curr_run
+                                              << " "
+                                              << curr_pos << " " << symbol
+                                              << "\n";
+                                }
+                            }
+                        } else {
+                            curr_pos = prev_pos;
+                            ms_row[i] = curr_pos;
+                            if (i == 0) {
+                                ms_len[i] = 1;
+                            } else {
+                                ms_len[i] =
+                                        std::min(ms_len[i - 1], lce.second) + 1;
+                            }
+                            curr_index =
+                                    (this->cols[i].select_runs(curr_run) + 1) -
+                                    1;
+                            if (i != query.size() - 1) {
+                                curr_index = lf(i, curr_index, query[i]);
+                                curr_run = this->cols[i + 1].rank_runs(
+                                        curr_index);
+                                symbol = get_next_char(
+                                        this->cols[i + 1].zero_first,
+                                        curr_run);
+                                if (verbose) {
+                                    std::cout << "new: " << curr_index << " "
+                                              << curr_run
+                                              << " "
+                                              << curr_pos << " " << symbol
+                                              << "\n";
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        if (verbose) {
+            std::cout << "ind:\t";
+            for (unsigned int i = 0; i < ms_row.size(); i++) {
+                std::cout << i << "\t";
+            }
+            std::cout << "\npos:\t";
+            for (auto e: ms_row) {
+                std::cout << e << "\t";
+            }
+            std::cout << "\nlen:\t";
+            for (auto e: ms_len) {
+                std::cout << e << "\t";
+            }
+        }
+        //int tmp_index = 0;
+
+        std::vector<std::pair<unsigned int, unsigned int>> ms_match;
+        for (unsigned int i = 0; i < ms_len.size(); i++) {
+            // TODO check if for last match
+
+            if ((ms_len[i] != 0 && ms_len[i] > ms_len[i + 1]) ||
+                (i == ms_len.size() - 1 && ms_len[i] != 0)) {
+                ms_match.emplace_back(i, ms_len[i]);
+            } else if (ms_len[i] != 0 && i < ms_len.size() - 1 &&
+                       ms_len[i] == ms_len[i + 1]) {
+                unsigned int pos = 0;
+                for (unsigned int j = i + 1; j < ms_len.size(); j++) {
+                    if (ms_len[j] > ms_len[j + 1]) {
+                        pos = j + 1;
+                        break;
+                    } else {
+                        pos = i + 1;
+                        break;
+                    }
+                }
+                if (i + 1 != pos) {
                     for (unsigned int j = i; j < pos; j++) {
                         ms_match.emplace_back(j, ms_len[j]);
                     }
