@@ -1,4 +1,4 @@
-This is XeTeX, Version 3.141592653-2.6-0.999993 (TeX Live 2021) (preloaded format=xelatex 2021.11.3)  7 FEB 2022 13:52
+This is XeTeX, Version 3.141592653-2.6-0.999993 (TeX Live 2021) (preloaded format=xelatex 2021.11.3)  17 FEB 2022 13:33
 entering extended mode
  \write18 enabled.
  %&-line parsing enabled.
@@ -1329,10 +1329,18 @@ File: img/logo_unimib.pdf Graphic file (type pdf)
  [22
 
 ]
-LaTeX Font Info:    Font shape `T1/lmss/m/it' in size <9> not available
-(Font)              Font shape `T1/lmss/m/sl' tried instead on input line 880.
+File: graph/thr_panel.pdf Graphic file (type pdf)
+<use graph/thr_panel.pdf>
+Missing character: There is no 2 ("32) in font nullfont!
+File: img/logo_unimib.pdf Graphic file (type pdf)
+<use img/logo_unimib.pdf>
+ [23
 
-Overfull \hbox (3.25658pt too wide) in paragraph at lines 880--880
+]
+LaTeX Font Info:    Font shape `T1/lmss/m/it' in size <9> not available
+(Font)              Font shape `T1/lmss/m/sl' tried instead on input line 893.
+
+Overfull \hbox (3.25658pt too wide) in paragraph at lines 893--893
  [] 
  []
 
@@ -1341,7 +1349,50 @@ Missing character: There is no 6 ("36) in font nullfont!
 Missing character: There is no 2 ("32) in font nullfont!
 File: img/logo_unimib.pdf Graphic file (type pdf)
 <use img/logo_unimib.pdf>
-[23
+[24
+
+]
+LaTeX Font Info:    Font shape `T1/lmss/bx/it' in size <10> not available
+(Font)              Font shape `T1/lmss/bx/sl' tried instead on input line 918.
+
+Missing character: There is no 7 ("37) in font nullfont!
+Missing character: There is no 1 ("31) in font nullfont!
+Missing character: There is no 2 ("32) in font nullfont!
+
+Overfull \vbox (4.26323pt too high) detected at line 918
+ []
+
+File: img/logo_unimib.pdf Graphic file (type pdf)
+<use img/logo_unimib.pdf>
+[25
+
+]
+File: graph/lce_panel.pdf Graphic file (type pdf)
+<use graph/lce_panel.pdf>
+Missing character: There is no 2 ("32) in font nullfont!
+File: img/logo_unimib.pdf Graphic file (type pdf)
+<use img/logo_unimib.pdf>
+ [26
+
+]
+File: graph/lce2.pdf Graphic file (type pdf)
+<use graph/lce2.pdf>
+Missing character: There is no 2 ("32) in font nullfont!
+File: img/logo_unimib.pdf Graphic file (type pdf)
+<use img/logo_unimib.pdf>
+ [27
+
+]
+Overfull \hbox (3.25658pt too wide) in paragraph at lines 955--955
+ [] 
+ []
+
+Missing character: There is no 6 ("36) in font nullfont!
+Missing character: There is no 6 ("36) in font nullfont!
+Missing character: There is no 2 ("32) in font nullfont!
+File: img/logo_unimib.pdf Graphic file (type pdf)
+<use img/logo_unimib.pdf>
+[28
 
 ]
 \tf@nav=\write6
@@ -1358,12 +1409,12 @@ Package rerunfilecheck Info: File `slides.out' has not changed.
 (rerunfilecheck)             Checksum: D41D8CD98F00B204E9800998ECF8427E;0.
  ) 
 Here is how much of TeX's memory you used:
- 23354 strings out of 476788
- 434595 string characters out of 5822420
+ 23392 strings out of 476788
+ 435489 string characters out of 5822420
  929807 words of memory out of 6000000
- 42921 multiletter control sequences out of 15000+600000
- 466177 words of font info for 86 fonts, out of 8000000 for 9000
+ 42955 multiletter control sequences out of 15000+600000
+ 471747 words of font info for 88 fonts, out of 8000000 for 9000
  1348 hyphenation exceptions out of 8191
  128i,15n,126p,601b,732s stack positions out of 5000i,500n,10000p,200000b,80000s
 
-Output written on slides.pdf (23 pages).
+Output written on slides.pdf (28 pages).

@@ -835,6 +835,7 @@
 \section{Matching Statistics}
 \begin{frame}{Matching Statistics and RLPBWT}
   \begin{block}{Some definitions}
+    \small
     \begin{itemize}
       \item for every run in a column of the PBTW with define the
       \textbf{threshold} as the index of the minimum \textit{lcp value} (and we
@@ -849,38 +850,111 @@
         \item $panel_{row}[k-(len+)1..k]=z[k-(len+1)..k]$
         \item $z[k-(len+1)..k+1]$ doesn't match with any row in the panel 
       \end{itemize}
+      \item we compute \textit{pos} and \textit{len} in two different scans
       \item we need random access to the panel. At this time we are using a
-      bitvector for every column of the panbel but we can use a data structure,
+      bitvector for every column of the panel but we can use a data structure,
       called \textit{SLP}, with a very low memory cost but with high access
       times  
+      
+    \end{itemize}
+  \end{block}
+\end{frame}
+
+\begin{frame}{Example}
+  \only<1>{
+    \begin{figure}[H]
+      \centering
+      \includegraphics[scale = 0.28]{graph/thr_panel.pdf}
+    \end{figure}
+  }
+  \only<2>{
+    \begin{block}{}
+      \begin{table}[H]
+        \footnotesize{}
+        \centering
+        \begin{tabular}{c|ccccccccccccccc}
+          $k$ & 00 & 01 & 02 & 03 & 04 &  {\color{nordgreen}05} & 06 & 07 & 08
+          &  {\color{nordgreen}09} & 10 &  {\color{nordgreen}11} & 12 & 13
+          &  {\color{nordgreen}14} \\
+          \hline
+          $z$ & 0 & 1 & 0 & 0 & 1 &  {\color{nordgreen}0} & 1 & 0 & 0
+          &  {\color{nordgreen}0} & 1 &  {\color{nordgreen}1} & 1 & 0
+          &  {\color{nordgreen}1} \\
+          $row$ & 19 & 19 & 17 & 17 & 13 &  {\color{nordgreen}13} & 19 & 19 & 19
+          &  {\color{nordgreen}19} & 11 &  {\color{nordgreen}11} & 17 & 17
+          &  {\color{nordgreen}17} \\
+          $len$ & 1 & 2 & 2 & 3 & 5 & {\color{nordgreen}6} & 4 & 5 & 6
+          & {\color{nordgreen}7} & 4 & {\color{nordgreen}5} & 2 & 3
+          & {\color{nordgreen}4}\\
+        \end{tabular}
+      \end{table}
+    \end{block}
+  }
+\end{frame}
+\begin{frame}{Matching Statistics using LCE queries}
+  \begin{block}{}
+    \small
+    \begin{itemize}
+      \item using an SLP we can make \textbf{Longest Common Extensions
+        (\textit{LCE}) queries}. Given two row of the panel and a column we can
+      compute the longest common suffix as far as the given column.
+      \item as for the case of the thresholds study we starts from the
+      bottom-left symbol in the panel and we move left to right using LF-mapping
+      
+      \item if we have a match we continue adding 1 every time to the
+      \textit{len} of \textit{MS}
+      \item every time we have a mismatch we look for the previous and the next
+      good symbol in the column. Using the prefix array samples we have the
+      original-row index of the end of the previous run and the original-row
+      index of the begin of the next run (if they exists)
+      \item if we are in a column with only the wrong symbol we restart the
+      computation from the last row of the original panel
+      \item we compute the two \textit{LCE} and we take the longest
+      \item next \textit{pos} in the \textit{MS} will be the index of the row
+      with the maximum \textit{LCE} and the \textit{len} of the \textit{MS} will
+      be the length of the \textit{LCE} plus 1 
     \end{itemize}
   \end{block}
 \end{frame}
 \begin{frame}{Example}
-  \begin{block}{Regarding the example seen above}
-    \begin{table}[H]
-      \footnotesize{}
+  \only<1>{
+    \begin{figure}[H]
       \centering
-      \begin{tabular}{c|ccccccccccccccc}
-        $k$ & 00 & 01 & 02 & 03 & 04 &  {\color{nordred}05} & 06 & 07 & 08
-        &  {\color{nordgreen}09} & 10 &  {\color{nordgreen}11} & 12 & 13
-        &  {\color{nordgreen}14} \\
-        \hline
-        $z$ & 0 & 1 & 0 & 0 & 1 &  {\color{nordgreen}0} & 1 & 0 & 0
-        &  {\color{nordgreen}0} & 1 &  {\color{nordgreen}1} & 1 & 0
-        &  {\color{nordgreen}1} \\
-        $row$ & 19 & 19 & 17 & 17 & 13 &  {\color{nordgreen}13} & 19 & 19 & 19
-        &  {\color{nordgreen}19} & 11 &  {\color{nordgreen}11} & 17 & 17
-        &  {\color{nordgreen}17} \\
-        $len$ & 1 & 2 & 3 & 4 & 5 & {\color{nordgreen}6} & 4 & 5 & 6
-        & {\color{nordgreen}7} & 4 & {\color{nordgreen}5} & 2 & 3
-        & {\color{nordgreen}4}\\
-      \end{tabular}
-    \end{table}
-\end{block}
+      \includegraphics[scale = 0.28]{graph/lce_panel.pdf}
+    \end{figure}
+  }
+  \only<2>{
+    \begin{figure}[H]
+      \centering
+      \includegraphics[scale = 0.3]{graph/lce2.pdf}
+    \end{figure}
+  }
+  \only<3>{
+        \begin{block}{}
+      \begin{table}[H]
+        \footnotesize{}
+        \centering
+        \begin{tabular}{c|ccccccccccccccc}
+          $k$ & 00 & 01 & 02 & 03 & 04 &  {\color{nordgreen}05} & 06 & 07 & 08
+          &  {\color{nordgreen}09} & 10 &  {\color{nordgreen}11} & 12 & 13
+          &  {\color{nordgreen}14} \\
+          \hline
+          $z$ & 0 & 1 & 0 & 0 & 1 &  {\color{nordgreen}0} & 1 & 0 & 0
+          &  {\color{nordgreen}0} & 1 &  {\color{nordgreen}1} & 1 & 0
+          &  {\color{nordgreen}1} \\
+          $row$ & 19 & 19 & 16 & 15 & 13 &  {\color{nordgreen}13} & 19 & 19 & 19
+          &  {\color{nordgreen}19} & 11 &  {\color{nordgreen}11} & 17 & 17
+          &  {\color{nordgreen}17} \\
+          $len$ & 1 & 2 & 3 & 4 & 5 & {\color{nordgreen}6} & 4 & 5 & 6
+          & {\color{nordgreen}7} & 4 & {\color{nordgreen}5} & 2 & 3
+          & {\color{nordgreen}4}\\
+        \end{tabular}
+      \end{table}
+    \end{block}
+  }
 \end{frame}
           %           \begin{frame}[allowframebreaks]{References} 
-          %           \nocite{*}
+%   \nocite{*}
 %   \bibliographystyle{unsrt}
 %   \bibliography{ref}
 % \end{frame}

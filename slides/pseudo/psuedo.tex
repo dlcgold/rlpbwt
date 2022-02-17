@@ -409,9 +409,10 @@
 
     \If{$z[i]=symb$}
     \State $ms_{row}[k]\gets curr_{row}$
-    \State $curr_{index}\gets lf(k, curr_{index}, z[k])$
-    \State $curr_{run}\gets rank_h^{k+1}(curr_{index})$
-    \State $symb\gets get\_symbol(start^{k+1}, curr_{run})$
+    \If{$k\neq |z|-1$}
+     \State $(curr_{index},\,\,curr_{run},\,\,symb)\gets UPDATE(k, curr_{index},
+    z)$ 
+    \EndIf
     \Else
     \State $curr_{thr}\gets rank_t^k(curr_{index}),\,\,single_{run}\gets \bot$
 
@@ -419,7 +420,7 @@
     \State $single_{run}\gets \top$
     \EndIf
     
-    \If{$|samples_{beg}^k|=0$}
+    \If{$|samples_{beg}^k|=1$}
     \State $ms_{row}[k]\gets rlpbwt.height$
     \If{$k\neq |z|-1$}
     \State $curr_{row}\gets
@@ -434,18 +435,16 @@
     \State $curr_{row}\gets samples_{end}^k[curr_{run}-1]$
     \State $ms_{row}[k]\gets curr_{row}$
     \If{$k\neq |z|-1$}
-    \State $curr_{index}\gets lf(k, curr_{index}, z[k])$
-    \State $curr_{run}\gets rank_h^{k+1}(curr_{index})$
-    \State $symb\gets get\_symbol(start^{k+1}, curr_{run})$
+     \State $(curr_{index},\,\,curr_{run},\,\,symb)\gets UPDATE(k, curr_{index},
+    z)$ 
     \EndIf
     \Else
     \State $curr_{index}\gets select_h^{k}(curr_{run}+1)+1$
     \State $curr_{row}\gets samples_{beg}^k[curr_{run}+1]$
     \State $ms_{row}[k]\gets curr_{row}$
     \If{$k\neq |z|-1$}
-    \State $curr_{index}\gets lf(k, curr_{index}, z[k])$
-    \State $curr_{run}\gets rank_h^{k+1}(curr_{index})$
-    \State $symb\gets get\_symbol(start^{k+1}, curr_{run})$
+     \State $(curr_{index},\,\,curr_{run},\,\,symb)\gets UPDATE(k, curr_{index},
+    z)$ 
     \EndIf
     \EndIf
     
@@ -475,7 +474,120 @@
     \EndFor
     \EndFunction
   \end{algorithmic}
-  \caption{Algoritmo per match con matching-statistics (ms) e thresholds}
+  \caption{Algoritmo per match con matching-statistics (MS) e thresholds}
+\end{algorithm}
+
+\begin{algorithm}
+  \scriptsize
+  \begin{algorithmic}[1]
+    \Function{matches\_ms\_lce}{$z$}
+    \State $ms_{row}\gets [0..0],\,\,ms_{len}\gets [0..0]$
+    \Comment ms vectors with row and len of length $|z|$
+    \State $curr_{row}\gets
+    rlpbwt[0].samples_{end}[|rlpbwt[0].samples_{end}|-1]$
+    \State $curr_{index}\gets curr_{row},\,\,curr_{run}\gets
+    rank_h^0(curr_{index})$ 
+    \State $symb\gets get\_symbol(start^0, curr_{run})$
+    \Comment \textbf{build matching statistics row}
+    \For {\textit{every} $k\in[0, |z|)$}
+    \If{$z[i]=symb$}
+    \State $ms_{row}[k]\gets curr_{row}$
+    \If{$k=0$}
+    \State $ms_{len}[k] \gets 1$
+    \Else
+    \State $ms_{len}[k] \gets ms_{len}[k-1]+1$
+    \EndIf
+    \If{$k\neq |z|-1$}
+     \State $(curr_{index},\,\,curr_{run},\,\,symb)\gets UPDATE(k, curr_{index},
+    z)$ 
+    \EndIf
+    \Else
+    
+    \If{$|samples_{beg}^k|=1$}
+    \State $ms_{row}[k]\gets rlpbwt.height$
+    \State $ms_{len}[k]\gets 0$
+    \If{$k\neq |z|-1$}
+    \State $curr_{row}\gets
+    rlpbwt[0].samples_{end}[|rlpbwt[0].samples_{end}|-1]$
+    \State $curr_{index}\gets curr_{row}$
+    \State $curr_{run}\gets rank_h^{k+1}(curr_{index})$
+    \State $symb\gets get\_symbol(start^{k+1}, curr_{run})$
+    \EndIf
+    \Else
+    \If{$curr_{run}=|samples_{beg}^k|-1$}
+    \State $curr_{index}\gets select_h^k(curr_{run}),\,\,prev_{pos}\gets
+    samples_{end}^k[curr_{run}-1]$ 
+    \State $lce\gets LCE(k, curr_{pos}, prev_{pos})$
+    \State $ms_{row}[k]\gets prev_{pos},\,\,curr_{pos}\gets prev_{pos}$
+    \If{$k=0$}
+    \State $ms_{len}[k] \gets 1$
+    \Else
+    \State $ms_{len}[k] \gets min(ms_{len}[k-1], lce_{len})+1$
+    \EndIf
+    \If{$k\neq |z|-1$}
+    \State $(curr_{index},\,\,curr_{run},\,\,symb)\gets UPDATE(k, curr_{index},
+    z)$  
+    \EndIf
+    
+    \ElsIf{$curr_{run}=0$}
+    \State $curr_{index}\gets select_h^k(curr_{run}+1)+1,\,\,next_{pos}\gets
+    samples_{beg}^k[curr_{run}+1]$ 
+    \State $lce\gets LCE(k, curr_{pos}, next_{pos})$
+    \State $ms_{row}[k]\gets next_{pos},\,\,curr_{pos}\gets next_{pos}$
+    \If{$k=0$}
+    \State $ms_{len}[k] \gets 1$
+    \Else
+    \State $ms_{len}[k] \gets min(ms_{len}[k-1], lce_{len})+1$
+    \EndIf
+  
+    \If{$k\neq |z|-1$}
+    \State $(curr_{index},\,\,curr_{run},\,\,symb)\gets UPDATE(k, curr_{index},
+    z)$ 
+    \EndIf
+    \Else
+    \State $prev_{pos}\gets samples_{end}^k[curr_{run}-1],\,\,next_{pos}\gets
+    samples_{beg}^k[curr_{run}+1]$ 
+    \State $lce\gets \max_{len} (LCE(k, curr_{pos}, prev_{pos}), LCE(k,
+    curr_{pos}, next_{pos}))$
+    \State $curr_{pos}\gets lce_{pos}$
+    \State $ms_{row}[k]\gets curr_{pos}$
+    \If{$k=0$}
+    \State $ms_{len}[k] \gets 1$
+    \Else
+    \State $ms_{len}[k] \gets min(ms_{len}[k-1], lce_{len})+1$
+    \EndIf
+    \If{$k\neq |z|-1$}
+    \State $(curr_{index},\,\,curr_{run},\,\,symb)\gets UPDATE(k, curr_{index},
+    z)$ 
+    \EndIf
+    \EndIf
+    \EndIf
+    \EndIf
+    \EndFor
+    
+    \For {\textit{every} $k\in[0,|ms_{row}|)$}
+    \Comment \textbf{build matching statistics matches}
+    \State \textit{report match at} $ms_{row}[k]$ \textit{with} $ms_{len}[k]$
+    \textit{iff} $ms_{len}[k]> ms_{len}[k+1]$
+    \State \textit{or} $ms_{len}[k]= ms_{len}[k+j]$, $j\geq 1$ and $\nexists j$
+    \textit{such that}  $ms_{len}[k]< ms_{len}[k+j]$
+    \EndFor
+    \EndFunction
+    %\algstore{myalg}
+    
+  \end{algorithmic}
+  \caption{Algoritmo per match con matching-statistics (MS) e LCE}
+\end{algorithm}
+\begin{algorithm}
+  \begin{algorithmic}[1]
+    \Function{update}{$k, curr_{index}, z$}
+    \State $curr_{index}\gets lf(k, curr_{index}, z[k])$
+    \State $curr_{run}\gets rank_h^{k+1}(curr_{index})$
+    \State $symb\gets get\_symbol(start^{k+1}, curr_{run})$
+    \State \textbf{return} $(curr_{index},\,\,curr_{run},\,\,symb)$
+    \EndFunction
+  \end{algorithmic}
+  \caption{Algorithm to update values for matching statistics of RLPBWT} 
 \end{algorithm}
 \end{document}
 
