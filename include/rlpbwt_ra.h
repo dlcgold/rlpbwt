@@ -6,11 +6,11 @@
 #define RLPBWT_RLPBWT_RA_H
 
 #include <vector>
-#include <omp.h>
 #include "column_thr.h"
 #include "exceptions.h"
 #include "panel_ra.h"
 #include "slp_panel_ra.h"
+#include "phi_struct.h"
 
 template<typename ra_t>
 class rlpbwt_ra {
@@ -18,6 +18,7 @@ public:
     std::vector<column_thr> cols;
     // panel saved as requested
     ra_t *panelbv;
+    phi_struct<ra_t> *phi;
 
 private:
     static column_thr
@@ -308,11 +309,12 @@ private:
 
 
 public:
+    sdsl::int_vector<> last_pref;
+
     rlpbwt_ra() = default;
 
     rlpbwt_ra(const char *filename, bool verbose,
               const char *slp_filename = "") {
-
         std::ifstream input_matrix(filename);
         if constexpr (!std::is_same_v<ra_t, panel_ra>) {
             if (std::string(slp_filename).empty()) {
@@ -341,7 +343,9 @@ public:
             input_matrix.seekg(0, std::ios::beg);
             this->cols = std::vector<column_thr>(tmp_width);
             std::vector<unsigned int> pref(tmp_height);
+            std::vector<unsigned int> lpref(tmp_height);
             sdsl::int_vector<> div(tmp_height);
+            this->last_pref.resize(tmp_height);
             for (unsigned int i = 0; i < tmp_height; i++) {
                 pref[i] = i;
                 div[i] = 0;
@@ -399,14 +403,25 @@ public:
                         &this->cols[count].thr);
                 this->cols[count].select_thr = sdsl::sd_vector<>::select_1_type(
                         &this->cols[count].thr);
+                if (count == tmp_width - 1) {
+                    lpref = pref;
+                }
                 rlpbwt_ra::update(new_column, pref, div);
-                last_col = new_column;
                 count++;
             }
+            for (unsigned int i = 0; i < lpref.size(); i++) {
+                this->last_pref[i] = lpref[i];
+            }
+            sdsl::util::bit_compress(this->last_pref);
             input_matrix.close();
         } else {
             throw FileNotFoundException{};
         }
+    }
+
+    void extend(bool verbose = false) {
+        this->phi = new phi_struct<ra_t>(this->cols, this->panelbv,
+                                         this->last_pref, verbose);
     }
 
     std::pair<unsigned int, unsigned int>
@@ -517,6 +532,7 @@ public:
                     this->cols[i].sample_end[curr_run]) {
                     in_thr = true;
                 }
+
                 if (this->cols[i].sample_beg.size() == 1) {
                     if (verbose) {
                         std::cout << "complete mismatch\n";
@@ -676,6 +692,10 @@ public:
 
     std::vector<std::pair<unsigned int, unsigned int>>
     match_lce(const std::string &query, bool verbose = false) {
+        if constexpr (!std::is_same_v<ra_t, slp_panel_ra>) {
+            throw WrongRaTypeException{};
+        }
+
         if (query.size() != this->panelbv->w) {
             throw NotEqualLengthException{};
         }
@@ -948,6 +968,7 @@ public:
             }
             std::cout << "\n";
         }
+
         return ms_match;
     }
 

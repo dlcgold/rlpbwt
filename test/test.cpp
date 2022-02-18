@@ -13,6 +13,7 @@
 #include "../include/rlpbwt_thr.h"
 #include "../include/panel_ra.h"
 #include "../include/rlpbwt_ra.h"
+#include "../include/phi_struct.h"
 //#include "../include/slp_panel_ra.h"
 
 
@@ -278,7 +279,7 @@ TEST (BuildRlpbwtBVVCF, TestBuildQuery) {
 TEST (BuildRlpbwtNewThr, TestBuildQuery) {
     rlpbwt_thr rlpbwt_thr("../input/sample_new.txt", 15, 19, false);
     std::cout << rlpbwt_thr.cols.size() << "\n";
-    unsigned int count = 0;
+    //unsigned int count = 0;
     /*for (const auto &c: rlpbwt_thr.cols) {
         std::cout << "column " << count << ":\n";
         std::cout << c;
@@ -367,13 +368,37 @@ TEST(RlpbwtRaTest, TestBuildQuery) {
 }
 
 TEST(Lce, Test) {
-    rlpbwt_ra<slp_panel_ra> rlpbwtSlp("../input/sample_new2.txt", false,
-                                      "../input/sample2.slp");
-    auto matches = rlpbwtSlp.match_lce("010010100011101", true);
+    rlpbwt_ra<slp_panel_ra> rlpbwtSlp("../input/sample_new.txt", false,
+                                      "../input/sample.slp");
+    rlpbwtSlp.extend();
+    
+    //auto matches = rlpbwtSlp.match_thr("010010100011101", true);
     /*for (auto m: matches) {
         std::cout << "(col: " << m.first << ", len:" << m.second << ") ";
     }*/
+    for (unsigned int i = 0; i < rlpbwtSlp.panelbv->h; i++) {
+        std::cout << i << ": ";
+        if (!rlpbwtSlp.phi->phi_support[i].empty()) {
+            for (unsigned int j = 0; j < rlpbwtSlp.panelbv->w; j++) {
+                std::cout << rlpbwtSlp.phi->phi(i, j).value_or(rlpbwtSlp.panelbv->h)
+                          << " ";
+            }
+        }
+        std::cout << "\n";
+    }
+    std::cout << "----------\n";
+    for (unsigned int i = 0; i < rlpbwtSlp.panelbv->h; i++) {
+        std::cout << i << ": ";
+        if (!rlpbwtSlp.phi->phi_inv_support[i].empty()) {
+            for (unsigned int j = 0; j < rlpbwtSlp.panelbv->w; j++) {
+                std::cout << rlpbwtSlp.phi->phi_inv(i, j).value_or(rlpbwtSlp.panelbv->h)
+                          << " ";
+            }
+        }
+        std::cout << "\n";
+    }
 }
+
 int main(int argc, char **argv) {
     ::testing::InitGoogleTest(&argc, argv);
     //::testing::GTEST_FLAG(filter) = "BuildRlpbwtTest*";

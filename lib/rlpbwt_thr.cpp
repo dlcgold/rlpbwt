@@ -933,7 +933,6 @@ rlpbwt_thr::match_thr(const std::string &query, bool verbose) {
     }
     int tmp_index = 0;
 
-#pragma omp parallel for
     for (int i = (int) ms_row.size() - 1; i >= 0; i--) {
         if (ms_row[i] == this->panelbv.h) {
             ms_len[i] = 0;
@@ -948,7 +947,6 @@ rlpbwt_thr::match_thr(const std::string &query, bool verbose) {
     }
 
     std::vector<std::pair<unsigned int, unsigned int>> ms_match;
-#pragma omp parallel for
     for (unsigned int i = 0; i < ms_len.size(); i++) {
         if (verbose) {
             std::cout << ms_len[i] << "\t";

@@ -15,7 +15,6 @@
 #include <fstream>
 #include <sstream>
 #include <algorithm>
-#include <omp.h>
 #include <sdsl/bit_vectors.hpp>
 #include "column_thr.h"
 #include "utils.h"

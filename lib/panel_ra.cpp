@@ -68,4 +68,23 @@ void panel_ra::load(std::istream &in) {
     }
 }
 
+unsigned int
+panel_ra::lceToR(unsigned int col, unsigned int f_r, unsigned int s_r) const {
+    int tmp_col = (int)col;
+    bool extend = true;
+    while (extend) {
+        if (this->getElem(f_r, tmp_col) != this->getElem(s_r, tmp_col)) {
+            extend = false;
+        }
+        if(tmp_col == 0){
+            extend = false;
+            tmp_col--;
+        }
+        if(extend) {
+            tmp_col--;
+        }
+    }
+    return col - tmp_col;
+}
+
 panel_ra::~panel_ra() = default;
