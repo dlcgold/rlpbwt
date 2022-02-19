@@ -953,6 +953,70 @@
     \end{block}
   }
 \end{frame}
+\begin{frame}{Extract the matching rows I}
+  \begin{block}{The idea on the RLBWT}
+    On the \textit{RLBWT} we can list every starting position of a pattern in a
+    text, of length $n$, using two functions. Given an \textit{SA} value $p$:
+    \begin{itemize}
+      \item $\varphi(p)=SA[ISA[p]-1]$ or \textit{NULL} if $ISA[p]=0$
+      \item $\varphi^{-1}(p)=SA[ISA[p]+1]$ or \textit{NULL} if $ISA[p]=n-1$
+    \end{itemize}
+    In other words the two functions gives pre previous and the next values of
+    the \textit{SA}.
+  \end{block}
+\end{frame}
+\begin{frame}{Extract the matching rows II}
+  \begin{block}{The idea on the RLPBWT}
+    We can use something similar on the \textit{RLPBWT} to understand, when we
+    have a match ending in column $k$, which rows are matching, having knowledge
+    of one of this rows, thanks to the \textit{matching statistics} $pos$
+    value.\\
+    In order to obtain this result we need an additional data structure:
+    \begin{itemize}
+      \item a sparse bit vector matrix for the $\varphi$. Given a row and a
+      column we have a 1 in this position iff that row is a run head in that
+      column 
+      \item a sparse bit vector matrix for the $\varphi^{-1}$. Given a row and a
+      column we have a 1 in this position iff that row is a run end in that
+      column 
+      \item two matrix of int\_vector, for the two panel, with a value for every
+      1 in the sparse bit vector matrices
+    \end{itemize}
+    In addition we use the last prefix array to complete the informations of the
+    last column, for examples for equal rows in panel.\\
+    Infact the key idea is to record every time two consecutive rows in a
+    certain order as far as column $k-1$ change their relative order in column
+    $k$. 
+  \end{block}
+\end{frame}
+\begin{frame}
+  \only<1> {
+    \begin{block}{}
+      This data structure could be computed only at request and take less space
+      than a complete prefix array for every column.
+    \end{block}
+    \begin{block}{}
+      We use $\varphi$ and $\varphi^{-1}$ to make queries from a given row and a
+      given column.\\
+      To make this type of query we simply \textit{rank} the given column in the
+      bitvector at the given row and we give the result based on the support
+      vector.
+    \end{block}
+    \begin{block}{}
+      So every time we have a match we could start from $pos$ value and go
+      up/down as far as the row obtained from the two queries and use
+      \textit{LCE} function or simply the random access to check the the matches
+      with the near rows in the permutation at column $k$.
+    \end{block}
+  }\only<2>{
+    \begin{figure}[H]
+    \centering
+    \includegraphics[scale = 0.7]{graph/phi.pdf}
+    \caption{In this example we would query $\varphi(j, k)$, but also $k+1$
+      etc$\ldots$, and we will obtain $i$.}
+  \end{figure}
+  }
+\end{frame}
           %           \begin{frame}[allowframebreaks]{References} 
 %   \nocite{*}
 %   \bibliographystyle{unsrt}
