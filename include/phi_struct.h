@@ -31,8 +31,8 @@ public:
 
     phi_struct() = default;
 
-    explicit phi_struct(std::vector<column_thr> cols, ra_t *panelbv,
-                        sdsl::int_vector<> last_pref, bool verbose = false) {
+    explicit phi_struct(std::vector<column_thr> &cols, ra_t *panelbv,
+                        sdsl::int_vector<> &last_pref, bool verbose = false) {
         this->def = panelbv->h;
         auto phi_tmp = std::vector<sdsl::bit_vector>(panelbv->h,
                                                      sdsl::bit_vector(
@@ -64,7 +64,7 @@ public:
         for (unsigned int i = 0; i < cols.size(); i++) {
             for (unsigned int j = 0;
                  j < cols[i].sample_beg.size(); j++) {
-                phi_tmp[cols[i].sample_beg[j]][i] = 1;
+                phi_tmp[cols[i].sample_beg[j]][i] = true;
                 if (j == 0) {
                     this->phi_support[cols[i].sample_beg[j]]
                     [counts[cols[i].sample_beg[j]].first] =
@@ -75,7 +75,7 @@ public:
                             cols[i].sample_end[j - 1];
                 }
                 counts[cols[i].sample_beg[j]].first++;
-                phi_inv_tmp[cols[i].sample_end[j]][i] = 1;
+                phi_inv_tmp[cols[i].sample_end[j]][i] = true;
                 if (j == cols[i].sample_beg.size() - 1) {
                     this->phi_inv_support[cols[i].sample_end[j]]
                     [counts[cols[i].sample_end[j]].second] =
@@ -89,57 +89,36 @@ public:
             }
         }
         for (unsigned int j = 0; j < counts.size(); j++) {
-            if (counts[j].first != 0) {
-                if (!phi_tmp[j][phi_tmp.size() - 1]) {
-                    phi_tmp[j][phi_tmp.size() - 1] = true;
-                    if (j == 0) {
-                        this->phi_support[last_pref[j]]
-                        [counts[last_pref[j]].first] = panelbv->h;
-                    } else {
-                        this->phi_support[last_pref[j]]
-                        [counts[last_pref[j]].first] =
-                                last_pref[j - 1];
-                    }
-                    counts[last_pref[j]].first++;
+            if (!phi_tmp[j][phi_tmp.size() - 1]) {
+                phi_tmp[j][phi_tmp.size() - 1] = true;
+                if (j == 0) {
+                    this->phi_support[last_pref[j]]
+                    [counts[last_pref[j]].first] = panelbv->h;
+                } else {
+                    this->phi_support[last_pref[j]]
+                    [counts[last_pref[j]].first] =
+                            last_pref[j - 1];
                 }
+                counts[last_pref[j]].first++;
             }
-            if (counts[j].second != 0) {
-                if (!phi_inv_tmp[j][phi_tmp.size() - 1]) {
-                    phi_inv_tmp[j][phi_inv_tmp.size() - 1] = true;
-                    if (j == counts.size() - 1) {
-                        this->phi_inv_support[last_pref[j]]
-                        [counts[last_pref[j]].second] = panelbv->h;
-                    } else {
-                        this->phi_inv_support[last_pref[j]]
-                        [counts[last_pref[j]].second] =
-                                last_pref[j + 1];
-                    }
-                    counts[last_pref[j]].second++;
+
+            if (!phi_inv_tmp[j][phi_tmp.size() - 1]) {
+                phi_inv_tmp[j][phi_inv_tmp.size() - 1] = true;
+                if (j == counts.size() - 1) {
+                    this->phi_inv_support[last_pref[j]]
+                    [counts[last_pref[j]].second] = panelbv->h;
+                } else {
+                    this->phi_inv_support[last_pref[j]]
+                    [counts[last_pref[j]].second] =
+                            last_pref[j + 1];
                 }
+                counts[last_pref[j]].second++;
             }
         }
         for (unsigned int i = 0; i < counts.size(); i++) {
-            if (counts[i].first >= 1) {
-                this->phi_support[i].resize(counts[i].first);
-                if (counts[i].first == 1) {
-                    phi_tmp[i][phi_tmp[i].size() - 1] = true;
-                }
-            } else {
-                this->phi_support[i].resize(1);
-                this->phi_support[i][0] = i - 1;
-                phi_tmp[i][phi_tmp[i].size() - 1] = true;
-            }
+            this->phi_support[i].resize(counts[i].first);
             sdsl::util::bit_compress(this->phi_support[i]);
-            if (counts[i].second >= 1) {
-                this->phi_inv_support[i].resize(counts[i].second);
-                if (counts[i].second == 1) {
-                    phi_inv_tmp[i][phi_inv_tmp[i].size() - 1] = true;
-                }
-            } else {
-                this->phi_inv_support[i].resize(1);
-                this->phi_inv_support[i][0] = i + 1;
-                phi_inv_tmp[i][phi_inv_tmp[i].size() - 1] = true;
-            }
+            this->phi_inv_support[i].resize(counts[i].second);
             sdsl::util::bit_compress(this->phi_inv_support[i]);
         }
         unsigned int count = 0;
@@ -164,24 +143,12 @@ public:
 
         if (verbose) {
             unsigned int index = 0;
-            for (unsigned int i = 0; i < cols.size(); i++) {
-                std::cout << index << ":\t" << cols[i].sample_beg
+            for (auto &col: cols) {
+                std::cout << index << ":\t" << col.sample_beg
                           << "\n";
-                std::cout << index << ":\t" << cols[i].sample_end
+                std::cout << index << ":\t" << col.sample_end
                           << "\n";
                 std::cout << "\n";
-                index++;
-            }
-            std::cout << "\n\n";
-            index = 0;
-            for (auto &i: phi_tmp) {
-                std::cout << index << ":\t" << i << "\n";
-                index++;
-            }
-            std::cout << "----------\n";
-            index = 0;
-            for (auto &i: phi_inv_tmp) {
-                std::cout << index << ":\t" << i << "\n";
                 index++;
             }
             std::cout << "\n\n";
@@ -219,7 +186,6 @@ public:
         } else {
             return res;
         }
-
     }
 
     std::optional<unsigned int> phi_inv(unsigned int pref, unsigned int col) {
@@ -232,7 +198,7 @@ public:
         }
     }
 
-    unsigned long long size_in_bytes(){
+    unsigned long long size_in_bytes() {
         unsigned long long size = 0;
         for (unsigned int i = 0; i < this->phi_vec.size(); ++i) {
             size += sdsl::size_in_bytes(phi_vec[i]);
@@ -246,7 +212,8 @@ public:
         }
         return size;
     }
-    double size_in_mega_bytes(){
+
+    double size_in_mega_bytes() {
         double size = 0;
         for (unsigned int i = 0; i < this->phi_vec.size(); ++i) {
             size += sdsl::size_in_mega_bytes(phi_vec[i]);
@@ -262,6 +229,74 @@ public:
     }
 
     // TODO serialize / load
+    size_t serialize(std::ostream &out, sdsl::structure_tree_node *v = nullptr,
+                     const std::string &name = "") {
+        sdsl::structure_tree_node *child =
+                sdsl::structure_tree::add_child(v, name,
+                                                sdsl::util::class_name(
+                                                        *this));
+        size_t written_bytes = 0;
+        out.write((char *) &this->def, sizeof(this->def));
+        written_bytes += sizeof(this->def);
+        for (unsigned int i = 0; i < this->phi_vec.size(); i++) {
+            std::string label = "phi_vec_" + std::to_string(i);
+            written_bytes += this->phi_vec[i].serialize(out, child, label);
+        }
+        for (unsigned int i = 0; i < this->phi_inv_vec.size(); i++) {
+            std::string label = "phi_inv_vec_" + std::to_string(i);
+            written_bytes += this->phi_inv_vec[i].serialize(out, child, label);
+        }
+        for (unsigned int i = 0; i < this->phi_support.size(); i++) {
+            std::string label = "phi_support_" + std::to_string(i);
+            written_bytes += this->phi_support[i].serialize(out, child, label);
+        }
+        for (unsigned int i = 0; i < this->phi_inv_support.size(); i++) {
+            std::string label = "phi_inv_support_" + std::to_string(i);
+            written_bytes += this->phi_inv_support[i].serialize(out, child,
+                                                                label);
+        }
+
+        sdsl::structure_tree::add_size(child, written_bytes);
+        return written_bytes;
+    }
+
+    void load(std::istream &in) {
+        in.read((char *) &this->def, sizeof(this->def));
+
+        for (unsigned int i = 0; i < this->def; i++) {
+            auto s = new sdsl::sd_vector<>();
+            s->load(in);
+            this->phi_vec.emplace_back(*s);
+        }
+        for (unsigned int i = 0; i < this->def; i++) {
+            auto s = new sdsl::sd_vector<>();
+            s->load(in);
+            this->phi_inv_vec.emplace_back(*s);
+        }
+        for (unsigned int i = 0; i < this->def; i++) {
+            auto s = new sdsl::int_vector<>();
+            s->load(in);
+            this->phi_support.emplace_back(*s);
+        }
+        for (unsigned int i = 0; i < this->def; i++) {
+            auto s = new sdsl::int_vector<>();
+            s->load(in);
+            this->phi_inv_support.emplace_back(*s);
+        }
+
+        for (unsigned int i = 0; i < this->phi_vec.size(); i++) {
+            this->phi_rank.emplace_back(sdsl::sd_vector<>::rank_1_type(
+                    &this->phi_vec[i]));
+            this->phi_select.emplace_back(sdsl::sd_vector<>::select_1_type(
+                    &this->phi_vec[i]));
+        }
+        for (unsigned int i = 0; i < this->phi_inv_vec.size(); i++) {
+            this->phi_inv_rank.emplace_back(sdsl::sd_vector<>::rank_1_type(
+                    &this->phi_inv_vec[i]));
+            this->phi_inv_select.emplace_back(sdsl::sd_vector<>::select_1_type(
+                    &this->phi_inv_vec[i]));
+        }
+    }
 };
 
 

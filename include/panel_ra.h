@@ -30,8 +30,10 @@ public:
 
     size_t serialize(std::ostream &out, sdsl::structure_tree_node *v = nullptr,
                      const std::string &name = "");
-    unsigned int lceToR(unsigned int column, unsigned int f_r, unsigned int s_r) const;
 
+    unsigned int lceToR(unsigned int col, unsigned int f_r, unsigned int s_r) const;
+    bool lceToRCheck(unsigned int col, unsigned int f_r, unsigned int s_r,
+                     unsigned int length) const;
     void load(std::istream &in);
 };
 

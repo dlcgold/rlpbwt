@@ -68,22 +68,40 @@ void panel_ra::load(std::istream &in) {
     }
 }
 
+bool
+panel_ra::lceToRCheck(unsigned int col, unsigned int f_r, unsigned int s_r,
+                      unsigned int length) const {
+    unsigned int start = 0;
+    if ((int)col - ((int)length - 1) >= 0) {
+        start = length - 1;
+    }
+    bool check = true;
+    for (unsigned int i = start; i <= col; i++) {
+        if(this->getElem(f_r, i) != this->getElem(s_r, i)){
+            check = false;
+            break;
+        }
+    }
+    return check;
+}
+
 unsigned int
 panel_ra::lceToR(unsigned int col, unsigned int f_r, unsigned int s_r) const {
-    int tmp_col = (int)col;
+    int tmp_col = (int) col;
     bool extend = true;
     while (extend) {
         if (this->getElem(f_r, tmp_col) != this->getElem(s_r, tmp_col)) {
             extend = false;
         }
-        if(tmp_col == 0){
+        if (tmp_col == 0) {
             extend = false;
             tmp_col--;
         }
-        if(extend) {
+        if (extend) {
             tmp_col--;
         }
     }
+
     return col - tmp_col;
 }
 

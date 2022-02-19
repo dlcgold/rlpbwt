@@ -14,6 +14,8 @@
 
 template<typename ra_t>
 class rlpbwt_ra {
+private:
+    bool extended{};
 public:
     std::vector<column_thr> cols;
     // panel saved as requested
@@ -413,6 +415,7 @@ public:
                 this->last_pref[i] = lpref[i];
             }
             sdsl::util::bit_compress(this->last_pref);
+            this->extended = false;
             input_matrix.close();
         } else {
             throw FileNotFoundException{};
@@ -420,30 +423,58 @@ public:
     }
 
     void extend(bool verbose = false) {
-        this->phi = new phi_struct<ra_t>(this->cols, this->panelbv,
-                                         this->last_pref, verbose);
+        if (!extended) {
+            this->phi = new phi_struct<ra_t>(this->cols, this->panelbv,
+                                             this->last_pref, verbose);
+        }
     }
 
-    std::pair<unsigned int, unsigned int>
-    lce(unsigned int col, unsigned int curr, unsigned int prev,
-        bool verbose = false) {
+    bool
+    lceBound(unsigned int col, unsigned int curr, unsigned int other,
+             unsigned int bound,
+             bool verbose = false) {
         if (col == 0) {
-            return std::make_pair(prev, 0);
+            return false;
         }
         unsigned int rev_col = (this->panelbv->w - 1) - col + 1;
 
         unsigned int pos_curr = rev_col + ((this->panelbv->w) * curr);
-        unsigned int pos_prev = rev_col + ((this->panelbv->w) * prev);
+        unsigned int pos_other = rev_col + ((this->panelbv->w) * other);
         if (verbose) {
             std::cout << "at " << rev_col << ": " << pos_curr << ", "
-                      << pos_prev << "\n";
+                      << pos_other << "\n";
         }
-        unsigned int lcp_prev = lceToR(this->panelbv->panel, pos_prev,
+        unsigned int lcp_pair = lceToRBounded(this->panelbv->panel, pos_other,
+                                              pos_curr, bound);
+        if (lcp_pair >= col) {
+            lcp_pair = col;
+        }
+        if (lcp_pair == bound) {
+            return true;
+        }
+        return false;
+    }
+
+    std::pair<unsigned int, unsigned int>
+    lce(unsigned int col, unsigned int curr, unsigned int other,
+        bool verbose = false) {
+        if (col == 0) {
+            return std::make_pair(other, 0);
+        }
+        unsigned int rev_col = (this->panelbv->w - 1) - col + 1;
+
+        unsigned int pos_curr = rev_col + ((this->panelbv->w) * curr);
+        unsigned int pos_other = rev_col + ((this->panelbv->w) * other);
+        if (verbose) {
+            std::cout << "at " << rev_col << ": " << pos_curr << ", "
+                      << pos_other << "\n";
+        }
+        unsigned int lcp_prev = lceToR(this->panelbv->panel, pos_other,
                                        pos_curr);
         if (lcp_prev >= col) {
             lcp_prev = col;
         }
-        return std::make_pair(prev, lcp_prev);
+        return std::make_pair(other, lcp_prev);
     }
 
     std::pair<unsigned int, unsigned int>
@@ -933,7 +964,6 @@ public:
         std::vector<std::pair<unsigned int, unsigned int>> ms_match;
         for (unsigned int i = 0; i < ms_len.size(); i++) {
             // TODO check if for last match
-
             if ((ms_len[i] != 0 && ms_len[i] > ms_len[i + 1]) ||
                 (i == ms_len.size() - 1 && ms_len[i] != 0)) {
                 ms_match.emplace_back(i, ms_len[i]);
@@ -1096,7 +1126,7 @@ public:
             std::string label = "col_" + std::to_string(i);
             written_bytes += this->cols[i].serialize(out, child, label);
         }
-
+        written_bytes += this->last_pref.serialize(out, child, "last_pref");
         sdsl::structure_tree::add_size(child, written_bytes);
         return written_bytes;
     }
@@ -1108,6 +1138,7 @@ public:
             c->load(in);
             this->cols.emplace_back(*c);
         }
+        this->last_pref.load(in);
     }
 };
 

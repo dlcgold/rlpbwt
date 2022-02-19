@@ -371,29 +371,25 @@ TEST(Lce, Test) {
     rlpbwt_ra<slp_panel_ra> rlpbwtSlp("../input/sample_new.txt", false,
                                       "../input/sample.slp");
     rlpbwtSlp.extend();
-    
+
     //auto matches = rlpbwtSlp.match_thr("010010100011101", true);
     /*for (auto m: matches) {
         std::cout << "(col: " << m.first << ", len:" << m.second << ") ";
     }*/
     for (unsigned int i = 0; i < rlpbwtSlp.panelbv->h; i++) {
         std::cout << i << ": ";
-        if (!rlpbwtSlp.phi->phi_support[i].empty()) {
-            for (unsigned int j = 0; j < rlpbwtSlp.panelbv->w; j++) {
-                std::cout << rlpbwtSlp.phi->phi(i, j).value_or(rlpbwtSlp.panelbv->h)
-                          << " ";
-            }
+        for (unsigned int j = 0; j < rlpbwtSlp.panelbv->w; j++) {
+            std::cout << rlpbwtSlp.phi->phi(i, j).value_or(
+                    rlpbwtSlp.panelbv->h) << " ";
         }
         std::cout << "\n";
     }
     std::cout << "----------\n";
     for (unsigned int i = 0; i < rlpbwtSlp.panelbv->h; i++) {
         std::cout << i << ": ";
-        if (!rlpbwtSlp.phi->phi_inv_support[i].empty()) {
-            for (unsigned int j = 0; j < rlpbwtSlp.panelbv->w; j++) {
-                std::cout << rlpbwtSlp.phi->phi_inv(i, j).value_or(rlpbwtSlp.panelbv->h)
-                          << " ";
-            }
+        for (unsigned int j = 0; j < rlpbwtSlp.panelbv->w; j++) {
+            std::cout << rlpbwtSlp.phi->phi_inv(i, j).value_or(
+                    rlpbwtSlp.panelbv->h) << " ";
         }
         std::cout << "\n";
     }
