@@ -1095,7 +1095,8 @@ public:
 
 
     void
-    match_tsv(const char *filename, const char *out, bool thr = false,
+    match_tsv(const char *filename, const char *out,
+              bool extend_matches = false, bool thr = false,
               bool verbose = false) {
         std::ifstream input_matrix(filename);
         std::ofstream out_match(out);
@@ -1126,9 +1127,11 @@ public:
                     }
                     ms_matches matches;
                     if (thr) {
-                        matches = this->match_thr(query, verbose);
+                        matches = this->match_thr(query, extend_matches,
+                                                  verbose);
                     } else {
-                        matches = this->match_lce(query, verbose);
+                        matches = this->match_lce(query, extend_matches,
+                                                  verbose);
                     }
                     if (verbose) {
                         std::cout << i << ": ";
@@ -1157,8 +1160,8 @@ public:
     }
 
     void
-    match_tsv_tr(const char *filename, const char *out, bool thr = false,
-                 bool verbose = false) {
+    match_tsv_tr(const char *filename, const char *out, bool extend_matches,
+                 bool thr = false, bool verbose = false) {
         std::ifstream input_matrix(filename);
         std::ofstream out_match(out);
         if (input_matrix.is_open()) {
@@ -1184,9 +1187,11 @@ public:
                 for (unsigned int i = 0; i < queries_panel.size(); i++) {
                     ms_matches matches;
                     if (thr) {
-                        matches = this->match_thr(queries_panel[i], verbose);
+                        matches = this->match_thr(queries_panel[i],
+                                                  extend_matches, verbose);
                     } else {
-                        matches = this->match_lce(queries_panel[i], verbose);
+                        matches = this->match_lce(queries_panel[i],
+                                                  extend_matches, verbose);
                     }
                     if (verbose) {
                         std::cout << i << ": ";
