@@ -2,8 +2,8 @@
 // Created by dlcgold on 17/02/22.
 //
 
-#ifndef RLPBWT_PHI_STRUCT_H
-#define RLPBWT_PHI_STRUCT_H
+#ifndef RLPBWT_PHI_SUPPORT_H
+#define RLPBWT_PHI_SUPPORT_H
 
 
 #include <vector>
@@ -15,7 +15,7 @@
 #include "column_thr.h"
 
 template<typename ra_t>
-class phi_struct {
+class phi_support {
 
 private:
     unsigned int def{};
@@ -26,12 +26,12 @@ public:
     std::vector<sdsl::sd_vector<>::rank_1_type> phi_inv_rank;
     std::vector<sdsl::sd_vector<>::select_1_type> phi_select;
     std::vector<sdsl::sd_vector<>::select_1_type> phi_inv_select;
-    std::vector<sdsl::int_vector<>> phi_support;
-    std::vector<sdsl::int_vector<>> phi_inv_support;
+    std::vector<sdsl::int_vector<>> phi_supp;
+    std::vector<sdsl::int_vector<>> phi_inv_supp;
 
-    phi_struct() = default;
+    phi_support() = default;
 
-    explicit phi_struct(std::vector<column_thr> &cols, ra_t *panelbv,
+    explicit phi_support(std::vector<column_thr> &cols, ra_t *panelbv,
                         sdsl::int_vector<> &last_pref, bool verbose = false) {
         this->def = panelbv->h;
         auto phi_tmp = std::vector<sdsl::bit_vector>(panelbv->h,
@@ -52,10 +52,10 @@ public:
                 panelbv->h);
         this->phi_inv_select = std::vector<sdsl::sd_vector<>::select_1_type>(
                 panelbv->h);
-        this->phi_support = std::vector(panelbv->h,
+        this->phi_supp = std::vector(panelbv->h,
                                         sdsl::int_vector(panelbv->w));
-        this->phi_inv_support = std::vector(panelbv->h,
-                                            sdsl::int_vector(
+        this->phi_inv_supp = std::vector(panelbv->h,
+                                         sdsl::int_vector(
                                                     panelbv->w));
 
         std::vector<std::pair<unsigned int, unsigned int>> counts(
@@ -66,22 +66,22 @@ public:
                  j < cols[i].sample_beg.size(); j++) {
                 phi_tmp[cols[i].sample_beg[j]][i] = true;
                 if (j == 0) {
-                    this->phi_support[cols[i].sample_beg[j]]
+                    this->phi_supp[cols[i].sample_beg[j]]
                     [counts[cols[i].sample_beg[j]].first] =
                             panelbv->h;
                 } else {
-                    this->phi_support[cols[i].sample_beg[j]]
+                    this->phi_supp[cols[i].sample_beg[j]]
                     [counts[cols[i].sample_beg[j]].first] =
                             cols[i].sample_end[j - 1];
                 }
                 counts[cols[i].sample_beg[j]].first++;
                 phi_inv_tmp[cols[i].sample_end[j]][i] = true;
                 if (j == cols[i].sample_beg.size() - 1) {
-                    this->phi_inv_support[cols[i].sample_end[j]]
+                    this->phi_inv_supp[cols[i].sample_end[j]]
                     [counts[cols[i].sample_end[j]].second] =
                             panelbv->h;
                 } else {
-                    this->phi_inv_support[cols[i].sample_end[j]]
+                    this->phi_inv_supp[cols[i].sample_end[j]]
                     [counts[cols[i].sample_end[j]].second] =
                             cols[i].sample_beg[j + 1];
                 }
@@ -92,10 +92,10 @@ public:
             if (!phi_tmp[j][phi_tmp.size() - 1]) {
                 phi_tmp[j][phi_tmp.size() - 1] = true;
                 if (j == 0) {
-                    this->phi_support[last_pref[j]]
+                    this->phi_supp[last_pref[j]]
                     [counts[last_pref[j]].first] = panelbv->h;
                 } else {
-                    this->phi_support[last_pref[j]]
+                    this->phi_supp[last_pref[j]]
                     [counts[last_pref[j]].first] =
                             last_pref[j - 1];
                 }
@@ -105,10 +105,10 @@ public:
             if (!phi_inv_tmp[j][phi_tmp.size() - 1]) {
                 phi_inv_tmp[j][phi_inv_tmp.size() - 1] = true;
                 if (j == counts.size() - 1) {
-                    this->phi_inv_support[last_pref[j]]
+                    this->phi_inv_supp[last_pref[j]]
                     [counts[last_pref[j]].second] = panelbv->h;
                 } else {
-                    this->phi_inv_support[last_pref[j]]
+                    this->phi_inv_supp[last_pref[j]]
                     [counts[last_pref[j]].second] =
                             last_pref[j + 1];
                 }
@@ -116,10 +116,10 @@ public:
             }
         }
         for (unsigned int i = 0; i < counts.size(); i++) {
-            this->phi_support[i].resize(counts[i].first);
-            sdsl::util::bit_compress(this->phi_support[i]);
-            this->phi_inv_support[i].resize(counts[i].second);
-            sdsl::util::bit_compress(this->phi_inv_support[i]);
+            this->phi_supp[i].resize(counts[i].first);
+            sdsl::util::bit_compress(this->phi_supp[i]);
+            this->phi_inv_supp[i].resize(counts[i].second);
+            sdsl::util::bit_compress(this->phi_inv_supp[i]);
         }
         unsigned int count = 0;
         for (auto &i: phi_tmp) {
@@ -165,13 +165,13 @@ public:
             }
             std::cout << "\n\n";
             index = 0;
-            for (auto &i: this->phi_support) {
+            for (auto &i: this->phi_supp) {
                 std::cout << index << ":\t" << i << "\n";
                 index++;
             }
             std::cout << "----------\n";
             index = 0;
-            for (auto &i: this->phi_inv_support) {
+            for (auto &i: this->phi_inv_supp) {
                 std::cout << index << ":\t" << i << "\n";
                 index++;
             }
@@ -179,7 +179,7 @@ public:
     }
 
     std::optional<unsigned int> phi(unsigned int pref, unsigned int col) {
-        auto res = static_cast<unsigned int>(this->phi_support[pref][this->phi_rank[pref](
+        auto res = static_cast<unsigned int>(this->phi_supp[pref][this->phi_rank[pref](
                 col)]);
         if (res == this->def) {
             return std::nullopt;
@@ -189,7 +189,7 @@ public:
     }
 
     std::optional<unsigned int> phi_inv(unsigned int pref, unsigned int col) {
-        auto res = static_cast<unsigned int>(this->phi_inv_support[pref][this->phi_inv_rank[pref](
+        auto res = static_cast<unsigned int>(this->phi_inv_supp[pref][this->phi_inv_rank[pref](
                 col)]);
         if (res == this->def) {
             return std::nullopt;
@@ -207,8 +207,8 @@ public:
             size += sdsl::size_in_bytes(phi_select[i]);
             size += sdsl::size_in_bytes(phi_inv_rank[i]);
             size += sdsl::size_in_bytes(phi_inv_select[i]);
-            size += sdsl::size_in_bytes(phi_support[i]);
-            size += sdsl::size_in_bytes(phi_inv_support[i]);
+            size += sdsl::size_in_bytes(phi_supp[i]);
+            size += sdsl::size_in_bytes(phi_inv_supp[i]);
         }
         return size;
     }
@@ -222,13 +222,12 @@ public:
             size += sdsl::size_in_mega_bytes(phi_select[i]);
             size += sdsl::size_in_mega_bytes(phi_inv_rank[i]);
             size += sdsl::size_in_mega_bytes(phi_inv_select[i]);
-            size += sdsl::size_in_mega_bytes(phi_support[i]);
-            size += sdsl::size_in_mega_bytes(phi_inv_support[i]);
+            size += sdsl::size_in_mega_bytes(phi_supp[i]);
+            size += sdsl::size_in_mega_bytes(phi_inv_supp[i]);
         }
         return size;
     }
 
-    // TODO serialize / load
     size_t serialize(std::ostream &out, sdsl::structure_tree_node *v = nullptr,
                      const std::string &name = "") {
         sdsl::structure_tree_node *child =
@@ -246,14 +245,14 @@ public:
             std::string label = "phi_inv_vec_" + std::to_string(i);
             written_bytes += this->phi_inv_vec[i].serialize(out, child, label);
         }
-        for (unsigned int i = 0; i < this->phi_support.size(); i++) {
-            std::string label = "phi_support_" + std::to_string(i);
-            written_bytes += this->phi_support[i].serialize(out, child, label);
+        for (unsigned int i = 0; i < this->phi_supp.size(); i++) {
+            std::string label = "phi_supp_" + std::to_string(i);
+            written_bytes += this->phi_supp[i].serialize(out, child, label);
         }
-        for (unsigned int i = 0; i < this->phi_inv_support.size(); i++) {
-            std::string label = "phi_inv_support_" + std::to_string(i);
-            written_bytes += this->phi_inv_support[i].serialize(out, child,
-                                                                label);
+        for (unsigned int i = 0; i < this->phi_inv_supp.size(); i++) {
+            std::string label = "phi_inv_supp_" + std::to_string(i);
+            written_bytes += this->phi_inv_supp[i].serialize(out, child,
+                                                             label);
         }
 
         sdsl::structure_tree::add_size(child, written_bytes);
@@ -276,12 +275,12 @@ public:
         for (unsigned int i = 0; i < this->def; i++) {
             auto s = new sdsl::int_vector<>();
             s->load(in);
-            this->phi_support.emplace_back(*s);
+            this->phi_supp.emplace_back(*s);
         }
         for (unsigned int i = 0; i < this->def; i++) {
             auto s = new sdsl::int_vector<>();
             s->load(in);
-            this->phi_inv_support.emplace_back(*s);
+            this->phi_inv_supp.emplace_back(*s);
         }
 
         for (unsigned int i = 0; i < this->phi_vec.size(); i++) {
@@ -300,4 +299,4 @@ public:
 };
 
 
-#endif //RLPBWT_PHI_STRUCT_H
+#endif //RLPBWT_PHI_SUPPORT_H

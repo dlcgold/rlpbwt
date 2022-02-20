@@ -74,24 +74,24 @@ public:
            sdsl::int_vector<> &div);
 
     /**
-     * @brief function to compute matches between the panel and a new query
+     * @brief function to compute basic_matches between the panel and a new query
      *
      * @param query an haplotype string of the same length of the panel
      * @param min_len minimum length of a match
      * @param verbose bool for extra print
-     * @return a vector of matches (begin, end, number of matches)
+     * @return a vector of basic_matches (begin, end, number of basic_matches)
      */
     std::vector<match>
     external_match(const std::string &query, unsigned int min_len = 1,
                    bool verbose = false);
 
     /**
-     * @brief function to compute matches between the panel and a new query
+     * @brief function to compute basic_matches between the panel and a new query
      * from a vcf file
      * @param query an haplotype string of the same length of the panel
      * @param min_len minimum length of a match
      * @param verbose bool for extra print
-     * @return a vector of matches (begin, end, number of matches)
+     * @return a vector of basic_matches (begin, end, number of basic_matches)
      */
     void external_match_vcf(const char *filename, unsigned int min_len = 1,
                             bool verbose = false);

@@ -549,7 +549,7 @@ unsigned int rlpbwt::prev_run(unsigned int col_index, unsigned int index,
             pos = this->cols[col_index].rows.size() - 1;
         }
         if (verbose) {
-            std::cout << "pos: " << pos << "\n";
+            std::cout << "row: " << pos << "\n";
         }
         unsigned int curru = uvtrick(col_index, pos).first;
 
@@ -579,7 +579,7 @@ unsigned int rlpbwt::prev_run(unsigned int col_index, unsigned int index,
             pos = this->cols[col_index].rows.size() - 1;
         }
         if (verbose) {
-            std::cout << "pos: " << pos << "\n";
+            std::cout << "row: " << pos << "\n";
         }
         unsigned int currv = uvtrick(col_index, pos).second;
         offset = v - currv;
@@ -872,7 +872,7 @@ void rlpbwt::external_match_vcf(const char *filename, unsigned int min_len,
 
         auto matches = external_match(s, min_len, verbose);
         if (!matches.empty()) {
-            std::cout << "matches with " << count << " " << qIDs[count]
+            std::cout << "basic_matches with " << count << " " << qIDs[count]
                       << "\n";
             for (const auto &m: matches) {
                 std::cout << m << "\n";

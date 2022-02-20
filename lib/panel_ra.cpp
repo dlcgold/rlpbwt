@@ -44,7 +44,6 @@ size_t panel_ra::serialize(std::ostream &out, sdsl::structure_tree_node *v,
                                             sdsl::util::class_name(
                                                     *this));
     size_t written_bytes = 0;
-
     out.write((char *) &this->h, sizeof(this->h));
     written_bytes += sizeof(this->h);
 
@@ -62,7 +61,6 @@ void panel_ra::load(std::istream &in) {
     in.read((char *) &this->h, sizeof(this->h));
     in.read((char *) &this->w, sizeof(this->w));
     this->panel = std::vector<sdsl::bit_vector>(w, sdsl::bit_vector(h, 0));
-
     for (unsigned int i = 0; i < this->w; i++) {
         this->panel[i].load(in);
     }
@@ -73,7 +71,7 @@ panel_ra::lceToRCheck(unsigned int col, unsigned int f_r, unsigned int s_r,
                       unsigned int length) const {
     unsigned int start = 0;
     if ((int)col - ((int)length - 1) >= 0) {
-        start = length - 1;
+        start = col - (length - 1) ;
     }
     bool check = true;
     for (unsigned int i = start; i <= col; i++) {

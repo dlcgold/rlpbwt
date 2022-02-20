@@ -3,7 +3,6 @@
 #include <sdsl/int_vector.hpp>
 #include <sdsl/bit_vectors.hpp>
 #include "include/exceptions.h"
-#include "include/rlpbwt_thr.h"
 #include "include/rlpbwt_ra.h"
 //#include "include/slp_panel_ra.h"
 
@@ -25,7 +24,7 @@ void printHelp() {
 
 template<typename rlpbwt_t>
 void build(std::string in_filename, const std::string &out_filename) {
-    rlpbwt_t rlpbwt(in_filename.c_str(), false);
+    rlpbwt_t rlpbwt(in_filename.c_str(), true);
     clock_t START = clock();
     auto matches = rlpbwt.match_thr("010010100011101", false);
     //auto matches = rlpbwt.match_thr("111111111111111", true);
@@ -43,8 +42,9 @@ void build(std::string in_filename, const std::string &out_filename) {
     file_o.close();
 }
 
+template<typename rlpbwt_t>
 void print_size(const std::string &out_filename) {
-    auto rlpbwt = new rlpbwt_thr();
+    auto rlpbwt = new rlpbwt_t();
     std::ifstream in;
     in.open(out_filename);
     rlpbwt->load(in);
@@ -56,7 +56,7 @@ void print_size(const std::string &out_filename) {
     double panel = 0;
     double sample = 0;
     double sparse = 0;
-    for (auto &i: rlpbwt->panelbv.panel) {
+    for (auto &i: rlpbwt->panel->panel) {
         panel += sdsl::size_in_mega_bytes(i);
         sparse += sdsl::size_in_mega_bytes(sdsl::sd_vector<>(i));
     }
@@ -162,11 +162,11 @@ int main(int argc, char **argv) {
         }
     }*/
 
-    std::string in_filename("../input/sample_new2.txt");
+    std::string in_filename("../input/sample_new.txt");
     std::string out_filename("../output/samplenew.txt.pbwt");
 
-    build<rlpbwt_thr>(in_filename, out_filename);
-    print_size(out_filename);
+    build<rlpbwt_ra<panel_ra>>(in_filename, out_filename);
+    print_size<rlpbwt_ra<panel_ra>>(out_filename);
 
     return 0;
 }

@@ -2,18 +2,13 @@
 #include <gtest/gtest.h>
 #include <gperftools/heap-profiler.h>
 #include <sdsl/int_vector.hpp>
-#include <sdsl/bit_vectors.hpp>
-#include <SelfShapedSlp.hpp>
-#include <DirectAccessibleGammaCode.hpp>
-#include <SelectType.hpp>
 #include "../include/exceptions.h"
 #include "../include/rlpbwt.h"
 #include "../include/rlpbwtbv.h"
 #include "../include/birlpbwt.h"
-#include "../include/rlpbwt_thr.h"
 #include "../include/panel_ra.h"
 #include "../include/rlpbwt_ra.h"
-#include "../include/phi_struct.h"
+#include "../include/phi_support.h"
 //#include "../include/slp_panel_ra.h"
 
 
@@ -78,10 +73,10 @@ TEST (BuildBiRlpbwtTest, TestBuildAndQuery) {
     auto match1 = match(3, 9, 1);
     auto match2 = match(7, 11, 1);
     auto match3 = match(11, 14, 3);
-    EXPECT_EQ(matches[0], match0);
-    EXPECT_EQ(matches[1], match1);
-    EXPECT_EQ(matches[2], match2);
-    EXPECT_EQ(matches[3], match3);
+    EXPECT_EQ(basic_matches[0], match0);
+    EXPECT_EQ(basic_matches[1], match1);
+    EXPECT_EQ(basic_matches[2], match2);
+    EXPECT_EQ(basic_matches[3], match3);
     auto rlsizeb = sizeof(birlpbwt.frlpbwt.width) * 10E-6;
     rlsizeb += sizeof(birlpbwt.frlpbwt.height) * 10E-6;
     rlsizeb *= 2;
@@ -115,7 +110,7 @@ TEST (BuildRlpbwtVCF, TestBuildAndQuery) {
     EXPECT_EQ(rlpbwt.height, 900);
     EXPECT_EQ(rlpbwt.width, 500);
     clock_t START = clock();
-    // TODO add test check for matches
+    // TODO add test check for basic_matches
     rlpbwt.external_match_vcf("../input/sample_query.vcf", 255);
     std::cout << clock() - START << " time\n";
 }
@@ -210,7 +205,7 @@ TEST (BuildBiRlpbwtVCF, TestQuery) {
     EXPECT_EQ(birlpbwt.frlpbwt.height, 900);
     EXPECT_EQ(birlpbwt.frlpbwt.width, 500);
     clock_t START = clock();
-    // TODO add test check for matches
+    // TODO add test check for basic_matches
     birlpbwt.external_match_vcf("../input/sample_query.vcf", 255, false);
     std::cout << clock() - START << " time\n";
 }
@@ -271,128 +266,62 @@ TEST (BuildRlpbwtBVVCF, TestBuildQuery) {
     EXPECT_EQ(rlpbwtbv.height, 900);
     EXPECT_EQ(rlpbwtbv.width, 500);
     clock_t START = clock();
-    // TODO add test check for matches
+    // TODO add test check for basic_matches
     rlpbwtbv.external_match_vcf("../input/sample_query.vcf", 255, false);
     std::cout << clock() - START << " time\n";
 }
 
-TEST (BuildRlpbwtNewThr, TestBuildQuery) {
-    rlpbwt_thr rlpbwt_thr("../input/sample_new.txt", 15, 19, false);
-    std::cout << rlpbwt_thr.cols.size() << "\n";
-    //unsigned int count = 0;
-    /*for (const auto &c: rlpbwt_thr.cols) {
-        std::cout << "column " << count << ":\n";
-        std::cout << c;
-        count++;
-        std::cout << "--------------------\n";
-    }
-     */
-    std::cout << rlpbwt_thr.panelbv;
-
-    rlpbwt_thr.match_thr("010010100011101", false);
-
-}
-
-TEST (BuildRlpbwtThr, TestBuildQuery) {
-    rlpbwt_thr rlpbwt_thr("../input/sample2.txt", false, false);
-    std::cout << rlpbwt_thr.panelbv.w << " ," << rlpbwt_thr.panelbv.h << "\n";
-    std::cout << rlpbwt_thr.cols.size();
-    /*
-     unsigned int count = 0;
-     for (const auto &c: rlpbwt_thr.cols) {
-         std::cout << "column " << count << ":\n";
-         std::cout << c;
-         count++;
-         std::cout << "--------------------\n";
-     }
-     */
-    rlpbwt_thr.match_thr("010010100011101", false);
-
-}
-
-TEST (BuildRlpbwtSerThr, TestSer) {
-    auto rlpbwt_t = new rlpbwt_thr("../input/sample2.txt", false, false);
-
-    auto filename = "../output/sample2_panel.ser";
-    std::ofstream file_o;
-    file_o.open(filename);
-    auto size = rlpbwt_t->panelbv.serialize(file_o);
-    std::cout << size << "\n";
-    file_o.close();
-    auto panel = new panel_ra();
-    std::ifstream file_i;
-    file_i.open(filename);
-    panel->load(file_i);
-    std::cout << *panel << "\n";
-    file_i.close();
-
-    filename = "../output/sample2_col.ser";
-    file_o.open(filename);
-    size = rlpbwt_t->cols[0].serialize(file_o);
-    std::cout << size << "\n";
-    file_o.close();
-    file_i.open(filename);
-    auto col = new column_thr();
-    col->load(file_i);
-    std::cout << col->runs << "\n";
-    std::cout << col->rank_runs(18) << " " << col->select_runs(2) << "\n";
-    file_i.close();
-
-    filename = "../output/sample2_pbwt.ser";
-    file_o.open(filename);
-    size = rlpbwt_t->serialize(file_o);
-    std::cout << size << "\n";
-    file_o.close();
-    file_i.open(filename);
-    auto rlpbwt = new rlpbwt_thr();
-    rlpbwt->load(file_i);
-    std::cout << rlpbwt->panelbv << "\n";
-    std::cout << rlpbwt->cols[13] << "\n";
-    std::cout << rlpbwt->cols.size() << " vs " << rlpbwt_t->cols.size() << "\n";
-    file_i.close();
-}
-
 TEST(RlpbwtRaTest, TestBuildQuery) {
-    rlpbwt_ra<panel_ra> rlpbwtRa("../input/sample_new.txt", false);
+    rlpbwt_ra<panel_ra> rlpbwtRa("../input/sample_new.txt", true);
     auto matches = rlpbwtRa.match_thr("010010100011101", true);
-    for (auto m: matches) {
-        std::cout << "(col: " << m.first << ", len:" << m.second << ") ";
-    }
-    rlpbwt_ra<slp_panel_ra> rlpbwtSlp("../input/sample_new.txt", false,
-                                      "../input/sample.slp");
+    std::cout << matches << "\n";
+    rlpbwt_ra<slp_panel_ra> rlpbwtSlp("../input/sample_new.txt", true,
+                                      "../input/sample.slp",
+                                      false);
 
     matches = rlpbwtRa.match_thr("010010100011101", false);
-    for (auto m: matches) {
-        std::cout << "(col: " << m.first << ", len:" << m.second << ") ";
-    }
-}
-
-TEST(Lce, Test) {
-    rlpbwt_ra<slp_panel_ra> rlpbwtSlp("../input/sample_new.txt", false,
-                                      "../input/sample.slp");
+    std::cout << matches << "\n";
     rlpbwtSlp.extend();
 
-    //auto matches = rlpbwtSlp.match_thr("010010100011101", true);
-    /*for (auto m: matches) {
-        std::cout << "(col: " << m.first << ", len:" << m.second << ") ";
-    }*/
-    for (unsigned int i = 0; i < rlpbwtSlp.panelbv->h; i++) {
+    matches = rlpbwtSlp.match_thr("010010100011101", false);
+    std::cout << matches << "\n";
+    std::cout << rlpbwtSlp.extended << "\n";
+    auto filename = "../output/phi_pbwt.ser";
+    std::ofstream file_o;
+    file_o.open(filename);
+    auto size = rlpbwtSlp.serialize(file_o);
+    std::cout << size << "\n";
+    file_o.close();
+    std::ifstream file_i;
+    file_i.open(filename);
+    auto rlpbwt = new rlpbwt_ra<slp_panel_ra>();
+    rlpbwt->load(file_i, "../input/sample.slp");
+
+    for (unsigned int i = 0; i < rlpbwt->panel->h; i++) {
         std::cout << i << ": ";
-        for (unsigned int j = 0; j < rlpbwtSlp.panelbv->w; j++) {
-            std::cout << rlpbwtSlp.phi->phi(i, j).value_or(
-                    rlpbwtSlp.panelbv->h) << " ";
+        for (unsigned int j = 0; j < rlpbwt->panel->w; j++) {
+            std::cout << rlpbwt->phi->phi(i, j).value_or(
+                    rlpbwt->panel->h) << " ";
         }
         std::cout << "\n";
     }
     std::cout << "----------\n";
-    for (unsigned int i = 0; i < rlpbwtSlp.panelbv->h; i++) {
+    for (unsigned int i = 0; i < rlpbwt->panel->h; i++) {
         std::cout << i << ": ";
-        for (unsigned int j = 0; j < rlpbwtSlp.panelbv->w; j++) {
-            std::cout << rlpbwtSlp.phi->phi_inv(i, j).value_or(
-                    rlpbwtSlp.panelbv->h) << " ";
+        for (unsigned int j = 0; j < rlpbwt->panel->w; j++) {
+            std::cout << rlpbwt->phi->phi_inv(i, j).value_or(
+                    rlpbwt->panel->h) << " ";
         }
         std::cout << "\n";
     }
+
+}
+TEST(Lce, Test) {
+    rlpbwt_ra<slp_panel_ra> rlpbwtSlp("../input/sample_new.txt", true,
+                                      "../input/sample.slp", false);
+    //rlpbwtSlp.extend();
+    auto matches = rlpbwtSlp.match_lce("010010100011101", true,false);
+    std::cout << matches;
 }
 
 int main(int argc, char **argv) {

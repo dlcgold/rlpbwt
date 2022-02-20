@@ -36,12 +36,13 @@ if (${BUILD_TESTS})
             lib/match_end.cpp include/match_end.h
             lib/rlpbwtbv.cpp include/rlpbwtbv.h
             lib/columnbv.cpp include/columnbv.h
-            lib/rlpbwt_thr.cpp include/rlpbwt_thr.h
             lib/column_thr.cpp include/column_thr.h
             lib/panel_ra.cpp include/panel_ra.h
             lib/slp_panel_ra.cpp include/slp_panel_ra.h
             include/rlpbwt_ra.h
-            )
+            include/phi_support.h
+            lib/ms.cpp include/ms.h
+            lib/ms_matches.cpp include/ms_matches.h)
 
     #target_compile_options(rlpbwt_test PUBLIC "-std=c++17")
     #find_library(SDSL_lib lsdsl)
@@ -73,10 +74,11 @@ else ()
             lib/columnbv.cpp include/columnbv.h
             lib/panel_ra.cpp include/panel_ra.h
             lib/slp_panel_ra.cpp include/slp_panel_ra.h
-            lib/rlpbwt_thr.cpp include/rlpbwt_thr.h
             lib/column_thr.cpp include/column_thr.h
-            #include/rlpbwt_ra.h
-            )
+            include/rlpbwt_ra.h
+            include/phi_support.h
+            lib/ms.cpp include/ms.h
+            lib/ms_matches.cpp include/ms_matches.h)
     #target_compile_options(rlpbwt PUBLIC "-std=c++17")
     #find_library(SDSL_lib lsdsl)
     #if (NOT SDSL_lib)

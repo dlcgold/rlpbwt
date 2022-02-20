@@ -37,7 +37,7 @@ public:
     size_t serialize(std::ostream &out, sdsl::structure_tree_node *v = nullptr,
                      const std::string &name = "");
 
-    void load(std::istream &in);
+    void load(std::istream &in, const char *slp_filename);
 };
 
 

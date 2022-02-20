@@ -44,11 +44,20 @@ class SlpNotFoundException: public std::exception {
 };
 
 /**
- * @brief exception file not found
+ * @brief exception wrong RA type
  */
 class WrongRaTypeException: public std::exception {
     const char* what() const noexcept override {
         return "rlpbwt type could be panel_ra or slp_panel_ra";
+    }
+};
+
+/**
+ * @brief exception file not found
+ */
+class NoThrException: public std::exception {
+    const char* what() const noexcept override {
+        return "rlpbwt is not build with thresholds";
     }
 };
 

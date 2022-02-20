@@ -205,7 +205,7 @@ birlpbwt::external_match(const std::string &query, unsigned int min_len,
     std::vector<match_end> fm = this->frlpbwt.end_external_match(query, true,
                                                              verbose);
     if (true) {
-        std::cout << "forward matches:\n";
+        std::cout << "forward basic_matches:\n";
         for (const auto &m: fm) {
             std::cout << m << "\n";
         }
@@ -215,7 +215,7 @@ birlpbwt::external_match(const std::string &query, unsigned int min_len,
                                                              verbose);
 
     if (true) {
-        std::cout << "backward matches:\n";
+        std::cout << "backward basic_matches:\n";
         for (const auto &m: bm) {
             std::cout << m << "\n";
         }
@@ -229,7 +229,7 @@ birlpbwt::external_match(const std::string &query, unsigned int min_len,
         end = std::max(fm[i].end, bm[i].end);
         nhaplo = std::min(fm[i].nhaplo, bm[i].nhaplo);
         if (end - begin != 0 && end - begin >= min_len && nhaplo > 0) {
-            matches.emplace_back(begin, end, nhaplo);
+            basic_matches.emplace_back(begin, end, nhaplo);
         }
     }*/
     return matches;
@@ -321,7 +321,7 @@ void birlpbwt::external_match_vcf(const char *filename, unsigned int min_len,
         }
         auto matches = external_match(s, min_len, verbose);
         if (!matches.empty()) {
-            std::cout << "matches with " << count << " " << qIDs[count] << "\n";
+            std::cout << "basic_matches with " << count << " " << qIDs[count] << "\n";
             for (const auto &m: matches) {
                 std::cout << m << "\n";
             }

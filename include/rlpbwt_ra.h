@@ -6,24 +6,28 @@
 #define RLPBWT_RLPBWT_RA_H
 
 #include <vector>
+#include <type_traits>
 #include "column_thr.h"
 #include "exceptions.h"
 #include "panel_ra.h"
 #include "slp_panel_ra.h"
-#include "phi_struct.h"
+#include "phi_support.h"
+#include "ms.h"
+#include "ms_matches.h"
 
 template<typename ra_t>
 class rlpbwt_ra {
-private:
-    bool extended{};
 public:
+    bool thr_enabled{};
+    bool extended{};
     std::vector<column_thr> cols;
     // panel saved as requested
-    ra_t *panelbv;
-    phi_struct<ra_t> *phi;
+    ra_t *panel;
+    phi_support<ra_t> *phi;
+
 
 private:
-    static column_thr
+    column_thr
     build_column(std::string &column, std::vector<unsigned int> &pref,
                  sdsl::int_vector<> &div) {
         unsigned int height = pref.size();
@@ -93,21 +97,24 @@ private:
 
 
             // stuff for thresholds
-            if ((i == 0) || (column[pref[i]] != column[pref[i - 1]])) {
-                thr_tmp = i;
-                lcs = div[i];
-            }
-            if (div[i] < lcs) {
-                thr_tmp = i;
-                lcs = div[i];
+            if (this->thr_enabled) {
+                if ((i == 0) || (column[pref[i]] != column[pref[i - 1]])) {
+                    thr_tmp = i;
+                    lcs = div[i];
+                }
+                if (div[i] < lcs) {
+                    thr_tmp = i;
+                    lcs = div[i];
+                }
             }
 
             if ((i == height - 1) || (column[pref[i]] != column[pref[i + 1]])) {
                 // 1 in bitvectors for runs et every end of a run
                 runvec[i] = true;
                 // 1 in bitvectors for thresholds index
-                thr[thr_tmp] = true;
-
+                if (this->thr_enabled) {
+                    thr[thr_tmp] = true;
+                }
                 rows.emplace_back(tmp_beg, pref[i]);
                 // update bitvectors for "u" and "v" and swap the case to study in
                 // next run
@@ -144,6 +151,9 @@ private:
         }
         sdsl::util::bit_compress(sample_beg);
         sdsl::util::bit_compress(sample_end);
+        if (!this->thr_enabled) {
+            thr = sdsl::bit_vector(0);
+        }
         return {start, count0, runvec, zerovec, onevec, thr, sample_beg,
                 sample_end};
     }
@@ -309,14 +319,95 @@ private:
         }
     }
 
+    void extend_haplos(ms_matches &ms_matches) {
+        for (unsigned int i = 0; i < ms_matches.basic_matches.size(); i++) {
+            std::vector<unsigned int> haplos;
+            unsigned int start_row = std::get<0>(
+                    ms_matches.basic_matches[i]);
+            haplos.emplace_back(start_row);
+            unsigned int curr_len = std::get<1>(
+                    ms_matches.basic_matches[i]);
+            unsigned int curr_col = std::get<2>(
+                    ms_matches.basic_matches[i]);
+            bool check_down = true;
+            unsigned int down_row = 0;
+            bool check_up = true;
+            unsigned int up_row = 0;
+            //down
+            if constexpr (std::is_same_v<ra_t, slp_panel_ra>) {
+                while (check_down) {
+                    auto phi_res = this->phi->phi_inv(start_row, curr_col);
+                    if (!phi_res.has_value()) {
+                        break;
+                    }
+                    down_row = phi_res.value();
+                    if (lceBound(curr_col, start_row, down_row,
+                                 curr_len)) {
+                        haplos.emplace_back(down_row);
+                        start_row = down_row;
+                    } else {
+                        check_down = false;
+                    }
+                }
+                //up
+                while (check_up) {
+                    auto phi_res = this->phi->phi(start_row, curr_col);
+                    if (!phi_res.has_value()) {
+                        break;
+                    }
+                    up_row = phi_res.value();
+                    if (lceBound(curr_col, start_row, up_row, curr_len)) {
+                        haplos.emplace_back(up_row);
+                        start_row = up_row;
+                    } else {
+                        check_up = false;
+                    }
+                }
+
+            } else {
+                // TODO use panelbv
+                while (check_down) {
+                    auto phi_res = this->phi->phi_inv(start_row, curr_col);
+                    if (!phi_res.has_value()) {
+                        break;
+                    }
+                    down_row = phi_res.value();
+                    if (this->panel->lceToRCheck(curr_col, start_row, down_row,
+                                                 curr_len)) {
+                        haplos.emplace_back(down_row);
+                        start_row = down_row;
+                    } else {
+                        check_down = false;
+                    }
+                }
+                //up
+                while (check_up) {
+                    auto phi_res = this->phi->phi(start_row, curr_col);
+                    if (!phi_res.has_value()) {
+                        break;
+                    }
+                    up_row = phi_res.value();
+                    if (this->panel->lceToRCheck(curr_col, start_row, up_row,
+                                                 curr_len)) {
+                        haplos.emplace_back(up_row);
+                        start_row = up_row;
+                    } else {
+                        check_up = false;
+                    }
+                }
+            }
+
+            ms_matches.haplos.emplace_back(haplos);
+        }
+    }
 
 public:
     sdsl::int_vector<> last_pref;
 
     rlpbwt_ra() = default;
 
-    rlpbwt_ra(const char *filename, bool verbose,
-              const char *slp_filename = "") {
+    rlpbwt_ra(const char *filename, bool thr, const char *slp_filename = "",
+              bool verbose = false) {
         std::ifstream input_matrix(filename);
         if constexpr (!std::is_same_v<ra_t, panel_ra>) {
             if (std::string(slp_filename).empty()) {
@@ -324,6 +415,7 @@ public:
             }
         }
         if (input_matrix.is_open()) {
+            this->thr_enabled = thr;
             std::string header1;
             std::string header2;
             std::string line;
@@ -353,9 +445,9 @@ public:
                 div[i] = 0;
             }
             if constexpr (std::is_same_v<ra_t, panel_ra>) {
-                this->panelbv = new ra_t(tmp_height, tmp_width);
+                this->panel = new ra_t(tmp_height, tmp_width);
             } else if constexpr (std::is_same_v<ra_t, slp_panel_ra>) {
-                this->panelbv = new ra_t(slp_filename, tmp_height, tmp_width);
+                this->panel = new ra_t(slp_filename, tmp_height, tmp_width);
             } else {
                 throw WrongRaTypeException{};
             }
@@ -384,7 +476,7 @@ public:
                 if constexpr (std::is_same_v<ra_t, panel_ra>) {
                     for (unsigned int k = 0; k < new_column.size(); k++) {
                         if (new_column[k] != '0') {
-                            this->panelbv->panel[count][k] = true;
+                            this->panel->panel[count][k] = true;
                         }
                     }
                 }
@@ -423,53 +515,67 @@ public:
     }
 
     void extend(bool verbose = false) {
-        if (!extended) {
-            this->phi = new phi_struct<ra_t>(this->cols, this->panelbv,
-                                             this->last_pref, verbose);
+        if (!this->extended) {
+            this->phi = new phi_support<ra_t>(this->cols, this->panel,
+                                              this->last_pref, verbose);
+            this->extended = true;
         }
     }
 
-    bool
+    void unextend(bool verbose = false) {
+        if (this->extended) {
+            this->phi = nullptr;
+            this->extended = false;
+        }
+    }
+
+    template<typename U = ra_t>
+    std::enable_if_t<sizeof(U) && (!std::is_same<ra_t, panel_ra>::value), bool>
     lceBound(unsigned int col, unsigned int curr, unsigned int other,
-             unsigned int bound,
-             bool verbose = false) {
+             unsigned int bound, bool verbose = false) {
+
         if (col == 0) {
             return false;
         }
-        unsigned int rev_col = (this->panelbv->w - 1) - col + 1;
+        unsigned int rev_col = (this->panel->w - 1) - col + 1;
 
-        unsigned int pos_curr = rev_col + ((this->panelbv->w) * curr);
-        unsigned int pos_other = rev_col + ((this->panelbv->w) * other);
+        unsigned int pos_curr = rev_col + ((this->panel->w) * curr);
+        unsigned int pos_other = rev_col + ((this->panel->w) * other);
         if (verbose) {
             std::cout << "at " << rev_col << ": " << pos_curr << ", "
                       << pos_other << "\n";
         }
-        unsigned int lcp_pair = lceToRBounded(this->panelbv->panel, pos_other,
+//        unsigned int lcp_pair_naive = lceToR_NaiveBounded(this->panel->panel, pos_other,
+//                                              pos_curr, bound);
+        // TODO check the bound in no naive version, it doesn't work
+        unsigned int lcp_pair = lceToRBounded(this->panel->panel, pos_other,
                                               pos_curr, bound);
-        if (lcp_pair >= col) {
-            lcp_pair = col;
-        }
-        if (lcp_pair == bound) {
+        // TODO if the bound wotks it should be lcp_pair == bound
+        if (lcp_pair >= bound) {
             return true;
         }
         return false;
     }
 
-    std::pair<unsigned int, unsigned int>
+
+    template<typename U = ra_t>
+    std::enable_if_t<sizeof(U) && (!std::is_same<ra_t, panel_ra>::value),
+            std::pair<unsigned int, unsigned int>>
     lce(unsigned int col, unsigned int curr, unsigned int other,
         bool verbose = false) {
+
         if (col == 0) {
             return std::make_pair(other, 0);
         }
-        unsigned int rev_col = (this->panelbv->w - 1) - col + 1;
+        unsigned int rev_col = (this->panel->w - 1) - col + 1;
 
-        unsigned int pos_curr = rev_col + ((this->panelbv->w) * curr);
-        unsigned int pos_other = rev_col + ((this->panelbv->w) * other);
+        unsigned int pos_curr = rev_col + ((this->panel->w) * curr);
+        unsigned int pos_other = rev_col + ((this->panel->w) * other);
         if (verbose) {
             std::cout << "at " << rev_col << ": " << pos_curr << ", "
                       << pos_other << "\n";
         }
-        unsigned int lcp_prev = lceToR(this->panelbv->panel, pos_other,
+        unsigned int lcp_prev = lceToR(this->panel->panel, pos_other,
                                        pos_curr);
         if (lcp_prev >= col) {
             lcp_prev = col;
@@ -477,28 +583,32 @@ public:
         return std::make_pair(other, lcp_prev);
     }
 
-    std::pair<unsigned int, unsigned int>
+    //std::pair<unsigned int, unsigned int>
+    template<typename U = ra_t>
+    std::enable_if_t<sizeof(U) && (!std::is_same<ra_t, panel_ra>::value),
+            std::pair<unsigned int, unsigned int>>
     lce_pair(unsigned int col, unsigned int curr, unsigned int prev,
              unsigned int next, bool verbose = false) {
+
         if (col == 0) {
             return std::make_pair(next, 0);
         }
-        unsigned int rev_col = (this->panelbv->w - 1) - col + 1;
+        unsigned int rev_col = (this->panel->w - 1) - col + 1;
 
-        unsigned int pos_curr = rev_col + ((this->panelbv->w) * curr);
-        unsigned int pos_prev = rev_col + ((this->panelbv->w) * prev);
-        unsigned int pos_next = rev_col + ((this->panelbv->w) * next);
+        unsigned int pos_curr = rev_col + ((this->panel->w) * curr);
+        unsigned int pos_prev = rev_col + ((this->panel->w) * prev);
+        unsigned int pos_next = rev_col + ((this->panel->w) * next);
         if (verbose) {
             std::cout << "at " << rev_col << ": " << pos_curr << ", "
                       << pos_prev
                       << ", " << pos_next << "\n";
         }
-        unsigned int lcp_prev = lceToR(this->panelbv->panel, pos_prev,
+        unsigned int lcp_prev = lceToR(this->panel->panel, pos_prev,
                                        pos_curr);
         if (lcp_prev >= col) {
             lcp_prev = col;
         }
-        unsigned int lcp_next = lceToR(this->panelbv->panel, pos_curr,
+        unsigned int lcp_next = lceToR(this->panel->panel, pos_curr,
                                        pos_next);
         if (lcp_next >= col) {
             lcp_next = col;
@@ -510,15 +620,19 @@ public:
         }
     }
 
-    std::vector<std::pair<unsigned int, unsigned int>>
-    match_thr(const std::string &query, bool verbose = false) {
-        if (query.size() != this->panelbv->w) {
+    template<typename U = ra_t>
+    std::enable_if_t<sizeof(U) && (!std::is_same<ra_t, panel_ra>::value),
+            ms_matches>
+    match_lce(const std::string &query, bool extend_matches = false,
+              bool verbose = false) {
+        if (query.size() != this->panel->w) {
             throw NotEqualLengthException{};
         }
-        std::vector<unsigned int> ms_row(query.size(), 0);
-        std::vector<unsigned int> ms_len(query.size(), 0);
-        //auto curr_prefs = this->cols[0].rows[this->cols[0].rows.size() - 1];
-        //auto curr_pos = curr_prefs.second;
+        if (extend_matches && !this->extended) {
+            this->extend();
+        }
+
+        ms ms(query.size());
         auto curr_pos = static_cast<unsigned int>(this->cols[0].sample_end[
                 this->cols[0].sample_end.size() - 1]);
         auto curr_index = curr_pos;
@@ -526,6 +640,7 @@ public:
         char symbol = get_next_char(this->cols[0].zero_first, curr_run);
 
         for (unsigned int i = 0; i < query.size(); i++) {
+            std::cout << "processed " << i << "\r";
             if (verbose) {
                 std::cout << "at " << i << ": " << curr_run << " "
                           << this->cols[i].rank_thr(curr_index) << "\n";
@@ -537,226 +652,12 @@ public:
                 if (verbose) {
                     std::cout << "match:\n";
                 }
-                // save in matching statistics pos vector
-                ms_row[i] = curr_pos;
-                if (i != query.size() - 1) {
-                    // update index, run, symbol
-                    // TODO maybe make a function for this update
-                    curr_index = lf(i, curr_index, query[i]);
-                    curr_run = this->cols[i + 1].rank_runs(curr_index);
-                    symbol = get_next_char(this->cols[i + 1].zero_first,
-                                           curr_run);
-                    if (verbose) {
-                        std::cout << "new: " << curr_index << " " << curr_run
-                                  << " "
-                                  << curr_pos << " "
-                                  << symbol << "\n";
-                    }
-                }
-            } else {
-                auto thr = this->cols[i].rank_thr(curr_index);
-                /* TODO if index is in the position of a thresholds
-                 * understand what to do
-                 */
-                bool in_thr = false;
-                if (this->cols[i].sample_beg[curr_run] ==
-                    this->cols[i].sample_end[curr_run]) {
-                    in_thr = true;
-                }
-
-                if (this->cols[i].sample_beg.size() == 1) {
-                    if (verbose) {
-                        std::cout << "complete mismatch\n";
-                    }
-                    ms_row[i] = this->panelbv->h;
-                    //curr_index = curr_pos;
-
-                    if (i != query.size() - 1) {
-                        curr_pos = static_cast<unsigned int>(this->cols[0].sample_end[
-                                this->cols[0].sample_end.size() - 1]);
-                        curr_index = curr_pos;
-                        curr_run = this->cols[i + 1].rank_runs(curr_index);
-                        symbol = get_next_char(this->cols[i + 1].zero_first,
-                                               curr_run);
-                        if (verbose) {
-                            std::cout << "update: " << curr_index << " "
-                                      << curr_pos
-                                      << " "
-                                      << symbol << "\n";
-                        }
-                    }
-                } else if ((curr_run != 0 && !in_thr && curr_run == thr) ||
-                           curr_run == this->cols[i].sample_beg.size() - 1) {
-                    if (verbose) {
-                        std::cout << "mismatch_up: ";
-                    }
-                    // threshold below index so we go up
-                    curr_index = (this->cols[i].select_runs(curr_run) + 1) - 1;
-                    //curr_prefs = this->cols[i].rows[curr_run - 1];
-                    curr_pos = static_cast<unsigned int>(this->cols[i].sample_end[
-                            curr_run - 1]);
-                    if (verbose) {
-                        std::cout << "update: " << curr_index << " " << curr_pos
-                                  << " "
-                                  << symbol << "\n";
-                    }
-                    ms_row[i] = curr_pos;
-                    if (i != query.size() - 1) {
-                        curr_index = lf(i, curr_index, query[i]);
-                        curr_run = this->cols[i + 1].rank_runs(curr_index);
-                        symbol = get_next_char(this->cols[i + 1].zero_first,
-                                               curr_run);
-                        if (verbose) {
-                            std::cout << "new: " << curr_index << " "
-                                      << curr_run
-                                      << " "
-                                      << curr_pos << " " << symbol << "\n";
-                        }
-                    }
-                } else {
-                    if (verbose) {
-                        std::cout << "mismatch_down: ";
-                    }
-                    // threshold above index so we go down
-                    curr_index = (this->cols[i].select_runs(curr_run + 1) + 1);
-                    curr_pos = static_cast<unsigned int>(this->cols[i].sample_beg[
-                            curr_run + 1]);
-                    ms_row[i] = curr_pos;
-                    if (verbose) {
-                        std::cout << "update: " << curr_index << " " << curr_pos
-                                  << " "
-                                  << symbol << "\n";
-                    }
-                    if (i != query.size() - 1) {
-                        curr_index = lf(i, curr_index, query[i]);
-                        curr_run = this->cols[i + 1].rank_runs(curr_index);
-                        symbol = get_next_char(this->cols[i + 1].zero_first,
-                                               curr_run);
-                        if (verbose) {
-                            std::cout << "new: " << curr_index << " "
-                                      << curr_run
-                                      << " "
-                                      << curr_pos << " " << symbol << "\n";
-                        }
-                    }
-                }
-            }
-        }
-        if (verbose) {
-            std::cout << "ind:\t";
-            for (unsigned int i = 0; i < ms_row.size(); i++) {
-                std::cout << i << "\t";
-            }
-            std::cout << "\npos:\t";
-            for (auto e: ms_row) {
-                std::cout << e << "\t";
-            }
-            std::cout << "\nlen:\t";
-        }
-        int tmp_index = 0;
-
-        for (int i = (int) ms_row.size() - 1; i >= 0; i--) {
-            if (ms_row[i] == this->panelbv->h) {
-                ms_len[i] = 0;
-                continue;
-            }
-            tmp_index = i;
-            while (tmp_index >= 0 &&
-                   query[tmp_index] == panelbv->getElem(ms_row[i], tmp_index)) {
-                tmp_index--;
-            }
-            ms_len[i] = i - tmp_index;
-        }
-
-        std::vector<std::pair<unsigned int, unsigned int>> ms_match;
-        for (unsigned int i = 0; i < ms_len.size(); i++) {
-            if (verbose) {
-                std::cout << ms_len[i] << "\t";
-            }
-            // TODO check if for last match
-            /*if (i > 0 && ms_len[i] >= ms_len[i - 1] &&
-                (i == ms_len.size() - 1 || ms_len[i] >= ms_len[i + 1])) {
-                ms_match.emplace_back(i, ms_len[i]);
-            }*/
-
-            if ((ms_len[i] != 0 && ms_len[i] > ms_len[i + 1]) ||
-                (i == ms_len.size() - 1 && ms_len[i] != 0)) {
-                ms_match.emplace_back(i, ms_len[i]);
-            } else if (ms_len[i] != 0 && i < ms_len.size() - 1 &&
-                       ms_len[i] == ms_len[i + 1]) {
-                unsigned int pos = 0;
-                for (unsigned int j = i + 1; j < ms_len.size(); j++) {
-                    if (ms_len[j] > ms_len[j + 1]) {
-                        pos = j + 1;
-                        break;
-                    } else {
-                        pos = i + 1;
-                        break;
-                    }
-                }
-                if (i + 1 != pos) {
-                    if (verbose) {
-                        for (unsigned int j = i + 1; j <= pos; j++) {
-                            std::cout << ms_len[j] << "\t";
-                        }
-                    }
-                    for (unsigned int j = i; j < pos; j++) {
-                        ms_match.emplace_back(j, ms_len[j]);
-                    }
-                    i = pos;
-                }
-                if (pos == ms_len.size() - 1) {
-                    break;
-                }
-            }
-        }
-        if (verbose) {
-            std::cout << "\nmatches:\t";
-            for (auto e: ms_match) {
-                std::cout << "(col: " << e.first << ", len: " << e.second
-                          << ")\t";
-            }
-            std::cout << "\n";
-        }
-        return ms_match;
-    }
-
-    std::vector<std::pair<unsigned int, unsigned int>>
-    match_lce(const std::string &query, bool verbose = false) {
-        if constexpr (!std::is_same_v<ra_t, slp_panel_ra>) {
-            throw WrongRaTypeException{};
-        }
-
-        if (query.size() != this->panelbv->w) {
-            throw NotEqualLengthException{};
-        }
-        std::vector<unsigned int> ms_row(query.size(), 0);
-        std::vector<unsigned int> ms_len(query.size(), 0);
-        auto curr_pos = static_cast<unsigned int>(this->cols[0].sample_end[
-                this->cols[0].sample_end.size() - 1]);
-        auto curr_index = curr_pos;
-        unsigned int curr_run = this->cols[0].rank_runs(curr_index);
-        char symbol = get_next_char(this->cols[0].zero_first, curr_run);
-
-        for (unsigned int i = 0; i < query.size(); i++) {
-            std::cout << "\t" << i << "\n";
-            if (verbose) {
-                std::cout << "at " << i << ": " << curr_run << " "
-                          << this->cols[i].rank_thr(curr_index) << "\n";
-                std::cout << curr_index << " " << curr_run << " " << curr_pos
-                          << " "
-                          << symbol << "\n";
-            }
-            if (query[i] == symbol) {
-                if (verbose) {
-                    std::cout << "match:\n";
-                }
-                // save in matching statistics pos vector
-                ms_row[i] = curr_pos;
+                // save in matching statistics row vector
+                ms.row[i] = curr_pos;
                 if (i != 0) {
-                    ms_len[i] = ms_len[i - 1] + 1;
+                    ms.len[i] = ms.len[i - 1] + 1;
                 } else {
-                    ms_len[i] = 1;
+                    ms.len[i] = 1;
                 }
                 if (i != query.size() - 1) {
                     // update index, run, symbol
@@ -777,8 +678,8 @@ public:
                     if (verbose) {
                         std::cout << "complete mismatch\n";
                     }
-                    ms_row[i] = this->panelbv->h;
-                    ms_len[i] = 0;
+                    ms.row[i] = this->panel->h;
+                    ms.len[i] = 0;
                     if (i != query.size() - 1) {
                         curr_pos = static_cast<unsigned int>(this->cols[0].sample_end[
                                 this->cols[0].sample_end.size() - 1]);
@@ -804,12 +705,13 @@ public:
                                       << prev_pos << "\n";
                         }
                         auto lce_value = lce(i, curr_pos, prev_pos, false);
-                        ms_row[i] = prev_pos;
+                        ms.row[i] = prev_pos;
                         if (i == 0) {
-                            ms_len[i] = 1;
+                            ms.len[i] = 1;
                         } else {
-                            ms_len[i] =
-                                    std::min(ms_len[i - 1], lce_value.second) +
+                            ms.len[i] =
+                                    std::min(ms.len[i - 1],
+                                             lce_value.second) +
                                     1;
                         }
                         curr_pos = prev_pos;
@@ -842,12 +744,13 @@ public:
                                       << next_pos << "\n";
                         }
                         auto lce_value = lce(i, curr_pos, next_pos, false);
-                        ms_row[i] = next_pos;
+                        ms.row[i] = next_pos;
                         if (i == 0) {
-                            ms_len[i] = 1;
+                            ms.len[i] = 1;
                         } else {
-                            ms_len[i] =
-                                    std::min(ms_len[i - 1], lce_value.second) +
+                            ms.len[i] =
+                                    std::min(ms.len[i - 1],
+                                             lce_value.second) +
                                     1;
                         }
                         curr_pos = next_pos;
@@ -888,12 +791,13 @@ public:
                         }
                         if (lce.first == next_pos) {
                             curr_pos = next_pos;
-                            ms_row[i] = curr_pos;
+                            ms.row[i] = curr_pos;
                             if (i == 0) {
-                                ms_len[i] = 1;
+                                ms.len[i] = 1;
                             } else {
-                                ms_len[i] =
-                                        std::min(ms_len[i - 1], lce.second) + 1;
+                                ms.len[i] =
+                                        std::min(ms.len[i - 1], lce.second) +
+                                        1;
                             }
                             curr_index = (
                                     this->cols[i].select_runs(curr_run + 1) +
@@ -915,12 +819,13 @@ public:
                             }
                         } else {
                             curr_pos = prev_pos;
-                            ms_row[i] = curr_pos;
+                            ms.row[i] = curr_pos;
                             if (i == 0) {
-                                ms_len[i] = 1;
+                                ms.len[i] = 1;
                             } else {
-                                ms_len[i] =
-                                        std::min(ms_len[i - 1], lce.second) + 1;
+                                ms.len[i] =
+                                        std::min(ms.len[i - 1], lce.second) +
+                                        1;
                             }
                             curr_index =
                                     (this->cols[i].select_runs(curr_run) + 1) -
@@ -945,33 +850,17 @@ public:
                 }
             }
         }
-        if (verbose) {
-            std::cout << "ind:\t";
-            for (unsigned int i = 0; i < ms_row.size(); i++) {
-                std::cout << i << "\t";
-            }
-            std::cout << "\npos:\t";
-            for (auto e: ms_row) {
-                std::cout << e << "\t";
-            }
-            std::cout << "\nlen:\t";
-            for (auto e: ms_len) {
-                std::cout << e << "\t";
-            }
-        }
-        //int tmp_index = 0;
-
-        std::vector<std::pair<unsigned int, unsigned int>> ms_match;
-        for (unsigned int i = 0; i < ms_len.size(); i++) {
+        ms_matches ms_matches;
+        for (unsigned int i = 0; i < ms.len.size(); i++) {
             // TODO check if for last match
-            if ((ms_len[i] != 0 && ms_len[i] > ms_len[i + 1]) ||
-                (i == ms_len.size() - 1 && ms_len[i] != 0)) {
-                ms_match.emplace_back(i, ms_len[i]);
-            } else if (ms_len[i] != 0 && i < ms_len.size() - 1 &&
-                       ms_len[i] == ms_len[i + 1]) {
+            if ((ms.len[i] != 0 && ms.len[i] > ms.len[i + 1]) ||
+                (i == ms.len.size() - 1 && ms.len[i] != 0)) {
+                ms_matches.basic_matches.emplace_back(ms.row[i], ms.len[i], i);
+            } else if (ms.len[i] != 0 && i < ms.len.size() - 1 &&
+                       ms.len[i] == ms.len[i + 1]) {
                 unsigned int pos = 0;
-                for (unsigned int j = i + 1; j < ms_len.size(); j++) {
-                    if (ms_len[j] > ms_len[j + 1]) {
+                for (unsigned int j = i + 1; j < ms.len.size(); j++) {
+                    if (ms.len[j] > ms.len[j + 1]) {
                         pos = j + 1;
                         break;
                     } else {
@@ -981,29 +870,233 @@ public:
                 }
                 if (i + 1 != pos) {
                     for (unsigned int j = i; j < pos; j++) {
-                        ms_match.emplace_back(j, ms_len[j]);
+                        ms_matches.basic_matches.emplace_back(ms.row[j],
+                                                              ms.len[j], j);
                     }
                     i = pos;
                 }
-                if (pos == ms_len.size() - 1) {
+                if (pos == ms.len.size() - 1) {
                     break;
                 }
             }
         }
+
+        if (extend_matches) {
+            extend_haplos(ms_matches);
+        }
         if (verbose) {
-            std::cout << "\nmatches:\t";
-            for (auto e: ms_match) {
-                std::cout << "(col: " << e.first << ", len: " << e.second
-                          << ")\t";
-            }
-            std::cout << "\n";
+            std::cout << ms << "\n";
+            std::cout << ms_matches << "\n";
         }
 
-        return ms_match;
+        return ms_matches;
     }
 
+
+    ms_matches
+    match_thr(const std::string &query, bool extend_matches = false,
+              bool verbose = false) {
+        if (!this->thr_enabled) {
+            throw NoThrException{};
+        }
+        if (query.size() != this->panel->w) {
+            throw NotEqualLengthException{};
+        }
+        if (extend_matches && !this->extended) {
+            this->extend();
+        }
+
+        ms ms(query.size());
+        auto curr_pos = static_cast<unsigned int>(this->cols[0].sample_end[
+                this->cols[0].sample_end.size() - 1]);
+        auto curr_index = curr_pos;
+        unsigned int curr_run = this->cols[0].rank_runs(curr_index);
+        char symbol = get_next_char(this->cols[0].zero_first, curr_run);
+
+        for (unsigned int i = 0; i < query.size(); i++) {
+            std::cout << "processed " << i << "\r";
+            if (verbose) {
+                std::cout << "at " << i << ": " << curr_run << " "
+                          << this->cols[i].rank_thr(curr_index) << "\n";
+                std::cout << curr_index << " " << curr_run << " " << curr_pos
+                          << " "
+                          << symbol << "\n";
+            }
+            if (query[i] == symbol) {
+                if (verbose) {
+                    std::cout << "match:\n";
+                }
+                // save in matching statistics row vector
+                ms.row[i] = curr_pos;
+                if (i != query.size() - 1) {
+                    // update index, run, symbol
+                    // TODO maybe make a function for this update
+                    curr_index = lf(i, curr_index, query[i]);
+                    curr_run = this->cols[i + 1].rank_runs(curr_index);
+                    symbol = get_next_char(this->cols[i + 1].zero_first,
+                                           curr_run);
+                    if (verbose) {
+                        std::cout << "new: " << curr_index << " " << curr_run
+                                  << " "
+                                  << curr_pos << " "
+                                  << symbol << "\n";
+                    }
+                }
+            } else {
+                auto thr = this->cols[i].rank_thr(curr_index);
+                /* TODO if index is in the position of a thresholds
+                 * understand what to do
+                 */
+                bool in_thr = false;
+                if (this->cols[i].sample_beg[curr_run] ==
+                    this->cols[i].sample_end[curr_run]) {
+                    in_thr = true;
+                }
+
+                if (this->cols[i].sample_beg.size() == 1) {
+                    if (verbose) {
+                        std::cout << "complete mismatch\n";
+                    }
+                    ms.row[i] = this->panel->h;
+                    if (i != query.size() - 1) {
+                        curr_pos = static_cast<unsigned int>(this->cols[0].sample_end[
+                                this->cols[0].sample_end.size() - 1]);
+                        curr_index = curr_pos;
+                        curr_run = this->cols[i + 1].rank_runs(curr_index);
+                        symbol = get_next_char(this->cols[i + 1].zero_first,
+                                               curr_run);
+                        if (verbose) {
+                            std::cout << "update: " << curr_index << " "
+                                      << curr_pos
+                                      << " "
+                                      << symbol << "\n";
+                        }
+                    }
+                } else if ((curr_run != 0 && !in_thr && curr_run == thr) ||
+                           curr_run == this->cols[i].sample_beg.size() - 1) {
+                    if (verbose) {
+                        std::cout << "mismatch_up: ";
+                    }
+                    // threshold below index so we go up
+                    curr_index = (this->cols[i].select_runs(curr_run) + 1) - 1;
+                    //curr_prefs = this->cols[i].rows[curr_run - 1];
+                    curr_pos = static_cast<unsigned int>(this->cols[i].sample_end[
+                            curr_run - 1]);
+                    if (verbose) {
+                        std::cout << "update: " << curr_index << " " << curr_pos
+                                  << " "
+                                  << symbol << "\n";
+                    }
+                    ms.row[i] = curr_pos;
+                    if (i != query.size() - 1) {
+                        curr_index = lf(i, curr_index, query[i]);
+                        curr_run = this->cols[i + 1].rank_runs(curr_index);
+                        symbol = get_next_char(this->cols[i + 1].zero_first,
+                                               curr_run);
+                        if (verbose) {
+                            std::cout << "new: " << curr_index << " "
+                                      << curr_run
+                                      << " "
+                                      << curr_pos << " " << symbol << "\n";
+                        }
+                    }
+                } else {
+                    if (verbose) {
+                        std::cout << "mismatch_down: ";
+                    }
+                    // threshold above index so we go down
+                    curr_index = (this->cols[i].select_runs(curr_run + 1) + 1);
+                    curr_pos = static_cast<unsigned int>(this->cols[i].sample_beg[
+                            curr_run + 1]);
+                    ms.row[i] = curr_pos;
+                    if (verbose) {
+                        std::cout << "update: " << curr_index << " " << curr_pos
+                                  << " "
+                                  << symbol << "\n";
+                    }
+                    if (i != query.size() - 1) {
+                        curr_index = lf(i, curr_index, query[i]);
+                        curr_run = this->cols[i + 1].rank_runs(curr_index);
+                        symbol = get_next_char(this->cols[i + 1].zero_first,
+                                               curr_run);
+                        if (verbose) {
+                            std::cout << "new: " << curr_index << " "
+                                      << curr_run
+                                      << " "
+                                      << curr_pos << " " << symbol << "\n";
+                        }
+                    }
+                }
+            }
+        }
+
+        int tmp_index = 0;
+
+        for (int i = (int) ms.row.size() - 1; i >= 0; i--) {
+            if (ms.row[i] == this->panel->h) {
+                ms.len[i] = 0;
+                continue;
+            }
+            if (i != (int) ms.row.size() - 1 && ms.row[i] == ms.row[i + 1]) {
+                ms.len[i] = ms.len[i + 1] - 1;
+                continue;
+            }
+            tmp_index = i;
+            while (tmp_index >= 0 &&
+                   query[tmp_index] == panel->getElem(ms.row[i], tmp_index)) {
+                tmp_index--;
+            }
+            ms.len[i] = i - tmp_index;
+        }
+
+        ms_matches ms_matches;
+        for (unsigned int i = 0; i < ms.len.size(); i++) {
+            if ((ms.len[i] != 0 && ms.len[i] > ms.len[i + 1]) ||
+                (i == ms.len.size() - 1 && ms.len[i] != 0)) {
+                ms_matches.basic_matches.emplace_back(ms.row[i], ms.len[i], i);
+            } else if (ms.len[i] != 0 && i < ms.len.size() - 1 &&
+                       ms.len[i] == ms.len[i + 1]) {
+                unsigned int pos = 0;
+                for (unsigned int j = i + 1; j < ms.len.size(); j++) {
+                    if (ms.len[j] > ms.len[j + 1]) {
+                        pos = j + 1;
+                        break;
+                    } else {
+                        pos = i + 1;
+                        break;
+                    }
+                }
+                if (i + 1 != pos) {
+                    if (verbose) {
+                        for (unsigned int j = i + 1; j <= pos; j++) {
+                            std::cout << ms.len[j] << "\t";
+                        }
+                    }
+                    for (unsigned int j = i; j < pos; j++) {
+                        ms_matches.basic_matches.emplace_back(ms.row[j],
+                                                              ms.len[j], j);
+                    }
+                    i = pos;
+                }
+                if (pos == ms.len.size() - 1) {
+                    break;
+                }
+            }
+        }
+        if (extend_matches) {
+            extend_haplos(ms_matches);
+        }
+        if (verbose) {
+            std::cout << ms << "\n";
+            std::cout << ms_matches << "\n";
+        }
+        return ms_matches;
+    }
+
+
     void
-    match_tsv(const char *filename, const char *out, bool verbose = false) {
+    match_tsv(const char *filename, const char *out, bool thr = false,
+              bool verbose = false) {
         std::ifstream input_matrix(filename);
         std::ofstream out_match(out);
         if (input_matrix.is_open()) {
@@ -1031,19 +1124,22 @@ public:
                     for (auto &j: queries_panel) {
                         query.push_back(j[i]);
                     }
-                    auto matches = this->match_thr(query, verbose);
+                    ms_matches matches;
+                    if (thr) {
+                        matches = this->match_thr(query, verbose);
+                    } else {
+                        matches = this->match_lce(query, verbose);
+                    }
                     if (verbose) {
                         std::cout << i << ": ";
                     }
                     out_match << i << ": ";
-                    for (auto m: matches) {
-                        if (verbose) {
-                            std::cout << "(col: " << m.first << ", len: "
-                                      << m.second << ") ";
-                        }
-                        out_match << "(col: " << m.first << ", len: "
-                                  << m.second << ") ";
+
+                    if (verbose) {
+                        std::cout << matches;
                     }
+                    out_match << matches;
+
                     if (verbose) {
                         std::cout << "\n";
                     }
@@ -1061,7 +1157,8 @@ public:
     }
 
     void
-    match_tsv_tr(const char *filename, const char *out, bool verbose = false) {
+    match_tsv_tr(const char *filename, const char *out, bool thr = false,
+                 bool verbose = false) {
         std::ifstream input_matrix(filename);
         std::ofstream out_match(out);
         if (input_matrix.is_open()) {
@@ -1085,19 +1182,22 @@ public:
             input_matrix.close();
             if (out_match.is_open()) {
                 for (unsigned int i = 0; i < queries_panel.size(); i++) {
-                    auto matches = this->match_thr(queries_panel[i], verbose);
+                    ms_matches matches;
+                    if (thr) {
+                        matches = this->match_thr(queries_panel[i], verbose);
+                    } else {
+                        matches = this->match_lce(queries_panel[i], verbose);
+                    }
                     if (verbose) {
                         std::cout << i << ": ";
                     }
                     out_match << i << ": ";
-                    for (auto m: matches) {
-                        if (verbose) {
-                            std::cout << "(col: " << m.first << ", len: "
-                                      << m.second << ") ";
-                        }
-                        out_match << "(col: " << m.first << ", len: "
-                                  << m.second << ") ";
+
+                    if (verbose) {
+                        std::cout << matches;
                     }
+                    out_match << matches;
+
                     if (verbose) {
                         std::cout << "\n";
                     }
@@ -1120,25 +1220,52 @@ public:
                                                 sdsl::util::class_name(
                                                         *this));
         size_t written_bytes = 0;
-        written_bytes += this->panelbv.serialize(out, child, "panel");
+        out.write((char *) &this->thr_enabled, sizeof(this->thr_enabled));
+        written_bytes += sizeof(this->thr_enabled);
+        out.write((char *) &this->extended, sizeof(this->extended));
+        written_bytes += sizeof(this->extended);
 
+        written_bytes += this->panel->serialize(out, child, "panel");
         for (unsigned int i = 0; i < this->cols.size(); i++) {
             std::string label = "col_" + std::to_string(i);
             written_bytes += this->cols[i].serialize(out, child, label);
         }
         written_bytes += this->last_pref.serialize(out, child, "last_pref");
+        if (this->extended) {
+            written_bytes += this->phi->serialize(out, child, "phi");
+        }
         sdsl::structure_tree::add_size(child, written_bytes);
         return written_bytes;
     }
 
-    void load(std::istream &in) {
-        this->panelbv.load(in);
-        for (unsigned int i = 0; i < this->panelbv.w; i++) {
+    void load(std::istream &in, const char *slp_filename = "") {
+        in.read((char *) &this->thr_enabled, sizeof(this->thr_enabled));
+        in.read((char *) &this->extended, sizeof(this->extended));
+        if constexpr (!std::is_same_v<ra_t, panel_ra>) {
+            if (std::string(slp_filename).empty()) {
+                throw SlpNotFoundException{};
+            }
+        }
+        if constexpr (!std::is_same_v<ra_t, panel_ra>) {
+            auto _panel = new ra_t();
+            _panel->load(in, slp_filename);
+            this->panel = _panel;
+        } else {
+            auto _panel = new ra_t();
+            _panel->load(in);
+            this->panel = _panel;
+        }
+        for (unsigned int i = 0; i < this->panel->w; i++) {
             auto c = new column_thr();
             c->load(in);
             this->cols.emplace_back(*c);
         }
         this->last_pref.load(in);
+        if (this->extended) {
+            auto _phi = new phi_support<ra_t>;
+            _phi->load(in);
+            this->phi = _phi;
+        }
     }
 };
 

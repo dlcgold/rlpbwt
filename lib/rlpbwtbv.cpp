@@ -359,7 +359,7 @@ rlpbwtbv::external_match(const std::string &query, unsigned int min_len,
     if (query.size() != this->width) {
         throw NotEqualLengthException{};
     }
-    // initialize matches vector
+    // initialize basic_matches vector
     std::vector<match> matches;
 
     // initialize all variables to support the computation
@@ -421,7 +421,7 @@ rlpbwtbv::external_match(const std::string &query, unsigned int min_len,
                 std::cout << "f: " << curr_tmp << ", g: " << end_tmp << "\n";
             }
 
-            // report matches if longer than a minimum length
+            // report basic_matches if longer than a minimum length
             // TODO this is a row solution regarding the minimum length aspect
             if (i > 0) {
                 if ((i - 1) - curr_beg >= min_len) {
@@ -464,7 +464,7 @@ rlpbwtbv::external_match(const std::string &query, unsigned int min_len,
                 // first update to curr index
                 curr_tmp = end_tmp - 1;
 
-                // we look back to update index of begin of matches
+                // we look back to update index of begin of basic_matches
                 // (iff it's not already at the minimum possible, 0)
                 // we don't have both the panel and the prefix array in
                 // memory, so we have to proceed reversing the permutations
@@ -527,7 +527,7 @@ rlpbwtbv::external_match(const std::string &query, unsigned int min_len,
                 // first update to end index
                 end_tmp = curr_tmp + 1;
 
-                // we look back to update index of begin of matches
+                // we look back to update index of begin of basic_matches
                 // (iff it's not already at the minimum possible, 0)
                 // we don't have both the panel and the prefix array in
                 // memory, so we have to proceed reversing the permutations
@@ -593,7 +593,7 @@ rlpbwtbv::external_match(const std::string &query, unsigned int min_len,
                       << "\n";
         }
     }
-    // check matches at the end
+    // check basic_matches at the end
     if (curr_index < end_index) {
         curr_len = end_index - curr_index;
         if (verbose) {
@@ -889,7 +889,7 @@ void rlpbwtbv::external_match_vcf(const char *filename, unsigned int min_len,
 
         auto matches = external_match(s, min_len, verbose);
         if (!matches.empty()) {
-            std::cout << "matches with " << count << " " << qIDs[count]
+            std::cout << "basic_matches with " << count << " " << qIDs[count]
                       << "\n";
             for (const auto &m: matches) {
                 std::cout << m << "\n";

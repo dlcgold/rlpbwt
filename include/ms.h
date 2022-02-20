@@ -6,20 +6,24 @@
 #define RLPBWT_MS_H
 
 
+#include <utility>
+#include <iostream>
 #include <vector>
+#include <tuple>
+#include <ostream>
 
 class ms {
 public:
-    std::vector<unsigned int> pos;
+    std::vector<unsigned int> row;
     std::vector<unsigned int> len;
-    std::vector<std::pair<unsigned int, unsigned int>> matches;
-    std::vector<std::vector<unsigned int>> haplos;
 
     ms();
 
-    ms(std::vector<unsigned int> pos,
-       std::vector<unsigned int> len,
-       std::vector<std::pair<unsigned int, unsigned int>> matches);
+    ms(std::vector<unsigned int> pos, std::vector<unsigned int> len);
+
+    explicit ms(unsigned int size);
+
+    friend std::ostream &operator<<(std::ostream &os, const ms &ms);
 };
 
 

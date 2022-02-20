@@ -35,7 +35,7 @@ std::ostream &operator<<(std::ostream &os, const slp_panel_ra &ra) {
     return os;
 }
 
-/*
+
 size_t slp_panel_ra::serialize(std::ostream &out, sdsl::structure_tree_node *v,
                                const std::string &name) {
     sdsl::structure_tree_node *child =
@@ -43,22 +43,21 @@ size_t slp_panel_ra::serialize(std::ostream &out, sdsl::structure_tree_node *v,
                                             sdsl::util::class_name(
                                                     *this));
     size_t written_bytes = 0;
-
     out.write((char *) &this->h, sizeof(this->h));
     written_bytes += sizeof(this->h);
-
     out.write((char *) &this->w, sizeof(this->w));
     written_bytes += sizeof(this->w);
-    written_bytes += this->panel.serialize(out, child, "panel");
     sdsl::structure_tree::add_size(child, written_bytes);
     return written_bytes;
 }
 
-void slp_panel_ra::load(std::istream &in) {
+void slp_panel_ra::load(std::istream &in, const char *slp_filename) {
     in.read((char *) &this->h, sizeof(this->h));
     in.read((char *) &this->w, sizeof(this->w));
-    this->panel.load(in);
+    std::ifstream slp_in;
+    slp_in.open(slp_filename);
+    this->panel.load(slp_in);
 }
- */
+
 
 slp_panel_ra::~slp_panel_ra() = default;
