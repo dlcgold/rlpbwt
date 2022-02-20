@@ -850,7 +850,7 @@
         \item $panel_{row}[k-(len+)1..k]=z[k-(len+1)..k]$
         \item $z[k-(len+1)..k+1]$ doesn't match with any row in the panel 
       \end{itemize}
-      \item we compute \textit{pos} and \textit{len} in two different scans
+      \item we compute \textit{row} and \textit{len} in two different scans
       \item we need random access to the panel. At this time we are using a
       bitvector for every column of the panel but we can use a data structure,
       called \textit{SLP}, with a very low memory cost but with high access
@@ -910,7 +910,7 @@
       \item if we are in a column with only the wrong symbol we restart the
       computation from the last row of the original panel
       \item we compute the two \textit{LCE} and we take the longest
-      \item next \textit{pos} in the \textit{MS} will be the index of the row
+      \item next \textit{row} in the \textit{MS} will be the index of the row
       with the maximum \textit{LCE} and the \textit{len} of the \textit{MS} will
       be the length of the \textit{LCE} plus 1 
     \end{itemize}
@@ -969,7 +969,7 @@
   \begin{block}{The idea on the RLPBWT}
     We can use something similar on the \textit{RLPBWT} to understand, when we
     have a match ending in column $k$, which rows are matching, having knowledge
-    of one of this rows, thanks to the \textit{matching statistics} $pos$
+    of one of this rows, thanks to the \textit{matching statistics} $row$
     value.\\
     In order to obtain this result we need an additional data structure:
     \begin{itemize}
@@ -1003,17 +1003,19 @@
       vector.
     \end{block}
     \begin{block}{}
-      So every time we have a match we could start from $pos$ value and go
-      up/down as far as the row obtained from the two queries and use
-      \textit{LCE} function or simply the random access to check the the matches
+      So every time we have a match we could start from $row$ value and go
+      up/down as far as the row obtained from the two queries is
+      ``good''. Infact we can use
+      \textit{LCE} function or simply the random access to check the matches
       with the near rows in the permutation at column $k$.
     \end{block}
   }\only<2>{
     \begin{figure}[H]
     \centering
-    \includegraphics[scale = 0.7]{graph/phi.pdf}
-    \caption{In this example we would query $\varphi(j, k)$, but also $k+1$
-      etc$\ldots$, and we will obtain $i$.}
+    \includegraphics[scale = 0.6]{graph/phi.pdf}
+    \caption{In this example we have $\varphi(j, k)=i$ and
+      $\varphi^{-1}(m,k)=n$: Notice that $k$ could also be $k+1$, $k+2$ or
+      $k+3$.}   
   \end{figure}
   }
 \end{frame}

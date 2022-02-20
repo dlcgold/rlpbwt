@@ -515,10 +515,10 @@
     \EndIf
     \Else
     \If{$curr_{run}=|samples_{beg}^k|-1$}
-    \State $curr_{index}\gets select_h^k(curr_{run}),\,\,prev_{pos}\gets
+    \State $curr_{index}\gets select_h^k(curr_{run}),\,\,prev_{row}\gets
     samples_{end}^k[curr_{run}-1]$ 
-    \State $lce\gets LCE(k, curr_{pos}, prev_{pos})$
-    \State $ms_{row}[k]\gets prev_{pos},\,\,curr_{pos}\gets prev_{pos}$
+    \State $lce\gets LCE(k, curr_{row}, prev_{row})$
+    \State $ms_{row}[k]\gets prev_{row},\,\,curr_{row}\gets prev_{row}$
     \If{$k=0$}
     \State $ms_{len}[k] \gets 1$
     \Else
@@ -530,10 +530,10 @@
     \EndIf
     
     \ElsIf{$curr_{run}=0$}
-    \State $curr_{index}\gets select_h^k(curr_{run}+1)+1,\,\,next_{pos}\gets
+    \State $curr_{index}\gets select_h^k(curr_{run}+1)+1,\,\,next_{row}\gets
     samples_{beg}^k[curr_{run}+1]$ 
-    \State $lce\gets LCE(k, curr_{pos}, next_{pos})$
-    \State $ms_{row}[k]\gets next_{pos},\,\,curr_{pos}\gets next_{pos}$
+    \State $lce\gets LCE(k, curr_{row}, next_{row})$
+    \State $ms_{row}[k]\gets next_{row},\,\,curr_{row}\gets next_{row}$
     \If{$k=0$}
     \State $ms_{len}[k] \gets 1$
     \Else
@@ -545,12 +545,12 @@
     z)$ 
     \EndIf
     \Else
-    \State $prev_{pos}\gets samples_{end}^k[curr_{run}-1],\,\,next_{pos}\gets
+    \State $prev_{row}\gets samples_{end}^k[curr_{run}-1],\,\,next_{row}\gets
     samples_{beg}^k[curr_{run}+1]$ 
-    \State $lce\gets \max_{len} (LCE(k, curr_{pos}, prev_{pos}), LCE(k,
-    curr_{pos}, next_{pos}))$
-    \State $curr_{pos}\gets lce_{pos}$
-    \State $ms_{row}[k]\gets curr_{pos}$
+    \State $lce\gets \max_{len} (LCE(k, curr_{row}, prev_{row}), LCE(k,
+    curr_{row}, next_{row}))$
+    \State $curr_{row}\gets lce_{row}$
+    \State $ms_{row}[k]\gets curr_{row}$
     \If{$k=0$}
     \State $ms_{len}[k] \gets 1$
     \Else
@@ -565,7 +565,7 @@
     \EndIf
     \EndFor
     
-    \For {\textit{every} $k\in[0,|ms_{row}|)$}
+    \For{\textit{every} $k\in[0,|ms_{row}|)$}
     \Comment \textbf{build matching statistics matches}
     \State \textit{report match at} $ms_{row}[k]$ \textit{with} $ms_{len}[k]$
     \textit{iff} $ms_{len}[k]> ms_{len}[k+1]$
@@ -573,7 +573,6 @@
     \textit{such that}  $ms_{len}[k]< ms_{len}[k+j]$
     \EndFor
     \EndFunction
-    %\algstore{myalg}
     
   \end{algorithmic}
   \caption{Algoritmo per match con matching-statistics (MS) e LCE}
@@ -588,6 +587,34 @@
     \EndFunction
   \end{algorithmic}
   \caption{Algorithm to update values for matching statistics of RLPBWT} 
+\end{algorithm}
+\begin{algorithm}
+  \begin{algorithmic}[1]
+    \Function{extend\_matches}{$col, row, len$}
+    \State $check_{down}\gets \top,\,\,check_{up}\gets \top$
+    \While {$check_{down}$}
+    \State $down_{row}\gets \varphi^{-1}(row, col)$
+    \If{$lce\_bounded(col, row, down_{row}, len)$}
+    \State $push(haplos, down_{row})$
+    \State $row \gets down_{row}$
+    \Else
+    \State $check_{down}\gets \bot$
+    \EndIf
+    \EndWhile
+    \While {$up_{down}$}
+    \State $up_{row}\gets \varphi(row, col)$
+    \If{$lce\_bounded(col, row, up_{row}, len)$}
+    \State $push(haplos, up_{row})$
+    \State $row \gets up_{row}$
+    \Else
+    \State $check_{up}\gets \bot$
+    \EndIf
+    \EndWhile
+    \State \textbf{return} $haplos$
+    \EndFunction
+  \end{algorithmic}
+  \caption{Algorithm to extend a match at $col$ using $\varphi$ and
+  $\varphi^{-1}$ and MS}  
 \end{algorithm}
 \end{document}
 
