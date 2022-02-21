@@ -2,16 +2,16 @@
 // Created by dlcgold on 28/01/22.
 //
 
-#include "../include/columnbv.h"
+#include "../include/column_bv.h"
 
 #include <utility>
 
 
-columnbv::columnbv() = default;
+column_bv::column_bv() = default;
 
-columnbv::~columnbv() = default;
+column_bv::~column_bv() = default;
 
-columnbv::columnbv(bool zeroFirst, unsigned int count0,
+column_bv::column_bv(bool zeroFirst, unsigned int count0,
                    const sdsl::bit_vector &runs,
                    const sdsl::bit_vector &u, const sdsl::bit_vector &v,
                    sdsl::int_vector<> lcp) : zero_first(zeroFirst),
@@ -30,7 +30,7 @@ columnbv::columnbv(bool zeroFirst, unsigned int count0,
 
 }
 
-size_t columnbv::serialize(std::ostream &out, sdsl::structure_tree_node *v,
+size_t column_bv::serialize(std::ostream &out, sdsl::structure_tree_node *v,
                            const std::string &name) {
     sdsl::structure_tree_node *child =
             sdsl::structure_tree::add_child(v, name,
@@ -53,7 +53,7 @@ size_t columnbv::serialize(std::ostream &out, sdsl::structure_tree_node *v,
     return written_bytes;
 }
 
-void columnbv::load(std::istream &in) {
+void column_bv::load(std::istream &in) {
     in.read((char *) &this->zero_first, sizeof(this->zero_first));
     in.read((char *) &this->count_0, sizeof(this->count_0));
     this->runs.load(in);
@@ -68,7 +68,7 @@ void columnbv::load(std::istream &in) {
     this->select_v = sdsl::sd_vector<>::select_1_type(&this->v);
 }
 
-std::ostream &operator<<(std::ostream &os, const columnbv &columnbv) {
+std::ostream &operator<<(std::ostream &os, const column_bv &columnbv) {
     auto yesno = "yes";
     if (!columnbv.zero_first) {
         yesno = "no";
@@ -78,4 +78,59 @@ std::ostream &operator<<(std::ostream &os, const columnbv &columnbv) {
        << columnbv.v
        << "\nlcp: " << columnbv.lcp << "\n";
     return os;
+}
+
+unsigned long long column_bv::size_in_bytes(bool verbose) const {
+    unsigned long long size = 0;
+    size += sizeof(bool);
+    size += sizeof(unsigned int);
+    auto size_run = sdsl::size_in_bytes(this->runs) +
+                    sdsl::size_in_bytes(this->rank_runs) +
+                    sdsl::size_in_bytes(this->select_runs);
+    auto size_u = sdsl::size_in_bytes(this->u) +
+                  sdsl::size_in_bytes(this->rank_u) +
+                  sdsl::size_in_bytes(this->select_u);
+    auto size_v = sdsl::size_in_bytes(this->v) +
+                  sdsl::size_in_bytes(this->rank_v) +
+                  sdsl::size_in_bytes(this->select_v);
+    auto size_lcp = sdsl::size_in_bytes(this->lcp);
+    size += size_run;
+    size += size_u;
+    size += size_v;
+    size += size_lcp;
+    if (verbose) {
+        std::cout << "run: " << size_run << " bytes\n";
+        std::cout << "u: " << size_u << " bytes\n";
+        std::cout << "v: " << size_v << " bytes\n";
+        std::cout << "lcp: " << size_lcp << " bytes\n";
+    }
+    return size;
+}
+
+double column_bv::size_in_mega_bytes(bool verbose) const {
+    double size = 0;
+    double to_mega = ((double) 1 / (double) 1024) / (double) 1024;
+    size += (double) (sizeof(bool) * to_mega);
+    size += (double) (sizeof(unsigned int) * to_mega);
+    auto size_run = sdsl::size_in_mega_bytes(this->runs) +
+                    sdsl::size_in_mega_bytes(this->rank_runs) +
+                    sdsl::size_in_mega_bytes(this->select_runs);
+    auto size_u = sdsl::size_in_mega_bytes(this->u) +
+                  sdsl::size_in_mega_bytes(this->rank_u) +
+                  sdsl::size_in_mega_bytes(this->select_u);
+    auto size_v = sdsl::size_in_mega_bytes(this->v) +
+                  sdsl::size_in_mega_bytes(this->rank_v) +
+                  sdsl::size_in_mega_bytes(this->select_v);
+    auto size_lcp = sdsl::size_in_mega_bytes(this->lcp);
+    size += size_run;
+    size += size_u;
+    size += size_v;
+    size += size_lcp;
+    if (verbose) {
+        std::cout << "run: " << size_run << " megabytes\n";
+        std::cout << "u: " << size_u << " megabytes\n";
+        std::cout << "v: " << size_v << " megabytes\n";
+        std::cout << "lcp: " << size_lcp << " megabytes\n";
+    }
+    return size;
 }

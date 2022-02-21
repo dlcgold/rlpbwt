@@ -61,6 +61,8 @@ public:
     virtual ~column_thr();
 
     friend std::ostream &operator<<(std::ostream &os, const column_thr &thr);
+    unsigned long long size_in_bytes(bool verbose = false) const;
+    double size_in_mega_bytes(bool verbose = false) const;
     size_t serialize(std::ostream &out, sdsl::structure_tree_node *v = nullptr,
                      const std::string& name = "");
     void load(std::istream &in);

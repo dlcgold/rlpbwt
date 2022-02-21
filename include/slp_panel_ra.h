@@ -5,15 +5,18 @@
 #ifndef RLPBWT_SLP_PANEL_RA_H
 #define RLPBWT_SLP_PANEL_RA_H
 
+#include <fstream>
+#include <filesystem>
 #include <sdsl/int_vector.hpp>
 #include <sdsl/bit_vectors.hpp>
 #include "exceptions.h"
 #include "SelfShapedSlp.hpp"
 #include "DirectAccessibleGammaCode.hpp"
 #include "SelectType.hpp"
-#include <fstream>
 
 class slp_panel_ra {
+private:
+    const char *slp_file{};
 public:
 
     unsigned int h{};
@@ -33,6 +36,9 @@ public:
     friend std::ostream &operator<<(std::ostream &os, const slp_panel_ra &ra);
 
     char getElem(unsigned int i, unsigned int j) const;
+
+    unsigned long long size_in_bytes(bool verbose = false);
+    double size_in_mega_bytes(bool verbose = false);
 
     size_t serialize(std::ostream &out, sdsl::structure_tree_node *v = nullptr,
                      const std::string &name = "");

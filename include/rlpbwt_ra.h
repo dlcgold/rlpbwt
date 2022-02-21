@@ -402,12 +402,14 @@ private:
     }
 
 public:
+    unsigned int width{};
+    unsigned int height{};
     sdsl::int_vector<> last_pref;
 
     rlpbwt_ra() = default;
 
-    rlpbwt_ra(const char *filename, bool thr, const char *slp_filename = "",
-              bool verbose = false) {
+    explicit rlpbwt_ra(const char *filename, bool thr = false,
+                       bool verbose = false, const char *slp_filename = "") {
         std::ifstream input_matrix(filename);
         if constexpr (!std::is_same_v<ra_t, panel_ra>) {
             if (std::string(slp_filename).empty()) {
@@ -508,6 +510,8 @@ public:
             }
             sdsl::util::bit_compress(this->last_pref);
             this->extended = false;
+            this->width = tmp_width;
+            this->height = tmp_height;
             input_matrix.close();
         } else {
             throw FileNotFoundException{};
@@ -1216,6 +1220,102 @@ public:
         } else {
             throw FileNotFoundException{};
         }
+    }
+
+
+    unsigned long long size_in_bytes(bool verbose = false) {
+        unsigned long long size = 0;
+        unsigned long long size_run = 0;
+        unsigned long long size_thr = 0;
+        unsigned long long size_u = 0;
+        unsigned long long size_v = 0;
+        unsigned long long size_samples = 0;
+        auto lp_size = sdsl::size_in_bytes(this->last_pref);
+        size += lp_size;
+        for (unsigned int i = 0; i < this->cols.size(); ++i) {
+            size += this->cols[i].size_in_bytes();
+            size_run += sdsl::size_in_bytes(this->cols[i].runs) +
+                        sdsl::size_in_bytes(this->cols[i].rank_runs) +
+                        sdsl::size_in_bytes(this->cols[i].select_runs);
+            size_thr += sdsl::size_in_bytes(this->cols[i].thr) +
+                        sdsl::size_in_bytes(this->cols[i].rank_thr) +
+                        sdsl::size_in_bytes(this->cols[i].select_thr);
+            size_u += sdsl::size_in_bytes(this->cols[i].u) +
+                      sdsl::size_in_bytes(this->cols[i].rank_u) +
+                      sdsl::size_in_bytes(this->cols[i].select_u);
+            size_v += sdsl::size_in_bytes(this->cols[i].v) +
+                      sdsl::size_in_bytes(this->cols[i].rank_v) +
+                      sdsl::size_in_bytes(this->cols[i].select_v);
+            size_samples += sdsl::size_in_bytes(this->cols[i].sample_beg) +
+                            sdsl::size_in_bytes(this->cols[i].sample_end) +
+                            lp_size;
+        }
+        if (verbose) {
+            std::cout << "run: " << size_run << " bytes\n";
+            std::cout << "thr: " << size_thr << " bytes\n";
+            std::cout << "u: " << size_u << " bytes\n";
+            std::cout << "v: " << size_v << " bytes\n";
+            std::cout << "samples: " << size_samples << " bytes\n";
+            std::cout
+                    << "rlpbwt (with also c values and other support variables): "
+                    << size << " bytes\n";
+        }
+        size += (sizeof(bool) * 2);
+        size += (sizeof(unsigned int) * 2);
+        size += this->panel->size_in_bytes(verbose);
+        if (this->extended) {
+            size += this->phi->size_in_bytes(verbose);
+        }
+
+        return size;
+    }
+
+    double size_in_mega_bytes(bool verbose = true) {
+        double size = 0;
+        double to_mega = ((double) 1 / (double) 1024) / (double) 1024;
+        double size_run = 0;
+        double size_thr = 0;
+        double size_u = 0;
+        double size_v = 0;
+        double size_samples = 0;
+        auto lp_size = sdsl::size_in_mega_bytes(this->last_pref);
+        size += lp_size;
+        for (unsigned int i = 0; i < this->cols.size(); ++i) {
+            size += this->cols[i].size_in_mega_bytes();
+            size_run += sdsl::size_in_mega_bytes(this->cols[i].runs) +
+                        sdsl::size_in_mega_bytes(this->cols[i].rank_runs) +
+                        sdsl::size_in_mega_bytes(this->cols[i].select_runs);
+            size_thr += sdsl::size_in_mega_bytes(this->cols[i].thr) +
+                        sdsl::size_in_mega_bytes(this->cols[i].rank_thr) +
+                        sdsl::size_in_mega_bytes(this->cols[i].select_thr);
+            size_u += sdsl::size_in_mega_bytes(this->cols[i].u) +
+                      sdsl::size_in_mega_bytes(this->cols[i].rank_u) +
+                      sdsl::size_in_mega_bytes(this->cols[i].select_u);
+            size_v += sdsl::size_in_mega_bytes(this->cols[i].v) +
+                      sdsl::size_in_mega_bytes(this->cols[i].rank_v) +
+                      sdsl::size_in_mega_bytes(this->cols[i].select_v);
+            size_samples += sdsl::size_in_mega_bytes(this->cols[i].sample_beg) +
+                            sdsl::size_in_mega_bytes(this->cols[i].sample_end) +
+                            lp_size;
+        }
+        if (verbose) {
+            std::cout << "run: " << size_run << " megabytes\n";
+            std::cout << "thr: " << size_thr << " megabytes\n";
+            std::cout << "u: " << size_u << " megabytes\n";
+            std::cout << "v: " << size_v << " megabytes\n";
+            std::cout << "samples: " << size_samples << " megabytes\n";
+            std::cout
+                    << "rlpbwt (with also c values and other support variables): "
+                    << size << " megabytes\n";
+        }
+        size += (sizeof(bool) * 2 * to_mega);
+        size += (sizeof(unsigned int) * 2 * to_mega);
+        size += this->panel->size_in_mega_bytes(verbose);
+        if (this->extended) {
+            size += this->phi->size_in_mega_bytes(verbose);
+        }
+
+        return size;
     }
 
     size_t serialize(std::ostream &out, sdsl::structure_tree_node *v = nullptr,

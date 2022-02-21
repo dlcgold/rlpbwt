@@ -2,188 +2,57 @@
 // Created by dlcgold on 28/01/22.
 //
 
-#include "../include/rlpbwtbv.h"
+#include "../include/rlpbwt_bv.h"
 
-rlpbwtbv::rlpbwtbv(const char *filename, bool vcf, bool verbose) {
-    // two cases:
-    // - build from vcf file
-    // - build from raw matrix file (every row is a column of the matrix)
-    if (vcf) {
-        // read vcf file from https://github.com/ZhiGroup/Syllable-PBWT
+rlpbwt_bv::rlpbwt_bv(const char *filename, bool verbose) {
+    std::ifstream input_matrix(filename);
+    if (input_matrix.is_open()) {
+        std::string header1;
+        std::string header2;
         std::string line;
-        std::ifstream input(filename);
-        if (!input.is_open()) {
-            throw FileNotFoundException{};
-        }
-        while (std::getline(input, line)) {
-            if (line[0] != '#' || line[1] != '#') {
-                break;
-            }
-        }
-        std::stringstream ss(line);
-        int tmp_height = -9;
-        int tmp_width = 0;
-        while (getline(ss, line, '\t')) {
-            tmp_height++;
-        }
-        tmp_height <<= 1;
-        while (std::getline(input, line)) {
-            tmp_width++;
-        }
-        input.clear();
-        input.seekg(0);
-        while (std::getline(input, line)) {
-            if (line[0] != '#' || line[1] != '#') {
-                break;
-            }
-        }
-        ss = std::stringstream(line);
-        for (int i = 0; i < 9; i++) {
-            getline(ss, line, '\t');
-        }
-        /*std::vector<std::string> IDs(tmp_height);
-        for (int i = 0; i < tmp_height; i += 2) {
-            getline(ss, IDs[i], '\t');
-            IDs[i + 1] = IDs[i] + "-1";
-            IDs[i] += "-0";
-            std::cout << IDs[i] << ", " << IDs[i+1] << "\n";
-        }
-        */
+        std::string garbage;
+        std::string new_column;
 
-        // initialize prefix and divergence arrays (latter as sdsl int_vector)
+        getline(input_matrix, header1);
+        getline(input_matrix, header2);
+        getline(input_matrix, line);
+        std::istringstream is(line);
+        is >> garbage >> garbage >> garbage >> garbage >> new_column;
+        unsigned int tmp_height = new_column.size();
+        std::cout << "h: " << tmp_height << "\n";
+        unsigned int tmp_width = std::count(
+                std::istreambuf_iterator<char>(input_matrix),
+                std::istreambuf_iterator<char>(), '\n') + 1;
+        std::cout << "w: " << tmp_width << "\n";
+        input_matrix.clear();
+        input_matrix.seekg(0, std::ios::beg);
+        this->cols = std::vector<column_bv>(tmp_width + 1);
         std::vector<unsigned int> pref(tmp_height);
         sdsl::int_vector<> div(tmp_height);
-        for (int i = 0; i < tmp_height; i++) {
+        for (unsigned int i = 0; i < tmp_height; i++) {
             pref[i] = i;
             div[i] = 0;
         }
-        std::string new_column;
-        // initialize vector for the column
-        this->cols = std::vector<columnbv>(tmp_width + 1);
-        int k = 0;
-        for (k = 0; k < tmp_width; k++) {
+        unsigned int count = 0;
+        std::string last_col;
+        getline(input_matrix, line);
+        getline(input_matrix, line);
+        std::string last_column;
+        while (getline(input_matrix, line) && !line.empty()) {
+            std::cout << count << "\r";
+            std::istringstream is_col(line);
+            is_col >> garbage;
+            if (garbage == "TOTAL_SAMPLES:") {
+                break;
+            }
+            is_col >> garbage >> garbage >> garbage >> new_column;
             if (verbose) {
-                std::cout << "\nnew_column " << k << "\n";
-                for (auto e: pref) {
-                    std::cout << e << " ";
-                }
-                std::cout << "\n";
-                for (auto e: div) {
-                    std::cout << e << " ";
-                }
-                std::cout << "\n";
+                std::cout << "\nnew_column " << count << "\n";
+                std::cout << new_column << "\n" << this->cols[count]
+                          << "\n-------------------------------\n";
             }
-
-            // read column as in https://github.com/ZhiGroup/Syllable-PBWT
-            new_column.clear();
-            std::getline(input, line);
-            ss = std::stringstream(line);
-            for (int i = 0; i < 9; i++) {
-                getline(ss, line, '\t');
-            }
-            //int index = 0;
-            while (getline(ss, line, '\t')) {
-                new_column.push_back(line[0]);
-                new_column.push_back(line[2]);
-            }
-
-            // create column with the bitvectors (but not rank/select) and add
-            // to columns vector
-            auto col = rlpbwtbv::build_column(new_column, pref, div);
-            this->cols[k] = col;
-
-            // create rank/select (here because of some problems using sdsl)
-            this->cols[k].rank_runs = sdsl::sd_vector<>::rank_1_type(
-                    &this->cols[k].runs);
-            this->cols[k].select_runs = sdsl::sd_vector<>::select_1_type(
-                    &this->cols[k].runs);
-            this->cols[k].rank_u = sdsl::sd_vector<>::rank_1_type(
-                    &this->cols[k].u);
-            this->cols[k].select_u = sdsl::sd_vector<>::select_1_type(
-                    &this->cols[k].u);
-            this->cols[k].rank_v = sdsl::sd_vector<>::rank_1_type(
-                    &this->cols[k].v);
-            this->cols[k].select_v = sdsl::sd_vector<>::select_1_type(
-                    &this->cols[k].v);
-            rlpbwtbv::update(new_column, pref, div);
-        }
-        // build another column with last prefix and divergence arrays
-        auto col = rlpbwtbv::build_column(new_column, pref, div);
-        this->cols[k] = col;
-        this->cols[k].rank_runs = sdsl::sd_vector<>::rank_1_type(
-                &this->cols[k].runs);
-        this->cols[k].select_runs = sdsl::sd_vector<>::select_1_type(
-                &this->cols[k].runs);
-        this->cols[k].rank_u = sdsl::sd_vector<>::rank_1_type(
-                &this->cols[k].u);
-        this->cols[k].select_u = sdsl::sd_vector<>::select_1_type(
-                &this->cols[k].u);
-        this->cols[k].rank_v = sdsl::sd_vector<>::rank_1_type(
-                &this->cols[k].v);
-        this->cols[k].select_v = sdsl::sd_vector<>::select_1_type(
-                &this->cols[k].v);
-        this->width = tmp_width;
-        this->height = tmp_height;
-    } else {
-        // same as for vcf files but using raw matrix input files
-        std::ifstream input_matrix(filename);
-        if (input_matrix.is_open()) {
-            std::string new_column;
-            getline(input_matrix, new_column);
-            new_column.erase(
-                    std::remove(new_column.begin(), new_column.end(), ' '),
-                    new_column.end());
-            const unsigned int tmp_height = new_column.size();
-            unsigned int tmp_width = std::count(
-                    std::istreambuf_iterator<char>(input_matrix),
-                    std::istreambuf_iterator<char>(), '\n') + 1;
-            std::vector<columnbv> tmp_cols(tmp_width);
-            this->cols = std::vector<columnbv>(tmp_width + 1);
-            input_matrix.clear();
-            input_matrix.seekg(0, std::ios::beg);
-            std::vector<unsigned int> pref(tmp_height);
-            sdsl::int_vector<> div(tmp_height);
-            for (unsigned int i = 0; i < tmp_height; i++) {
-                pref[i] = i;
-                div[i] = 0;
-            }
-            unsigned int count = 0;
-            std::string last_col;
-            while (getline(input_matrix, new_column)) {
-                if (verbose) {
-                    std::cout << "\nnew_column " << count << "\n";
-                    std::cout << new_column << "\n" << this->cols[count].runs
-                              << "\n"
-                              << this->cols[count].u << "\n"
-                              << this->cols[count].v
-                              << "\n-------------------------------\n";
-                }
-                new_column.erase(
-                        std::remove(new_column.begin(), new_column.end(), ' '),
-                        new_column.end());
-                auto col = rlpbwtbv::build_column(new_column, pref, div);
-                this->cols[count] = col;
-                this->cols[count].rank_runs = sdsl::sd_vector<>::rank_1_type(
-                        &this->cols[count].runs);
-                this->cols[count].select_runs = sdsl::sd_vector<>::select_1_type(
-                        &this->cols[count].runs);
-                this->cols[count].rank_u = sdsl::sd_vector<>::rank_1_type(
-                        &this->cols[count].u);
-                this->cols[count].select_u = sdsl::sd_vector<>::select_1_type(
-                        &this->cols[count].u);
-                this->cols[count].rank_v = sdsl::sd_vector<>::rank_1_type(
-                        &this->cols[count].v);
-                this->cols[count].select_v = sdsl::sd_vector<>::select_1_type(
-                        &this->cols[count].v);
-
-                rlpbwtbv::update(new_column, pref, div);
-                count++;
-                last_col = new_column;
-            }
-
-            auto col = rlpbwtbv::build_column(last_col, pref, div);
+            auto col = rlpbwt_bv::build_column(new_column, pref, div);
             this->cols[count] = col;
-
             this->cols[count].rank_runs = sdsl::sd_vector<>::rank_1_type(
                     &this->cols[count].runs);
             this->cols[count].select_runs = sdsl::sd_vector<>::select_1_type(
@@ -197,19 +66,240 @@ rlpbwtbv::rlpbwtbv(const char *filename, bool vcf, bool verbose) {
             this->cols[count].select_v = sdsl::sd_vector<>::select_1_type(
                     &this->cols[count].v);
 
-            this->width = tmp_width;
-            this->height = tmp_height;
-            input_matrix.close();
-        } else {
-            throw FileNotFoundException{};
+            rlpbwt_bv::update(new_column, pref, div);
+            last_col = new_column;
+            count++;
         }
+        auto col = rlpbwt_bv::build_column(last_col, pref, div);
+        this->cols[count] = col;
+        this->cols[count].rank_runs = sdsl::sd_vector<>::rank_1_type(
+                &this->cols[count].runs);
+        this->cols[count].select_runs = sdsl::sd_vector<>::select_1_type(
+                &this->cols[count].runs);
+        this->cols[count].rank_u = sdsl::sd_vector<>::rank_1_type(
+                &this->cols[count].u);
+        this->cols[count].select_u = sdsl::sd_vector<>::select_1_type(
+                &this->cols[count].u);
+        this->cols[count].rank_v = sdsl::sd_vector<>::rank_1_type(
+                &this->cols[count].v);
+        this->cols[count].select_v = sdsl::sd_vector<>::select_1_type(
+                &this->cols[count].v);
+        this->cols[count] = col;
+        this->height = tmp_height;
+        this->width = tmp_width;
+        input_matrix.close();
+    } else {
+        throw FileNotFoundException{};
     }
 }
 
-rlpbwtbv::rlpbwtbv() = default;
+//rlpbwt_bv::rlpbwt_bv(const char *filename, bool vcf, bool verbose) {
+//    // two cases:
+//    // - build from vcf file
+//    // - build from raw matrix file (every row is a column of the matrix)
+//    if (vcf) {
+//        // read vcf file from https://github.com/ZhiGroup/Syllable-PBWT
+//        std::string line;
+//        std::ifstream input(filename);
+//        if (!input.is_open()) {
+//            throw FileNotFoundException{};
+//        }
+//        while (std::getline(input, line)) {
+//            if (line[0] != '#' || line[1] != '#') {
+//                break;
+//            }
+//        }
+//        std::stringstream ss(line);
+//        int tmp_height = -9;
+//        int tmp_width = 0;
+//        while (getline(ss, line, '\t')) {
+//            tmp_height++;
+//        }
+//        tmp_height <<= 1;
+//        while (std::getline(input, line)) {
+//            tmp_width++;
+//        }
+//        input.clear();
+//        input.seekg(0);
+//        while (std::getline(input, line)) {
+//            if (line[0] != '#' || line[1] != '#') {
+//                break;
+//            }
+//        }
+//        ss = std::stringstream(line);
+//        for (int i = 0; i < 9; i++) {
+//            getline(ss, line, '\t');
+//        }
+//        /*std::vector<std::string> IDs(tmp_height);
+//        for (int i = 0; i < tmp_height; i += 2) {
+//            getline(ss, IDs[i], '\t');
+//            IDs[i + 1] = IDs[i] + "-1";
+//            IDs[i] += "-0";
+//            std::cout << IDs[i] << ", " << IDs[i+1] << "\n";
+//        }
+//        */
+//
+//        // initialize prefix and divergence arrays (latter as sdsl int_vector)
+//        std::vector<unsigned int> pref(tmp_height);
+//        sdsl::int_vector<> div(tmp_height);
+//        for (int i = 0; i < tmp_height; i++) {
+//            pref[i] = i;
+//            div[i] = 0;
+//        }
+//        std::string new_column;
+//        // initialize vector for the column
+//        this->cols = std::vector<column_bv>(tmp_width + 1);
+//        int k = 0;
+//        for (k = 0; k < tmp_width; k++) {
+//            if (verbose) {
+//                std::cout << "\nnew_column " << k << "\n";
+//                for (auto e: pref) {
+//                    std::cout << e << " ";
+//                }
+//                std::cout << "\n";
+//                for (auto e: div) {
+//                    std::cout << e << " ";
+//                }
+//                std::cout << "\n";
+//            }
+//
+//            // read column as in https://github.com/ZhiGroup/Syllable-PBWT
+//            new_column.clear();
+//            std::getline(input, line);
+//            ss = std::stringstream(line);
+//            for (int i = 0; i < 9; i++) {
+//                getline(ss, line, '\t');
+//            }
+//            //int index = 0;
+//            while (getline(ss, line, '\t')) {
+//                new_column.push_back(line[0]);
+//                new_column.push_back(line[2]);
+//            }
+//
+//            // create column with the bitvectors (but not rank/select) and add
+//            // to columns vector
+//            auto col = rlpbwt_bv::build_column(new_column, pref, div);
+//            this->cols[k] = col;
+//
+//            // create rank/select (here because of some problems using sdsl)
+//            this->cols[k].rank_runs = sdsl::sd_vector<>::rank_1_type(
+//                    &this->cols[k].runs);
+//            this->cols[k].select_runs = sdsl::sd_vector<>::select_1_type(
+//                    &this->cols[k].runs);
+//            this->cols[k].rank_u = sdsl::sd_vector<>::rank_1_type(
+//                    &this->cols[k].u);
+//            this->cols[k].select_u = sdsl::sd_vector<>::select_1_type(
+//                    &this->cols[k].u);
+//            this->cols[k].rank_v = sdsl::sd_vector<>::rank_1_type(
+//                    &this->cols[k].v);
+//            this->cols[k].select_v = sdsl::sd_vector<>::select_1_type(
+//                    &this->cols[k].v);
+//            rlpbwt_bv::update(new_column, pref, div);
+//        }
+//        // build another column with last prefix and divergence arrays
+//        auto col = rlpbwt_bv::build_column(new_column, pref, div);
+//        this->cols[k] = col;
+//        this->cols[k].rank_runs = sdsl::sd_vector<>::rank_1_type(
+//                &this->cols[k].runs);
+//        this->cols[k].select_runs = sdsl::sd_vector<>::select_1_type(
+//                &this->cols[k].runs);
+//        this->cols[k].rank_u = sdsl::sd_vector<>::rank_1_type(
+//                &this->cols[k].u);
+//        this->cols[k].select_u = sdsl::sd_vector<>::select_1_type(
+//                &this->cols[k].u);
+//        this->cols[k].rank_v = sdsl::sd_vector<>::rank_1_type(
+//                &this->cols[k].v);
+//        this->cols[k].select_v = sdsl::sd_vector<>::select_1_type(
+//                &this->cols[k].v);
+//        this->width = tmp_width;
+//        this->height = tmp_height;
+//    } else {
+//        // same as for vcf files but using raw matrix input files
+//        std::ifstream input_matrix(filename);
+//        if (input_matrix.is_open()) {
+//            std::string new_column;
+//            getline(input_matrix, new_column);
+//            new_column.erase(
+//                    std::remove(new_column.begin(), new_column.end(), ' '),
+//                    new_column.end());
+//            const unsigned int tmp_height = new_column.size();
+//            unsigned int tmp_width = std::count(
+//                    std::istreambuf_iterator<char>(input_matrix),
+//                    std::istreambuf_iterator<char>(), '\n') + 1;
+//            //std::vector<column_bv> tmp_cols(tmp_width);
+//            this->cols = std::vector<column_bv>(tmp_width + 1);
+//            input_matrix.clear();
+//            input_matrix.seekg(0, std::ios::beg);
+//            std::vector<unsigned int> pref(tmp_height);
+//            sdsl::int_vector<> div(tmp_height);
+//            for (unsigned int i = 0; i < tmp_height; i++) {
+//                pref[i] = i;
+//                div[i] = 0;
+//            }
+//            unsigned int count = 0;
+//            std::string last_col;
+//            while (getline(input_matrix, new_column)) {
+//                if (verbose) {
+//                    std::cout << "\nnew_column " << count << "\n";
+//                    std::cout << new_column << "\n" << this->cols[count].runs
+//                              << "\n"
+//                              << this->cols[count].u << "\n"
+//                              << this->cols[count].v
+//                              << "\n-------------------------------\n";
+//                }
+//                new_column.erase(
+//                        std::remove(new_column.begin(), new_column.end(), ' '),
+//                        new_column.end());
+//                auto col = rlpbwt_bv::build_column(new_column, pref, div);
+//                this->cols[count] = col;
+//                this->cols[count].rank_runs = sdsl::sd_vector<>::rank_1_type(
+//                        &this->cols[count].runs);
+//                this->cols[count].select_runs = sdsl::sd_vector<>::select_1_type(
+//                        &this->cols[count].runs);
+//                this->cols[count].rank_u = sdsl::sd_vector<>::rank_1_type(
+//                        &this->cols[count].u);
+//                this->cols[count].select_u = sdsl::sd_vector<>::select_1_type(
+//                        &this->cols[count].u);
+//                this->cols[count].rank_v = sdsl::sd_vector<>::rank_1_type(
+//                        &this->cols[count].v);
+//                this->cols[count].select_v = sdsl::sd_vector<>::select_1_type(
+//                        &this->cols[count].v);
+//
+//                rlpbwt_bv::update(new_column, pref, div);
+//                count++;
+//                last_col = new_column;
+//            }
+//
+//            auto col = rlpbwt_bv::build_column(last_col, pref, div);
+//            this->cols[count] = col;
+//
+//            this->cols[count].rank_runs = sdsl::sd_vector<>::rank_1_type(
+//                    &this->cols[count].runs);
+//            this->cols[count].select_runs = sdsl::sd_vector<>::select_1_type(
+//                    &this->cols[count].runs);
+//            this->cols[count].rank_u = sdsl::sd_vector<>::rank_1_type(
+//                    &this->cols[count].u);
+//            this->cols[count].select_u = sdsl::sd_vector<>::select_1_type(
+//                    &this->cols[count].u);
+//            this->cols[count].rank_v = sdsl::sd_vector<>::rank_1_type(
+//                    &this->cols[count].v);
+//            this->cols[count].select_v = sdsl::sd_vector<>::select_1_type(
+//                    &this->cols[count].v);
+//
+//            this->width = tmp_width;
+//            this->height = tmp_height;
+//            input_matrix.close();
+//        } else {
+//            throw FileNotFoundException{};
+//        }
+//    }
+//}
 
-columnbv
-rlpbwtbv::build_column(std::string &column, std::vector<unsigned int> &pref,
+
+rlpbwt_bv::rlpbwt_bv() = default;
+
+column_bv
+rlpbwt_bv::build_column(std::string &column, std::vector<unsigned int> &pref,
                        sdsl::int_vector<> &div) {
     unsigned int height = pref.size();
     // variable for "c" value
@@ -316,7 +406,7 @@ rlpbwtbv::build_column(std::string &column, std::vector<unsigned int> &pref,
 
 
 // algorithm 2 from Durbin's paper
-void rlpbwtbv::update(std::string &column, std::vector<unsigned int> &pref,
+void rlpbwt_bv::update(std::string &column, std::vector<unsigned int> &pref,
                       sdsl::int_vector<> &div) {
     unsigned int height = pref.size();
     std::vector<unsigned int> new_pref(height);
@@ -352,15 +442,15 @@ void rlpbwtbv::update(std::string &column, std::vector<unsigned int> &pref,
     pref = new_pref;
 }
 
-std::vector<match>
-rlpbwtbv::external_match(const std::string &query, unsigned int min_len,
+matches_naive
+rlpbwt_bv::external_match(const std::string &query, unsigned int min_len,
                          bool verbose) {
     // query allowed iff |query| is uqual to RLPBWT width
     if (query.size() != this->width) {
         throw NotEqualLengthException{};
     }
     // initialize basic_matches vector
-    std::vector<match> matches;
+    matches_naive matches;
 
     // initialize all variables to support the computation
     // "curr" variables refers to "f" and "end" to "g" in Durbin's paper
@@ -429,7 +519,8 @@ rlpbwtbv::external_match(const std::string &query, unsigned int min_len,
                         std::cout << "match at (" << curr_beg << ", " << i - 1
                                   << ") with " << curr_len << " haplotypes \n";
                     }
-                    matches.emplace_back(curr_beg, i - 1, curr_len);
+                    matches.basic_matches.emplace_back(curr_len, i - curr_beg,
+                                                       i - 1);
                 }
             }
 
@@ -602,14 +693,16 @@ rlpbwtbv::external_match(const std::string &query, unsigned int min_len,
         }
         // TODO this is a row solution regarding the minimum length aspect
         if ((query.size() - 1) - curr_beg >= min_len) {
-            matches.emplace_back(curr_beg, query.size() - 1, curr_len);
+            matches.basic_matches.emplace_back(curr_len,
+                                               query.size() - curr_beg,
+                                               query.size() - 1);
         }
     }
     return matches;
 }
 
 unsigned int
-rlpbwtbv::lf(unsigned int col_index, unsigned int index, char symbol,
+rlpbwt_bv::lf(unsigned int col_index, unsigned int index, char symbol,
              bool verbose) const {
     // obtain "u" and "v"
     auto uv = uvtrick(col_index, index);
@@ -629,7 +722,7 @@ rlpbwtbv::lf(unsigned int col_index, unsigned int index, char symbol,
 
 // TODO this function is written very bad
 std::pair<unsigned int, unsigned int>
-rlpbwtbv::uvtrick(unsigned int col_index, unsigned int index) const {
+rlpbwt_bv::uvtrick(unsigned int col_index, unsigned int index) const {
     // for index 0 u = v = 0
     if (index == 0) {
         return {0, 0};
@@ -731,7 +824,7 @@ rlpbwtbv::uvtrick(unsigned int col_index, unsigned int index) const {
 }
 
 unsigned int
-rlpbwtbv::reverse_lf(unsigned int col_index, unsigned int index,
+rlpbwt_bv::reverse_lf(unsigned int col_index, unsigned int index,
                      bool verbose) const {
     // by design if we try to work on first column the function return 0
     if (col_index == 0) {
@@ -804,7 +897,8 @@ rlpbwtbv::reverse_lf(unsigned int col_index, unsigned int index,
     }
 }
 
-void rlpbwtbv::external_match_vcf(const char *filename, unsigned int min_len,
+
+void rlpbwt_bv::external_match_vcf(const char *filename, unsigned int min_len,
                                   bool verbose) {
     std::ifstream in(filename);
     if (in.fail()) {
@@ -888,18 +982,17 @@ void rlpbwtbv::external_match_vcf(const char *filename, unsigned int min_len,
         }
 
         auto matches = external_match(s, min_len, verbose);
-        if (!matches.empty()) {
+        if (!matches.basic_matches.empty()) {
             std::cout << "basic_matches with " << count << " " << qIDs[count]
                       << "\n";
-            for (const auto &m: matches) {
-                std::cout << m << "\n";
-            }
+            std::cout << matches << "\n";
+
         }
         count++;
     }
 }
 
-size_t rlpbwtbv::serialize(std::ostream &out, sdsl::structure_tree_node *v,
+size_t rlpbwt_bv::serialize(std::ostream &out, sdsl::structure_tree_node *v,
                            const std::string &name) {
     sdsl::structure_tree_node *child =
             sdsl::structure_tree::add_child(v, name,
@@ -921,14 +1014,197 @@ size_t rlpbwtbv::serialize(std::ostream &out, sdsl::structure_tree_node *v,
     return written_bytes;
 }
 
-void rlpbwtbv::load(std::istream &in) {
+void rlpbwt_bv::load(std::istream &in) {
     in.read((char *) &this->height, sizeof(this->height));
     in.read((char *) &this->width, sizeof(this->width));
-    auto c = new columnbv();
+    auto c = new column_bv();
     for (unsigned int i = 0; i <= this->width; i++) {
         c->load(in);
         this->cols.emplace_back(*c);
     }
 }
+
+void
+rlpbwt_bv::match_tsv(const char *filename, const char *out, bool verbose) {
+    std::ifstream input_matrix(filename);
+    std::ofstream out_match(out);
+    if (input_matrix.is_open()) {
+        std::string header1;
+        std::string header2;
+        std::string line;
+        std::string garbage;
+        std::string new_column;
+        getline(input_matrix, line);
+        getline(input_matrix, line);
+        std::vector<std::string> queries_panel;
+        while (getline(input_matrix, line) && !line.empty()) {
+            std::istringstream is_col(line);
+            is_col >> garbage;
+            if (garbage == "TOTAL_SAMPLES:") {
+                break;
+            }
+            is_col >> garbage >> garbage >> garbage >> new_column;
+            queries_panel.push_back(new_column);
+        }
+        input_matrix.close();
+        std::string query;
+        if (out_match.is_open()) {
+            for (unsigned int i = 0; i < queries_panel[0].size(); i++) {
+                for (auto &j: queries_panel) {
+                    query.push_back(j[i]);
+                }
+                matches_naive matches;
+                matches = this->external_match(query, verbose);
+                if (verbose) {
+                    std::cout << i << ": ";
+                }
+                out_match << i << ": ";
+
+                if (verbose) {
+                    std::cout << matches;
+                }
+                out_match << matches;
+
+                if (verbose) {
+                    std::cout << "\n";
+                }
+                out_match << "\n";
+                query.clear();
+            }
+            out_match.close();
+        } else {
+            throw FileNotFoundException{};
+        }
+
+    } else {
+        throw FileNotFoundException{};
+    }
+}
+
+void
+rlpbwt_bv::match_tsv_tr(const char *filename, const char *out, bool verbose) {
+    std::ifstream input_matrix(filename);
+    std::ofstream out_match(out);
+    if (input_matrix.is_open()) {
+        std::string header1;
+        std::string header2;
+        std::string line;
+        std::string garbage;
+        std::string new_column;
+        getline(input_matrix, line);
+        getline(input_matrix, line);
+        std::vector<std::string> queries_panel;
+        while (getline(input_matrix, line) && !line.empty()) {
+            std::istringstream is_col(line);
+            is_col >> garbage;
+            if (garbage == "TOTAL_SAMPLES:") {
+                break;
+            }
+            is_col >> garbage >> garbage >> garbage >> new_column;
+            queries_panel.push_back(new_column);
+        }
+        input_matrix.close();
+        if (out_match.is_open()) {
+            for (unsigned int i = 0; i < queries_panel.size(); i++) {
+                matches_naive matches;
+
+                matches = this->external_match(queries_panel[i], verbose);
+                if (verbose) {
+                    std::cout << i << ": ";
+                }
+                out_match << i << ": ";
+
+                if (verbose) {
+                    std::cout << matches;
+                }
+                out_match << matches;
+
+                if (verbose) {
+                    std::cout << "\n";
+                }
+                out_match << "\n";
+            }
+            out_match.close();
+        } else {
+            throw FileNotFoundException{};
+        }
+
+    } else {
+        throw FileNotFoundException{};
+    }
+}
+
+unsigned long long rlpbwt_bv::size_in_bytes(bool verbose) {
+    unsigned long long size = 0;
+    unsigned long long size_run = 0;
+    unsigned long long size_thr = 0;
+    unsigned long long size_u = 0;
+    unsigned long long size_v = 0;
+    unsigned long long size_lcp = 0;
+    for (auto &col: this->cols) {
+        size += col.size_in_bytes();
+        size_run += sdsl::size_in_bytes(col.runs) +
+                    sdsl::size_in_bytes(col.rank_runs) +
+                    sdsl::size_in_bytes(col.select_runs);
+        size_u += sdsl::size_in_bytes(col.u) +
+                  sdsl::size_in_bytes(col.rank_u) +
+                  sdsl::size_in_bytes(col.select_u);
+        size_v += sdsl::size_in_bytes(col.v) +
+                  sdsl::size_in_bytes(col.rank_v) +
+                  sdsl::size_in_bytes(col.select_v);
+        size_lcp += sdsl::size_in_bytes(col.lcp);
+    }
+    if (verbose) {
+        std::cout << "run: " << size_run << " bytes\n";
+        std::cout << "thr: " << size_thr << " bytes\n";
+        std::cout << "u: " << size_u << " bytes\n";
+        std::cout << "v: " << size_v << " bytes\n";
+        std::cout << "lcp: " << size_lcp << " bytes\n";
+        std::cout << "rlpbwt (with also c values and other support variables): "
+                  << size << " bytes\n";
+    }
+    size += sizeof(bool);
+    size += sizeof(unsigned int);
+
+    return size;
+}
+
+double rlpbwt_bv::size_in_mega_bytes(bool verbose) {
+    double size = 0;
+    double size_run = 0;
+    double size_thr = 0;
+    double size_u = 0;
+    double size_v = 0;
+    double size_lcp = 0;
+    double to_mega = ((double) 1 / (double) 1024) / (double) 1024;
+    for (auto &col: this->cols) {
+        size += col.size_in_mega_bytes();
+        size_run += sdsl::size_in_mega_bytes(col.runs) +
+                    sdsl::size_in_mega_bytes(col.rank_runs) +
+                    sdsl::size_in_mega_bytes(col.select_runs);
+        size_u += sdsl::size_in_mega_bytes(col.u) +
+                  sdsl::size_in_mega_bytes(col.rank_u) +
+                  sdsl::size_in_mega_bytes(col.select_u);
+        size_v += sdsl::size_in_mega_bytes(col.v) +
+                  sdsl::size_in_mega_bytes(col.rank_v) +
+                  sdsl::size_in_mega_bytes(col.select_v);
+        size_lcp += sdsl::size_in_mega_bytes(col.lcp);
+    }
+    if (verbose) {
+        std::cout << "run: " << size_run << " megabytes\n";
+        std::cout << "thr: " << size_thr << " megabytes\n";
+        std::cout << "u: " << size_u << " megabytes\n";
+        std::cout << "v: " << size_v << " megabytes\n";
+        std::cout << "lcp: " << size_lcp << " megabytes\n";
+        std::cout << "rlpbwt (with also c values and other support variables): "
+                  << size << " megabytes\n";
+    }
+    size += (double) (sizeof(bool) * to_mega);
+    size += (double) (sizeof(unsigned int) * to_mega);
+
+    return size;
+}
+
+
 
 

@@ -28,12 +28,15 @@ public:
 
     friend std::ostream &operator<<(std::ostream &os, const panel_ra &ra);
 
-    size_t serialize(std::ostream &out, sdsl::structure_tree_node *v = nullptr,
-                     const std::string &name = "");
 
     unsigned int lceToR(unsigned int col, unsigned int f_r, unsigned int s_r) const;
     bool lceToRCheck(unsigned int col, unsigned int f_r, unsigned int s_r,
                      unsigned int length) const;
+    unsigned long long size_in_bytes(bool verbose = false);
+    double size_in_mega_bytes(bool verbose = false);
+    size_t serialize(std::ostream &out, sdsl::structure_tree_node *v = nullptr,
+                     const std::string &name = "");
+
     void load(std::istream &in);
 };
 

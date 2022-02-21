@@ -2,15 +2,15 @@
 // Created by dlcgold on 28/01/22.
 //
 
-#ifndef RLPBWT_COLUMNBV_H
-#define RLPBWT_COLUMNBV_H
+#ifndef RLPBWT_COLUMN_BV_H
+#define RLPBWT_COLUMN_BV_H
 
 #include <vector>
 #include <sdsl/int_vector.hpp>
 #include <sdsl/bit_vectors.hpp>
 #include <ostream>
 
-class columnbv {
+class column_bv {
 public:
     /**
     * @brief bool to check first value of the column in PBWT matrix
@@ -37,7 +37,7 @@ public:
 
     sdsl::int_vector<> lcp;
 
-    columnbv(bool zeroFirst, unsigned int count0,
+    column_bv(bool zeroFirst, unsigned int count0,
              const sdsl::bit_vector& runs,
              const sdsl::bit_vector& u,
              const sdsl::bit_vector& v,
@@ -46,16 +46,17 @@ public:
     /**
      * @brief default constructor
      */
-    columnbv();
+    column_bv();
 
-    virtual ~columnbv();
+    virtual ~column_bv();
 
-    friend std::ostream &operator<<(std::ostream &os, const columnbv &columnbv);
-
+    friend std::ostream &operator<<(std::ostream &os, const column_bv &columnbv);
+    unsigned long long size_in_bytes(bool verbose = false) const;
+    double size_in_mega_bytes(bool verbose = false) const;
     size_t serialize(std::ostream &out, sdsl::structure_tree_node *v = nullptr,
                      const std::string& name = "");
     void load(std::istream &in);
 };
 
 
-#endif //RLPBWT_COLUMNBV_H
+#endif //RLPBWT_COLUMN_BV_H

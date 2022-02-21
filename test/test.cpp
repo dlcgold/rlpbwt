@@ -1,217 +1,15 @@
 #include <iostream>
 #include <gtest/gtest.h>
 #include <gperftools/heap-profiler.h>
-#include <sdsl/int_vector.hpp>
 #include "../include/exceptions.h"
-#include "../include/rlpbwt.h"
-#include "../include/rlpbwtbv.h"
-#include "../include/birlpbwt.h"
+#include "../include/rlpbwt_bv.h"
 #include "../include/panel_ra.h"
 #include "../include/rlpbwt_ra.h"
-#include "../include/phi_support.h"
-//#include "../include/slp_panel_ra.h"
+#include "../include/rlpbwt_naive.h"
 
-
-TEST (BuildRlpbwtTest, TestBuildAndQuery) {
-    //HeapProfilerStart("heap.prof");
-    //std::cout << IsHeapProfilerRunning() << "\n";
-    rlpbwt rlpbwt("../input/sample.txt", false);
-    //HeapProfilerDump("end construction");
-    //HeapProfilerStop();
-    std::cout << rlpbwt.cols[rlpbwt.cols.size() - 1] << "\n";
-    EXPECT_EQ(rlpbwt.height, 20);
-    EXPECT_EQ(rlpbwt.width, 15);
-    std::cout << rlpbwt.height << " " << rlpbwt.width << "\n";
-    bool verbose = false;
-    if (verbose) {
-        rlpbwt.print();
-    }
-    auto matches = rlpbwt.external_match("010010100011101", true);
-    for (const auto &m: matches) {
-        std::cout << m << "\n";
-    }
-    auto match0 = match(0, 5, 4);
-    auto match1 = match(3, 9, 1);
-    auto match2 = match(7, 11, 1);
-    auto match3 = match(11, 14, 3);
-    EXPECT_EQ(matches[0], match0);
-    EXPECT_EQ(matches[1], match1);
-    EXPECT_EQ(matches[2], match2);
-    EXPECT_EQ(matches[3], match3);
-
-    auto rlsize = sizeof(rlpbwt.width) * 10E-6;
-    rlsize += sizeof(rlpbwt.height) * 10E-6;
-    auto rlsizeb = rlsize;
-    for (const auto &c: rlpbwt.cols) {
-        rlsize += sizeof(bool) * 10E-6;
-        rlsize += sizeof(unsigned int) * 10E-6;
-        rlsize += sizeof(unsigned int) * (double) c.rows.size() * 10E-6;
-        rlsize += sizeof(unsigned int) * (double) c.rows.size() * 10E-6;
-        rlsizeb += sizeof(bool) * 10E-6;
-        rlsizeb += sizeof(unsigned int) * 10E-6;
-        rlsizeb += sizeof(unsigned int) * (double) c.rows.size() * 10E-6;
-        rlsizeb += sizeof(unsigned int) * (double) c.rows.size() * 10E-6;
-        rlsize += sdsl::size_in_mega_bytes(c.lcp);
-    }
-    double nrlsize = sizeof(unsigned int) *
-                     (double) (rlpbwt.height * rlpbwt.width * 5) * 10E-6;
-    nrlsize += sizeof(unsigned int) * (double) rlpbwt.width * 10E-6;
-    std::cout << rlsize << " vs " << rlsizeb * 2 << " vs " << nrlsize << "\n";
-}
-
-TEST (BuildBiRlpbwtTest, TestBuildAndQuery) {
-    birlpbwt birlpbwt("../input/sample2.txt", false);
-    bool verbose = false;
-    if (verbose) {
-        birlpbwt.print();
-    }
-    auto matches = birlpbwt.external_match("010010100011101");
-    for (const auto &m: matches) {
-        std::cout << m << "\n";
-    }
-    /*auto match0 = match(0, 5, 4);
-    auto match1 = match(3, 9, 1);
-    auto match2 = match(7, 11, 1);
-    auto match3 = match(11, 14, 3);
-    EXPECT_EQ(basic_matches[0], match0);
-    EXPECT_EQ(basic_matches[1], match1);
-    EXPECT_EQ(basic_matches[2], match2);
-    EXPECT_EQ(basic_matches[3], match3);
-    auto rlsizeb = sizeof(birlpbwt.frlpbwt.width) * 10E-6;
-    rlsizeb += sizeof(birlpbwt.frlpbwt.height) * 10E-6;
-    rlsizeb *= 2;
-    for (const auto &c: birlpbwt.frlpbwt.cols) {
-        rlsizeb += sizeof(bool) * 10E-6;
-        rlsizeb += sizeof(unsigned int) * 10E-6;
-        rlsizeb += sizeof(unsigned int) * (double) c.rows.size() * 10E-6;
-        rlsizeb += sizeof(unsigned int) * (double) c.rows.size() * 10E-6;
-    }
-    for (const auto &c: birlpbwt.brlpbwt.cols) {
-        rlsizeb += sizeof(bool) * 10E-6;
-        rlsizeb += sizeof(unsigned int) * 10E-6;
-        rlsizeb += sizeof(unsigned int) * (double) c.rows.size() * 10E-6;
-        rlsizeb += sizeof(unsigned int) * (double) c.rows.size() * 10E-6;
-    }
-    double nrlsize = sizeof(unsigned int) * (double) (birlpbwt.frlpbwt.height *
-                                                      birlpbwt.frlpbwt.width *
-                                                      5) * 10E-6;
-    std::cout << rlsizeb << " vs " << nrlsize << "\n";*/
-}
-
-TEST (BuildRlpbwtVCF, TestBuildAndQuery) {
-    //HeapProfilerStart("heaprlp2.prof");
-    //std::cout << IsHeapProfilerRunning() << "\n";
-    rlpbwt rlpbwt("../input/sample_panel.vcf", true);
-    //HeapProfilerDump("end construction");
-    //HeapProfilerStop();
-
-    std::cout << rlpbwt.width << " " << rlpbwt.height << "\n";
-    //rlpbwt.print();
-    EXPECT_EQ(rlpbwt.height, 900);
-    EXPECT_EQ(rlpbwt.width, 500);
-    clock_t START = clock();
-    // TODO add test check for basic_matches
-    rlpbwt.external_match_vcf("../input/sample_query.vcf", 255);
-    std::cout << clock() - START << " time\n";
-}
-
-TEST (BuildRlpbwtSerOrig, TestSer) {
-    auto rlpbwt_t = new rlpbwt("../input/sample2.txt", false, false);
-
-    auto filename = "../output/sample2orig_panel.ser";
-    std::ofstream file_o;
-    std::ifstream file_i;
-    unsigned int size = 0;
-    file_o.open(filename);
-    size = rlpbwt_t->cols[14].serialize(file_o);
-    std::cout << size << "\n";
-    file_o.close();
-    file_i.open(filename);
-    auto col = new column();
-    col->load(file_i);
-    for (const auto &r: col->rows) {
-        std::cout << r.p << ", " << r.uv << "\n";
-    }
-    for (const auto &e: col->lcp) {
-        std::cout << e << " ";
-    }
-    std::cout << "\n";
-    file_i.close();
-
-
-    filename = "../output/sample2orig_pbwt.ser";
-    file_o.open(filename);
-    size = rlpbwt_t->serialize(file_o);
-    std::cout << size << "\n";
-    file_o.close();
-    // TODO FIX THIS
-    //file_i.open(filename);
-    //auto rlpbwt = new rlpbwtbv();
-    //rlpbwt->load(file_i);
-    /*std::cout << rlpbwt->cols[13] << "\n";
-    std::cout << rlpbwt->cols.size() << " vs " << rlpbwt_t->cols.size() << "\n";
-    file_i.close();*/
-}
-
-TEST (BuildBiRlpbwtVCF, TestBuild) {
-    //HeapProfilerStart("birlpbwtheap.prof");
-    //std::cout << IsHeapProfilerRunning() << "\n";
-    birlpbwt birlpbwt("../input/sample_panel.vcf", true);
-    //HeapProfilerDump("end construction");
-    //HeapProfilerStop();
-
-    std::cout << birlpbwt.frlpbwt.width << " " << birlpbwt.frlpbwt.height
-              << "\n";
-    EXPECT_EQ(birlpbwt.frlpbwt.height, 900);
-    EXPECT_EQ(birlpbwt.frlpbwt.width, 500);
-    //birlpbwt.print()
-    unsigned int size = 0;
-    unsigned int sizeb = 0;
-    unsigned int obj = 0;
-    unsigned int objb = 0;
-    auto rlsizeb = sizeof(birlpbwt.frlpbwt.width) * 10E-6;
-    rlsizeb += sizeof(birlpbwt.frlpbwt.height) * 10E-6;
-    rlsizeb *= 2;
-    for (const auto &c: birlpbwt.frlpbwt.cols) {
-        rlsizeb += sizeof(bool) * 10E-6;
-        rlsizeb += sizeof(unsigned int) * 10E-6;
-        rlsizeb += sizeof(unsigned int) * (double) c.rows.size() * 10E-6;
-        rlsizeb += sizeof(unsigned int) * (double) c.rows.size() * 10E-6;
-        size += c.rows.size();
-        obj += (c.rows.size() * 2 + 2);
-    }
-    for (const auto &c: birlpbwt.brlpbwt.cols) {
-        rlsizeb += sizeof(bool) * 10E-6;
-        rlsizeb += sizeof(unsigned int) * 10E-6;
-        rlsizeb += sizeof(unsigned int) * (double) c.rows.size() * 10E-6;
-        rlsizeb += sizeof(unsigned int) * (double) c.rows.size() * 10E-6;
-        sizeb += c.rows.size();
-        objb += (c.rows.size() * 2 + 2);
-    }
-    double nrlsize = sizeof(unsigned int) * (double) (birlpbwt.frlpbwt.height *
-                                                      birlpbwt.frlpbwt.width *
-                                                      5) * 10E-6;
-    std::cout << rlsizeb << " vs " << nrlsize << "\n";
-    std::cout << "saved: " << obj + objb << " vs "
-              << (birlpbwt.frlpbwt.height * birlpbwt.frlpbwt.width * 5) + 1
-              << " (~"
-              << ((birlpbwt.frlpbwt.height * birlpbwt.frlpbwt.width * 5) + 1) /
-                 (obj + objb) << " times less) and avg height "
-              << (size + sizeb) / (birlpbwt.frlpbwt.width * 2) << "\n";
-}
-
-TEST (BuildBiRlpbwtVCF, TestQuery) {
-    birlpbwt birlpbwt("../input/sample_panel.vcf", true);
-    EXPECT_EQ(birlpbwt.frlpbwt.height, 900);
-    EXPECT_EQ(birlpbwt.frlpbwt.width, 500);
-    clock_t START = clock();
-    // TODO add test check for basic_matches
-    birlpbwt.external_match_vcf("../input/sample_query.vcf", 255, false);
-    std::cout << clock() - START << " time\n";
-}
-
+/*
 TEST (BuildRlpbwtSerBV, TestSer) {
-    auto rlpbwt_t = new rlpbwtbv("../input/sample2.txt", false, false);
+    auto rlpbwt_t = new rlpbwt_bv("../input/sample2.txt", false, false);
 
     auto filename = "../output/sample2bv_panel.ser";
     std::ofstream file_o;
@@ -222,7 +20,7 @@ TEST (BuildRlpbwtSerBV, TestSer) {
     std::cout << size << "\n";
     file_o.close();
     file_i.open(filename);
-    auto col = new columnbv();
+    auto col = new column_bv();
     col->load(file_i);
     std::cout << col->runs << "\n";
     std::cout << col->rank_runs(18) << " " << col->select_runs(2) << "\n";
@@ -234,7 +32,7 @@ TEST (BuildRlpbwtSerBV, TestSer) {
     std::cout << size << "\n";
     file_o.close();
     file_i.open(filename);
-    auto rlpbwt = new rlpbwtbv();
+    auto rlpbwt = new rlpbwt_bv();
     rlpbwt->load(file_i);
     std::cout << rlpbwt->cols[13] << "\n";
     std::cout << rlpbwt->cols.size() << " vs " << rlpbwt_t->cols.size() << "\n";
@@ -243,9 +41,9 @@ TEST (BuildRlpbwtSerBV, TestSer) {
 
 
 TEST (BuildRlpbwtBVtest, TestBuildQuery) {
-    rlpbwtbv rlpbwtbv("../input/sample2.txt", false);
+    rlpbwt_bv rlpbwt_bv("../input/sample2.txt", false);
 
-    auto matches = rlpbwtbv.external_match("010010100011101", 1);
+    auto matches = rlpbwt_bv.external_match("010010100011101", 1);
     for (const auto &m: matches) {
         std::cout << m << "\n";
     }
@@ -262,22 +60,21 @@ TEST (BuildRlpbwtBVtest, TestBuildQuery) {
 }
 
 TEST (BuildRlpbwtBVVCF, TestBuildQuery) {
-    rlpbwtbv rlpbwtbv("../input/sample_panel.vcf", true);
-    EXPECT_EQ(rlpbwtbv.height, 900);
-    EXPECT_EQ(rlpbwtbv.width, 500);
+    rlpbwt_bv rlpbwt_bv("../input/sample_panel.vcf", true);
+    EXPECT_EQ(rlpbwt_bv.height, 900);
+    EXPECT_EQ(rlpbwt_bv.width, 500);
     clock_t START = clock();
     // TODO add test check for basic_matches
-    rlpbwtbv.external_match_vcf("../input/sample_query.vcf", 255, false);
+    rlpbwt_bv.external_match_vcf("../input/sample_query.vcf", 255, false);
     std::cout << clock() - START << " time\n";
-}
+}*/
 
 TEST(RlpbwtRaTest, TestBuildQuery) {
     rlpbwt_ra<panel_ra> rlpbwtRa("../input/sample_new.txt", true);
     auto matches = rlpbwtRa.match_thr("010010100011101", true);
     std::cout << matches << "\n";
     rlpbwt_ra<slp_panel_ra> rlpbwtSlp("../input/sample_new.txt", true,
-                                      "../input/sample.slp",
-                                      false);
+                                      false, "../input/sample.slp");
 
     matches = rlpbwtRa.match_thr("010010100011101", false);
     std::cout << matches << "\n";
@@ -316,21 +113,44 @@ TEST(RlpbwtRaTest, TestBuildQuery) {
     }
 
 }
+
 TEST(Lce, Test) {
-    rlpbwt_ra<slp_panel_ra> rlpbwtSlp("../input/sample_new.txt", true,
-                                      "../input/sample.slp", false);
+    rlpbwt_ra<slp_panel_ra> rlpbwtSlp("../input/sample_new.txt", true, false,
+                                      "../input/sample.slp");
     //rlpbwtSlp.extend();
-    auto matches = rlpbwtSlp.match_lce("010010100011101", true,false);
+    auto matches = rlpbwtSlp.match_thr("010010100011101", true, false);
     std::cout << matches;
+    std::cout << rlpbwtSlp.panel->size_in_bytes() << " "
+              << rlpbwtSlp.panel->size_in_mega_bytes();
+}
+
+TEST(RlpbwtNaive, BuildQuery) {
+    rlpbwt_naive rlpbwt("../input/sample_new.txt");
+    std::cout << rlpbwt;
+    auto matches = rlpbwt.external_match("010010100011101");
+    std::cout << matches;
+
+    rlpbwt_bv rlpbwtbv("../input/sample_new.txt");
+    std::cout << rlpbwt;
+    matches = rlpbwt.external_match("010010100011101");
+    std::cout << matches;
+}
+
+TEST(MixRlpbwt, TestBuildSize) {
+    rlpbwt_naive rlpbwt("../input/sample_new.txt");
+    rlpbwt_bv rlpbwtbv("../input/sample_new.txt");
+    rlpbwt_ra<slp_panel_ra> rlpbwtSlp("../input/sample_new.txt", true,
+                                      false, "../input/sample.slp");
+    rlpbwt_ra<panel_ra> rlpbwtPan("../input/sample_new.txt", true, false);
+    std::cout << "rlpbwt:\n"<< rlpbwt.size_in_mega_bytes(true) << " megabytes\n----\n";
+    std::cout << "rlpbwt_bv:\n"<< rlpbwtbv.size_in_mega_bytes(true) << " megabytes\n----\n";
+    std::cout << "rlpbwt_slp:\n"<< rlpbwtSlp.size_in_mega_bytes(true) << " megabytes\n----\n";
+    std::cout << "rlpbwt_pa:\n"<< rlpbwtPan.size_in_mega_bytes(true) << " megabytes\n----\n";
+
 }
 
 int main(int argc, char **argv) {
     ::testing::InitGoogleTest(&argc, argv);
-    //::testing::GTEST_FLAG(filter) = "BuildRlpbwtTest*";
-    //::testing::GTEST_FLAG(filter) = "BuildRlpbwtSerOrig*";
-    //::testing::GTEST_FLAG(filter) = "BuildBiRlpbwtTest*";
-    //::testing::GTEST_FLAG(filter) = "BuildRlpbwtVCF*";
-    //::testing::GTEST_FLAG(filter) = "BuildBiRlpbwtVCF*";
     //::testing::GTEST_FLAG(filter) = "BuildRlpbwtSerBV*";
     //::testing::GTEST_FLAG(filter) = "BuildRlpbwtBVtest*";
     //::testing::GTEST_FLAG(filter) = "BuildRlpbwtBVVCF*";
@@ -338,6 +158,8 @@ int main(int argc, char **argv) {
     //::testing::GTEST_FLAG(filter) = "BuildRlpbwtSerThr*";
     //::testing::GTEST_FLAG(filter) = "BuildRlpbwtNewThr*";
     //::testing::GTEST_FLAG(filter) = "RlpbwtRaTest*";
-    ::testing::GTEST_FLAG(filter) = "Lce*";
+    //::testing::GTEST_FLAG(filter) = "Lce*";
+    //::testing::GTEST_FLAG(filter) = "RlpbwtNaive*";
+    ::testing::GTEST_FLAG(filter) = "MixRlpbwt*";
     return RUN_ALL_TESTS();
 }

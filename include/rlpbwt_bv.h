@@ -2,8 +2,8 @@
 // Created by dlcgold on 28/01/22.
 //
 
-#ifndef RLPBWT_RLPBWTBV_H
-#define RLPBWT_RLPBWTBV_H
+#ifndef RLPBWT_RLPBWT_BV_H
+#define RLPBWT_RLPBWT_BV_H
 
 #include <vector>
 #include <string>
@@ -16,20 +16,18 @@
 #include <algorithm>
 #include <list>
 #include <sdsl/bit_vectors.hpp>
-#include "column.h"
 #include "utils.h"
 #include "exceptions.h"
-#include "match.h"
-#include "match_end.h"
-#include "columnbv.h"
+#include "column_bv.h"
+#include "matches_naive.h"
 
-class rlpbwtbv {
+class rlpbwt_bv {
 public:
     /**
     * @brief vector with all the structs for every column in run-length encoded
     * PBWT matrix
     */
-    std::vector<columnbv> cols;
+    std::vector<column_bv> cols;
 
     /**
      * @brief height of the original panel
@@ -47,9 +45,10 @@ public:
      * one column of the panel
      * @param verbose bool for extra print
      */
-    explicit rlpbwtbv(const char *filename, bool vcf, bool verbose = false);
+    //explicit rlpbwt_bv(const char *filename, bool vcf, bool verbose = false);
+    explicit rlpbwt_bv(const char *filename, bool verbose = false);
 
-    rlpbwtbv();
+    rlpbwt_bv();
 
     /**
      * @brief function to obtain the struct for the run-length encoded PBWT
@@ -59,7 +58,7 @@ public:
      * @param div current divergence array
      * @return the struct for the run-length encoded PBWT column
      */
-    static columnbv
+    static column_bv
     build_column(std::string &column, std::vector<unsigned int> &pref,
                  sdsl::int_vector<> &div);
 
@@ -73,6 +72,8 @@ public:
     update(std::string &column, std::vector<unsigned int> &pref,
            sdsl::int_vector<> &div);
 
+    unsigned long long size_in_bytes(bool verbose = false);
+    double size_in_mega_bytes(bool verbose = false);
     /**
      * @brief function to compute basic_matches between the panel and a new query
      *
@@ -81,7 +82,7 @@ public:
      * @param verbose bool for extra print
      * @return a vector of basic_matches (begin, end, number of basic_matches)
      */
-    std::vector<match>
+    matches_naive
     external_match(const std::string &query, unsigned int min_len = 1,
                    bool verbose = false);
 
@@ -95,6 +96,13 @@ public:
      */
     void external_match_vcf(const char *filename, unsigned int min_len = 1,
                             bool verbose = false);
+
+    void
+    match_tsv(const char *filename, const char *out,
+              bool verbose = false);
+
+    void
+    match_tsv_tr(const char *filename, const char *out, bool verbose = false);
 
     /**
     * @brief function to compute the lf mapping, w(i, s) function in Durbin
@@ -140,4 +148,4 @@ public:
 };
 
 
-#endif //RLPBWT_RLPBWTBV_H
+#endif //RLPBWT_RLPBWT_BV_H

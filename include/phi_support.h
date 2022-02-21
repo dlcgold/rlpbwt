@@ -198,7 +198,7 @@ public:
         }
     }
 
-    unsigned long long size_in_bytes() {
+    unsigned long long size_in_bytes(bool verbose = false) {
         unsigned long long size = 0;
         for (unsigned int i = 0; i < this->phi_vec.size(); ++i) {
             size += sdsl::size_in_bytes(phi_vec[i]);
@@ -210,10 +210,13 @@ public:
             size += sdsl::size_in_bytes(phi_supp[i]);
             size += sdsl::size_in_bytes(phi_inv_supp[i]);
         }
+        if(verbose){
+            std::cout << "phi: " << size << " bytes\n";
+        }
         return size;
     }
 
-    double size_in_mega_bytes() {
+    double size_in_mega_bytes(bool verbose = false) {
         double size = 0;
         for (unsigned int i = 0; i < this->phi_vec.size(); ++i) {
             size += sdsl::size_in_mega_bytes(phi_vec[i]);
@@ -224,6 +227,9 @@ public:
             size += sdsl::size_in_mega_bytes(phi_inv_select[i]);
             size += sdsl::size_in_mega_bytes(phi_supp[i]);
             size += sdsl::size_in_mega_bytes(phi_inv_supp[i]);
+        }
+        if(verbose){
+            std::cout << "phi: " << size << " megabytes\n";
         }
         return size;
     }

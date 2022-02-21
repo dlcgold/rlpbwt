@@ -332,3 +332,5 @@ flycheck_*.el
 output/
 build/
 build_test/
+venv/
+old

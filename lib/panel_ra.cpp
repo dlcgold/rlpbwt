@@ -70,12 +70,12 @@ bool
 panel_ra::lceToRCheck(unsigned int col, unsigned int f_r, unsigned int s_r,
                       unsigned int length) const {
     unsigned int start = 0;
-    if ((int)col - ((int)length - 1) >= 0) {
-        start = col - (length - 1) ;
+    if ((int) col - ((int) length - 1) >= 0) {
+        start = col - (length - 1);
     }
     bool check = true;
     for (unsigned int i = start; i <= col; i++) {
-        if(this->getElem(f_r, i) != this->getElem(s_r, i)){
+        if (this->getElem(f_r, i) != this->getElem(s_r, i)) {
             check = false;
             break;
         }
@@ -101,6 +101,34 @@ panel_ra::lceToR(unsigned int col, unsigned int f_r, unsigned int s_r) const {
     }
 
     return col - tmp_col;
+}
+
+unsigned long long panel_ra::size_in_bytes(bool verbose) {
+    unsigned long long size = 0;
+
+    for (const auto &bv: this->panel) {
+        size += sdsl::size_in_bytes(bv);
+    }
+    if(verbose){
+        std::cout << "panel: " << size << " bytes\n";
+    }
+    size += (sizeof(unsigned int) * 2);
+
+    return size;
+}
+
+double panel_ra::size_in_mega_bytes(bool verbose) {
+    double size = 0;
+    double to_mega = ((double) 1 / (double) 1024) / (double) 1024;
+
+    for (const auto &bv: this->panel) {
+        size += sdsl::size_in_mega_bytes(bv);
+    }
+    if(verbose){
+        std::cout << "panel: " << size << " megabytes\n";
+    }
+    size += (sizeof(unsigned int) * 2 * to_mega);
+    return size;
 }
 
 panel_ra::~panel_ra() = default;

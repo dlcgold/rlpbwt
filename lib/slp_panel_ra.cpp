@@ -5,7 +5,8 @@
 #include "../include/slp_panel_ra.h"
 
 slp_panel_ra::slp_panel_ra(const char *filename, unsigned int h, unsigned int w)
-        : h(h),
+        : slp_file(filename),
+          h(h),
           w(w) {
     std::ifstream in(filename);
     if (in.is_open()) {
@@ -57,6 +58,30 @@ void slp_panel_ra::load(std::istream &in, const char *slp_filename) {
     std::ifstream slp_in;
     slp_in.open(slp_filename);
     this->panel.load(slp_in);
+}
+
+unsigned long long slp_panel_ra::size_in_bytes(bool verbose) {
+    unsigned long long size = 0;
+    std::filesystem::path slp{this->slp_file};
+    size += std::filesystem::file_size(slp);
+    if(verbose){
+        std::cout << "slp: " << size << " bytes\n";
+    }
+    size += (sizeof(unsigned int) * 2);
+
+    return size;
+}
+
+double slp_panel_ra::size_in_mega_bytes(bool verbose) {
+    double size = 0;
+    std::filesystem::path slp{this->slp_file};
+    double to_mega = ((double) 1 / (double) 1024) / (double) 1024;
+    size += ((double) std::filesystem::file_size(slp) * to_mega);
+    if(verbose){
+        std::cout << "slp: " << size << " megabytes\n";
+    }
+    size += (sizeof(unsigned int) * 2);
+    return size * to_mega;
 }
 
 
