@@ -82,7 +82,7 @@ TEST(RlpbwtRaTest, TestBuildQuery) {
 
     matches = rlpbwtSlp.match_thr("010010100011101", false);
     std::cout << matches << "\n";
-    std::cout << rlpbwtSlp.extended << "\n";
+    std::cout << rlpbwtSlp.is_extended << "\n";
     auto filename = "../output/phi_pbwt.ser";
     std::ofstream file_o;
     file_o.open(filename);
@@ -137,16 +137,91 @@ TEST(RlpbwtNaive, BuildQuery) {
 }
 
 TEST(MixRlpbwt, TestBuildSize) {
-    rlpbwt_naive rlpbwt("../input/sample_new.txt");
-    rlpbwt_bv rlpbwtbv("../input/sample_new.txt");
-    rlpbwt_ra<slp_panel_ra> rlpbwtSlp("../input/sample_new.txt", true,
-                                      false, "../input/sample.slp");
-    rlpbwt_ra<panel_ra> rlpbwtPan("../input/sample_new.txt", true, false);
-    std::cout << "rlpbwt:\n"<< rlpbwt.size_in_mega_bytes(true) << " megabytes\n----\n";
-    std::cout << "rlpbwt_bv:\n"<< rlpbwtbv.size_in_mega_bytes(true) << " megabytes\n----\n";
-    std::cout << "rlpbwt_slp:\n"<< rlpbwtSlp.size_in_mega_bytes(true) << " megabytes\n----\n";
-    std::cout << "rlpbwt_pa:\n"<< rlpbwtPan.size_in_mega_bytes(true) << " megabytes\n----\n";
+    bool size_verbose = false;
+    bool match_verbose = false;
+    auto input = "../input/sample_new.txt";
+    auto slp = "../input/sample.slp";
 
+    rlpbwt_naive rlpbwt(input);
+    std::cout << "rlpbwt:\n" << rlpbwt.size_in_mega_bytes(size_verbose)
+              << " megabytes\n----\n";
+
+    rlpbwt_bv rlpbwtbv(input);
+    std::cout << "rlpbwt_bv:\n" << rlpbwtbv.size_in_mega_bytes(size_verbose)
+              << " megabytes\n----\n";
+
+    rlpbwt_ra<slp_panel_ra> rlpbwtSlp(input, true,
+                                      false, slp);
+    std::cout << "rlpbwt_slp:\n" << rlpbwtSlp.size_in_mega_bytes(size_verbose)
+              << " megabytes\n----\n";
+    rlpbwtSlp.extend();
+    std::cout << "rlpbwt_slp_ext:\n"
+              << rlpbwtSlp.size_in_mega_bytes(size_verbose)
+              << " megabytes\n----\n";
+
+    rlpbwt_ra<panel_ra> rlpbwtPan(input, true, false);
+    std::cout << "rlpbwt_pa:\n" << rlpbwtPan.size_in_mega_bytes(size_verbose)
+              << " megabytes\n----\n";
+    rlpbwtPan.extend();
+    std::cout << "rlpbwt_pa_ext:\n"
+              << rlpbwtPan.size_in_mega_bytes(size_verbose)
+              << " megabytes\n----\n";
+    clock_t START = clock();
+    auto matches_naive = rlpbwt.external_match("010010100011101");
+    if (match_verbose) {
+        std::cout << matches_naive;
+    }
+    std::cout << "rlpbwt_naive time: "
+              << (float) (clock() - START) / CLOCKS_PER_SEC << " s\n";
+    START = clock();
+    matches_naive = rlpbwtbv.external_match("010010100011101");
+    if (match_verbose) {
+        std::cout << matches_naive;
+    }
+    std::cout << "rlpbwt_bv time: "
+              << (float) (clock() - START) / CLOCKS_PER_SEC << " s\n";
+    START = clock();
+    auto matches = rlpbwtSlp.match_lce("010010100011101", true);
+    if (match_verbose) {
+        std::cout << matches;
+    }
+    std::cout << "slp_lce_ext time: "
+              << (float) (clock() - START) / CLOCKS_PER_SEC << " s\n";
+    START = clock();
+    matches = rlpbwtSlp.match_lce("010010100011101", false);
+    if (match_verbose) {
+        std::cout << matches;
+    }
+    std::cout << "slp_lce_noext time: "
+              << (float) (clock() - START) / CLOCKS_PER_SEC << " s\n";
+    START = clock();
+    matches = rlpbwtSlp.match_thr("010010100011101", true);
+    if (match_verbose) {
+        std::cout << matches;
+    }
+    std::cout << "slp_thr_ext time: "
+              << (float) (clock() - START) / CLOCKS_PER_SEC << " s\n";
+    START = clock();
+    matches = rlpbwtSlp.match_thr("010010100011101", false);
+    if (match_verbose) {
+        std::cout << matches;
+    }
+    std::cout << "slp_thr_noext time: "
+              << (float) (clock() - START) / CLOCKS_PER_SEC << " s\n";
+    START = clock();
+    matches = rlpbwtPan.match_thr("010010100011101", true);
+    if (match_verbose) {
+        std::cout << matches;
+    }
+    std::cout << "panel_thr_ext time: "
+              << (float) (clock() - START) / CLOCKS_PER_SEC << " s\n";
+    START = clock();
+    matches = rlpbwtPan.match_thr("010010100011101", false);
+    if (match_verbose) {
+        std::cout << matches;
+    }
+    std::cout << "panel_thr_noext time: "
+              << (float) (clock() - START) / CLOCKS_PER_SEC << " s\n";
 }
 
 int main(int argc, char **argv) {

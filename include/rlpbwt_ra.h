@@ -18,8 +18,8 @@
 template<typename ra_t>
 class rlpbwt_ra {
 public:
-    bool thr_enabled{};
-    bool extended{};
+    bool is_thr_enabled{};
+    bool is_extended{};
     std::vector<column_thr> cols;
     // panel saved as requested
     ra_t *panel;
@@ -30,7 +30,7 @@ private:
     column_thr
     build_column(std::string &column, std::vector<unsigned int> &pref,
                  sdsl::int_vector<> &div) {
-        unsigned int height = pref.size();
+        unsigned int height_tmp = pref.size();
         // variable for "c" value
         unsigned int count0 = 0;
         // variables for compute "u" and "v" values
@@ -49,7 +49,7 @@ private:
         unsigned int thr_tmp = 0;
         unsigned int lcs = 0;
         // update start and "c" value
-        for (unsigned int i = 0; i < height; i++) {
+        for (unsigned int i = 0; i < height_tmp; i++) {
             if (i == 0 && column[pref[i]] == '1') {
                 start = false;
             }
@@ -59,10 +59,10 @@ private:
         }
 
         // initialize the three bitvectors
-        sdsl::bit_vector runvec(height + 1, 0);
-        sdsl::bit_vector thr(height, 0);
+        sdsl::bit_vector runvec(height_tmp + 1, 0);
+        sdsl::bit_vector thr(height_tmp, 0);
         sdsl::bit_vector zerovec(count0, 0);
-        sdsl::bit_vector onevec(height - count0, 0);
+        sdsl::bit_vector onevec(height_tmp - count0, 0);
 
         // bools to check if we are at the beginning of a run and if we have to swap
         // the counting of zeros and ones
@@ -78,7 +78,7 @@ private:
         }
 
         // iteration over the entire column
-        for (unsigned int i = 0; i < height; i++) {
+        for (unsigned int i = 0; i < height_tmp; i++) {
             // if we are at the beginning of a run we save previous temporary values
             // for "u" and "v"
             if (begrun) {
@@ -97,7 +97,7 @@ private:
 
 
             // stuff for thresholds
-            if (this->thr_enabled) {
+            if (this->is_thr_enabled) {
                 if ((i == 0) || (column[pref[i]] != column[pref[i - 1]])) {
                     thr_tmp = i;
                     lcs = div[i];
@@ -108,11 +108,11 @@ private:
                 }
             }
 
-            if ((i == height - 1) || (column[pref[i]] != column[pref[i + 1]])) {
+            if ((i == height_tmp - 1) || (column[pref[i]] != column[pref[i + 1]])) {
                 // 1 in bitvectors for runs et every end of a run
                 runvec[i] = true;
                 // 1 in bitvectors for thresholds index
-                if (this->thr_enabled) {
+                if (this->is_thr_enabled) {
                     thr[thr_tmp] = true;
                 }
                 rows.emplace_back(tmp_beg, pref[i]);
@@ -151,7 +151,7 @@ private:
         }
         sdsl::util::bit_compress(sample_beg);
         sdsl::util::bit_compress(sample_end);
-        if (!this->thr_enabled) {
+        if (!this->is_thr_enabled) {
             thr = sdsl::bit_vector(0);
         }
         return {start, count0, runvec, zerovec, onevec, thr, sample_beg,
@@ -417,7 +417,7 @@ public:
             }
         }
         if (input_matrix.is_open()) {
-            this->thr_enabled = thr;
+            this->is_thr_enabled = thr;
             std::string header1;
             std::string header2;
             std::string line;
@@ -509,7 +509,7 @@ public:
                 this->last_pref[i] = lpref[i];
             }
             sdsl::util::bit_compress(this->last_pref);
-            this->extended = false;
+            this->is_extended = false;
             this->width = tmp_width;
             this->height = tmp_height;
             input_matrix.close();
@@ -519,17 +519,17 @@ public:
     }
 
     void extend(bool verbose = false) {
-        if (!this->extended) {
+        if (!this->is_extended) {
             this->phi = new phi_support<ra_t>(this->cols, this->panel,
                                               this->last_pref, verbose);
-            this->extended = true;
+            this->is_extended = true;
         }
     }
 
     void unextend(bool verbose = false) {
-        if (this->extended) {
+        if (this->is_extended) {
             this->phi = nullptr;
-            this->extended = false;
+            this->is_extended = false;
         }
     }
 
@@ -632,7 +632,7 @@ public:
         if (query.size() != this->panel->w) {
             throw NotEqualLengthException{};
         }
-        if (extend_matches && !this->extended) {
+        if (extend_matches && !this->is_extended) {
             this->extend();
         }
 
@@ -900,13 +900,13 @@ public:
     ms_matches
     match_thr(const std::string &query, bool extend_matches = false,
               bool verbose = false) {
-        if (!this->thr_enabled) {
+        if (!this->is_thr_enabled) {
             throw NoThrException{};
         }
         if (query.size() != this->panel->w) {
             throw NotEqualLengthException{};
         }
-        if (extend_matches && !this->extended) {
+        if (extend_matches && !this->is_extended) {
             this->extend();
         }
 
@@ -1263,7 +1263,7 @@ public:
         size += (sizeof(bool) * 2);
         size += (sizeof(unsigned int) * 2);
         size += this->panel->size_in_bytes(verbose);
-        if (this->extended) {
+        if (this->is_extended) {
             size += this->phi->size_in_bytes(verbose);
         }
 
@@ -1311,7 +1311,7 @@ public:
         size += (sizeof(bool) * 2 * to_mega);
         size += (sizeof(unsigned int) * 2 * to_mega);
         size += this->panel->size_in_mega_bytes(verbose);
-        if (this->extended) {
+        if (this->is_extended) {
             size += this->phi->size_in_mega_bytes(verbose);
         }
 
@@ -1325,10 +1325,10 @@ public:
                                                 sdsl::util::class_name(
                                                         *this));
         size_t written_bytes = 0;
-        out.write((char *) &this->thr_enabled, sizeof(this->thr_enabled));
-        written_bytes += sizeof(this->thr_enabled);
-        out.write((char *) &this->extended, sizeof(this->extended));
-        written_bytes += sizeof(this->extended);
+        out.write((char *) &this->is_thr_enabled, sizeof(this->is_thr_enabled));
+        written_bytes += sizeof(this->is_thr_enabled);
+        out.write((char *) &this->is_extended, sizeof(this->is_extended));
+        written_bytes += sizeof(this->is_extended);
 
         written_bytes += this->panel->serialize(out, child, "panel");
         for (unsigned int i = 0; i < this->cols.size(); i++) {
@@ -1336,7 +1336,7 @@ public:
             written_bytes += this->cols[i].serialize(out, child, label);
         }
         written_bytes += this->last_pref.serialize(out, child, "last_pref");
-        if (this->extended) {
+        if (this->is_extended) {
             written_bytes += this->phi->serialize(out, child, "phi");
         }
         sdsl::structure_tree::add_size(child, written_bytes);
@@ -1344,8 +1344,8 @@ public:
     }
 
     void load(std::istream &in, const char *slp_filename = "") {
-        in.read((char *) &this->thr_enabled, sizeof(this->thr_enabled));
-        in.read((char *) &this->extended, sizeof(this->extended));
+        in.read((char *) &this->is_thr_enabled, sizeof(this->is_thr_enabled));
+        in.read((char *) &this->is_extended, sizeof(this->is_extended));
         if constexpr (!std::is_same_v<ra_t, panel_ra>) {
             if (std::string(slp_filename).empty()) {
                 throw SlpNotFoundException{};
@@ -1366,7 +1366,7 @@ public:
             this->cols.emplace_back(*c);
         }
         this->last_pref.load(in);
-        if (this->extended) {
+        if (this->is_extended) {
             auto _phi = new phi_support<ra_t>;
             _phi->load(in);
             this->phi = _phi;

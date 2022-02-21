@@ -89,8 +89,8 @@ public:
             }
         }
         for (unsigned int j = 0; j < counts.size(); j++) {
-            if (!phi_tmp[j][phi_tmp.size() - 1]) {
-                phi_tmp[j][phi_tmp.size() - 1] = true;
+            if (!phi_tmp[j][phi_tmp[j].size() - 1]) {
+                phi_tmp[j][phi_tmp[j].size() - 1] = true;
                 if (j == 0) {
                     this->phi_supp[last_pref[j]]
                     [counts[last_pref[j]].first] = panelbv->h;
@@ -102,8 +102,8 @@ public:
                 counts[last_pref[j]].first++;
             }
 
-            if (!phi_inv_tmp[j][phi_tmp.size() - 1]) {
-                phi_inv_tmp[j][phi_inv_tmp.size() - 1] = true;
+            if (!phi_inv_tmp[j][phi_tmp[j].size() - 1]) {
+                phi_inv_tmp[j][phi_inv_tmp[j].size() - 1] = true;
                 if (j == counts.size() - 1) {
                     this->phi_inv_supp[last_pref[j]]
                     [counts[last_pref[j]].second] = panelbv->h;
