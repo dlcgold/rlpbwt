@@ -586,7 +586,84 @@
     \State \textbf{return} $(curr_{index},\,\,curr_{run},\,\,symb)$
     \EndFunction
   \end{algorithmic}
-  \caption{Algorithm to update values for matching statistics of RLPBWT} 
+  \caption{Algoritmo per l'update usando le matching statistics} 
+\end{algorithm}
+\begin{algorithm}
+  \footnotesize
+  \begin{algorithmic}[1]
+    \Function{Build\_phi}{$cols, panel, prefix$}
+    \Comment  $prefix$ is the last prefix array
+    \State $\varphi\gets [[0..0]..[0..0]],\,\,\varphi^{-1}\gets
+    [[0..0]..[0..0]]$ 
+    \Comment sparse bit vector panels for $\varphi$ and $\varphi^{-1}$
+    \State $\varphi_{supp} = [],\,\,\varphi_{supp}^{-1} = []$
+    \Comment vectors for $\varphi$ and $\varphi^{-1}$ row values
+    \For {\textit{every} $k\in [0,|cols|)$}
+    \For {\textit{every} $i\in [0,|samples_{beg}|)$}
+    \State $\varphi[sample_{beg}^{k}[i]][k]\gets 1$
+    \If{$i=0$}
+    \State $push(\varphi_{supp}[sample_{beg}^{k}[i]], panel_{height})$
+    \Else
+    \State $push(\varphi_{supp}[sample_{beg}^{k}[i]],sample_{end}^{k}[i-1])$
+    \EndIf
+
+    \State $\varphi^{-1}[sample_{end}^{k}[i]][k]\gets 1$
+    \If{$i=|sample_{beg}^k|-1$}
+    \State $push(\varphi_{supp}^{-1}[sample_{end}^{k}[i]], panel_{height})$
+    \Else
+    \State $push(\varphi_{supp}^{-1}[sample_{end}^{k}[i]],sample_{beg}^{k}[i+1])$
+    \EndIf
+    \EndFor
+    \EndFor
+    \For {\textit{every} $k\in [0,|prefix|)$}
+    \If{$\varphi[k][|\varphi[k]|-1] = 0$}
+    \State $\varphi[k][|\varphi[k]|-1]\gets 1$
+    \If{$k=0$}
+    \State $push(\varphi_{supp}[prefix^k], panel_{height})$
+    \Else
+    \State $push(\varphi_{supp}[prefix^k] ,prefix^k[i-1])$
+    \EndIf
+    \EndIf
+
+    \If{$\varphi^{-1}[k][|\varphi[k]|-1] = 0$}
+    \State $\varphi^{-1}[k][|\varphi[k]|-1]\gets 1$
+    \If{$k=|prefix|-1$}
+    \State $push(\varphi^{-1}_{supp}[prefix^k], panel_{height})$
+    \Else
+    \State $push(\varphi^{-1}_{supp}[prefix^k] ,prefix^k[i+1])$
+    \EndIf
+    \EndIf
+    \EndFor
+    \State \textit{build rank/select for every sparse bitvector in} $\varphi$
+    and $\varphi^{-1}$
+    \EndFunction
+  \end{algorithmic}
+  \caption{Algoritmo per la costruzione della struttura per $\varphi$ e
+  $\varphi^{-1}$} 
+\end{algorithm}
+\begin{algorithm}
+  \begin{algorithmic}[1]
+    \Function {$\varphi$}{$prefix_{value}, col$}
+    \State $res\gets
+    \varphi_{supp}^{prefix_{value}}[rank_{\varphi}^{prefix_{value}}(col)]$ 
+    \If{$res = panel_{height}$}
+    \State \textbf{return} $null$
+    \Else
+    \State \textbf{return} $res$
+    \EndIf
+    \EndFunction
+  \end{algorithmic}
+  \begin{algorithmic}[1]
+    \Function {$\varphi^{-1}$}{$prefix_{value}, col$}
+     \State $res\gets \varphi^{-1}_{supp}\,^{prefix_{value}}[rank_{\varphi^{-1}}^{prefix_{value}}(col)]$
+    \If{$res = panel_{height}$ }
+    \State \textbf{return} $null$
+    \Else
+    \State \textbf{return} $res$
+    \EndIf
+    \EndFunction
+  \end{algorithmic}
+  \caption{Algoritmi per le query a $\varphi$ e $\varphi^{-1}$}
 \end{algorithm}
 \begin{algorithm}
   \begin{algorithmic}[1]
@@ -613,8 +690,8 @@
     \State \textbf{return} $haplos$
     \EndFunction
   \end{algorithmic}
-  \caption{Algorithm to extend a match at $col$ using $\varphi$ and
-  $\varphi^{-1}$ and MS}  
+  \caption{Algoritmo per estendere un match in $col$ usando $\varphi$,
+  $\varphi^{-1}$ e MS} 
 \end{algorithm}
 \end{document}
 

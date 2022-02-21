@@ -1,4 +1,4 @@
-This is XeTeX, Version 3.141592653-2.6-0.999993 (TeX Live 2021) (preloaded format=xelatex 2021.11.3)  20 FEB 2022 23:07
+This is XeTeX, Version 3.141592653-2.6-0.999993 (TeX Live 2021) (preloaded format=xelatex 2021.11.3)  21 FEB 2022 23:21
 entering extended mode
  \write18 enabled.
  %&-line parsing enabled.
@@ -1878,7 +1878,16 @@ Package fancyhdr Warning: \headheight is too small (12.0pt):
 
 (fancyhdr)                \addtolength{\topmargin}{-2.49998pt}.
 
-[7] (./psuedo.aux)
+[7]
+
+Package fancyhdr Warning: \headheight is too small (12.0pt): 
+(fancyhdr)                Make it at least 14.49998pt, for example:
+(fancyhdr)                \setlength{\headheight}{14.49998pt}.
+(fancyhdr)                You might also make \topmargin smaller to compensate:
+
+(fancyhdr)                \addtolength{\topmargin}{-2.49998pt}.
+
+[8] (./psuedo.aux)
 Package rerunfilecheck Info: File `psuedo.out' has not changed.
 (rerunfilecheck)             Checksum: D41D8CD98F00B204E9800998ECF8427E;0.
 Package logreq Info: Writing requests to 'psuedo.run.xml'.
@@ -1886,12 +1895,12 @@ Package logreq Info: Writing requests to 'psuedo.run.xml'.
 
  ) 
 Here is how much of TeX's memory you used:
- 51762 strings out of 476788
- 1127206 string characters out of 5822420
- 2102244 words of memory out of 6000000
- 70984 multiletter control sequences out of 15000+600000
+ 51763 strings out of 476788
+ 1127219 string characters out of 5822420
+ 2111244 words of memory out of 6000000
+ 70985 multiletter control sequences out of 15000+600000
  410286 words of font info for 73 fonts, out of 8000000 for 9000
  1348 hyphenation exceptions out of 8191
  99i,11n,103p,735b,4750s stack positions out of 5000i,500n,10000p,200000b,80000s
 
-Output written on psuedo.pdf (7 pages).
+Output written on psuedo.pdf (8 pages).
