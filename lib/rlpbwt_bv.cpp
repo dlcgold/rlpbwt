@@ -897,7 +897,7 @@ rlpbwt_bv::reverse_lf(unsigned int col_index, unsigned int index,
     }
 }
 
-
+/*
 void rlpbwt_bv::external_match_vcf(const char *filename, unsigned int min_len,
                                   bool verbose) {
     std::ifstream in(filename);
@@ -991,7 +991,7 @@ void rlpbwt_bv::external_match_vcf(const char *filename, unsigned int min_len,
         count++;
     }
 }
-
+*/
 size_t rlpbwt_bv::serialize(std::ostream &out, sdsl::structure_tree_node *v,
                            const std::string &name) {
     sdsl::structure_tree_node *child =

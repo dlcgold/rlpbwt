@@ -2,9 +2,9 @@
 // Created by dlcgold on 02/02/22.
 //
 
-#include "../include/column_thr.h"
+#include "../include/column_ms.h"
 
-column_thr::column_thr(bool zeroFirst, unsigned int count0,
+column_ms::column_ms(bool zeroFirst, unsigned int count0,
                        const sdsl::bit_vector &runs, const sdsl::bit_vector &u,
                        const sdsl::bit_vector &v, const sdsl::bit_vector &thr,
                        sdsl::int_vector<> sample_beg,
@@ -20,7 +20,7 @@ column_thr::column_thr(bool zeroFirst, unsigned int count0,
     this->thr = sdsl::sd_vector<>(thr);
 }
 
-std::ostream &operator<<(std::ostream &os, const column_thr &thr) {
+std::ostream &operator<<(std::ostream &os, const column_ms &thr) {
     auto yesno = "yes";
     if (!thr.zero_first) {
         yesno = "no";
@@ -36,7 +36,7 @@ std::ostream &operator<<(std::ostream &os, const column_thr &thr) {
     return os;
 }
 
-size_t column_thr::serialize(std::ostream &out, sdsl::structure_tree_node *v,
+size_t column_ms::serialize(std::ostream &out, sdsl::structure_tree_node *v,
                              const std::string &name) {
     sdsl::structure_tree_node *child =
             sdsl::structure_tree::add_child(v, name,
@@ -62,7 +62,7 @@ size_t column_thr::serialize(std::ostream &out, sdsl::structure_tree_node *v,
     return written_bytes;
 }
 
-void column_thr::load(std::istream &in) {
+void column_ms::load(std::istream &in) {
     in.read((char *) &this->zero_first, sizeof(this->zero_first));
     in.read((char *) &this->count_0, sizeof(this->count_0));
     this->runs.load(in);
@@ -81,7 +81,7 @@ void column_thr::load(std::istream &in) {
     this->select_thr = sdsl::sd_vector<>::select_1_type(&this->thr);
 }
 
-unsigned long long column_thr::size_in_bytes(bool verbose) const {
+unsigned long long column_ms::size_in_bytes(bool verbose) const {
     unsigned long long size = 0;
     size += sizeof(bool);
     size += sizeof(unsigned int);
@@ -116,7 +116,7 @@ unsigned long long column_thr::size_in_bytes(bool verbose) const {
     return size;
 }
 
-double column_thr::size_in_mega_bytes(bool verbose) const {
+double column_ms::size_in_mega_bytes(bool verbose) const {
     double size = 0;
     double to_mega = ((double) 1 / (double) 1024) / (double) 1024;
     size += (double) (sizeof(bool) * to_mega);
@@ -153,7 +153,7 @@ double column_thr::size_in_mega_bytes(bool verbose) const {
 }
 
 
-column_thr::~column_thr() = default;
+column_ms::~column_ms() = default;
 
-column_thr::column_thr() = default;
+column_ms::column_ms() = default;
 

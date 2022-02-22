@@ -11,6 +11,7 @@
 #include <sdsl/structure_tree.hpp>
 #include <sdsl/io.hpp>
 #include <climits>
+
 /**
  * @brief function to get the char (in bialleic case with 0 and 1) at certain
  * run index
@@ -91,6 +92,12 @@ my_serialize_vector(const std::vector<T> &vec, std::ostream &out,
     }
 }
 
+/**
+ * @brief function to serialize custom objects
+ * @tparam X type of the object
+ * @param x object to serialzie
+ * @param in std::ostream object in which serialize the data
+ */
 template<typename X>
 uint64_t
 my_serialize(const std::vector<X> &x,
@@ -142,6 +149,12 @@ void my_load_vector(std::vector<T> &vec, std::istream &in,
     in.read((char *) p, ((vec.size()) - idx) * sizeof(T));
 }
 
+/**
+ * @brief function to load custom objects
+ * @tparam X type of the object
+ * @param x object in which load the data
+ * @param in std::istream object from which load the data
+ */
 template<typename X>
 void my_load(std::vector<X> &x, std::istream &in,
              typename std::enable_if<std::is_fundamental<X>::value>::type * = 0) {

@@ -2,12 +2,12 @@
 // Created by dlcgold on 10/02/22.
 //
 
-#ifndef RLPBWT_RLPBWT_RA_H
-#define RLPBWT_RLPBWT_RA_H
+#ifndef RLPBWT_RLPBWT_MS_H
+#define RLPBWT_RLPBWT_MS_H
 
 #include <vector>
 #include <type_traits>
-#include "column_thr.h"
+#include "column_ms.h"
 #include "exceptions.h"
 #include "panel_ra.h"
 #include "slp_panel_ra.h"
@@ -15,19 +15,54 @@
 #include "ms.h"
 #include "ms_matches.h"
 
+/**
+ * @brief data structure for matching-statistics supported RLPBWT
+ * @tparam ra_t type of panel (panel_ra or slp_panel_ra)
+ */
 template<typename ra_t>
-class rlpbwt_ra {
+class rlpbwt_ms {
 public:
+    /**
+     * @brief bool to check if the RLPBWT support the use of thresholds
+     */
     bool is_thr_enabled{};
+
+    /**
+     * @brief bool to check if the RLPBWT is extended with phi/phi_inv structure
+     */
     bool is_extended{};
-    std::vector<column_thr> cols;
-    // panel saved as requested
+
+    /**
+    * @brief vector of matcing statistics supported columns
+    */
+    std::vector<column_ms> cols;
+
+    /**
+     * @brief panel (panel_ra or slp_panel_ra)
+     */
+
     ra_t *panel;
+    /**
+     * @brief phi/phi_inv support data structure
+     * @tparam type of panel (panel_ra or slp_panel_ra)
+     */
     phi_support<ra_t> *phi;
 
-
 private:
-    column_thr
+
+    /**
+     * @brief compressed int vector for last prefix array
+     */
+    sdsl::int_vector<> last_pref;
+
+    /**
+     * @brief function to build a naive column for a column of the panel
+     * @param column column of the panel
+     * @param pref current prefix array
+     * @param div current divergence array (as lcp array)
+     * @return the new naive column
+     */
+    column_ms
     build_column(std::string &column, std::vector<unsigned int> &pref,
                  sdsl::int_vector<> &div) {
         unsigned int height_tmp = pref.size();
@@ -108,7 +143,8 @@ private:
                 }
             }
 
-            if ((i == height_tmp - 1) || (column[pref[i]] != column[pref[i + 1]])) {
+            if ((i == height_tmp - 1) ||
+                (column[pref[i]] != column[pref[i + 1]])) {
                 // 1 in bitvectors for runs et every end of a run
                 runvec[i] = true;
                 // 1 in bitvectors for thresholds index
@@ -158,6 +194,12 @@ private:
                 sample_end};
     }
 
+    /**
+     * @brief function to update prefix/divergence (lcp) arrays as in Durbin
+     * @param column column of the panel
+     * @param pref current prefix array
+     * @param div current divergence array (as lcp array)
+     */
     static void
     update(std::string &column, std::vector<unsigned int> &pref,
            sdsl::int_vector<> &div) {
@@ -196,6 +238,14 @@ private:
         pref = new_pref;
     }
 
+    /**
+     * @brief function to compute the lf mapping, w(i, s) function in Durbin
+     * @param col_index index of the column
+     * @param index virtual index of the row of the original panel
+     * @param symbol symbol s
+     * @param verbose bool for extra print
+     * @return the index computed with the lf-mapping
+     */
     unsigned int
     lf(unsigned int col_index, unsigned int index, char symbol,
        bool verbose = false) const {
@@ -215,6 +265,12 @@ private:
         }
     }
 
+    /**
+     * @brief trick to extract u and v value from a run in rlpbwt column
+     * @param col_index index of the column
+     * @param index virtual index of the row of the original panel
+     * @return a std::pair with u as first and v as second
+     */
     std::pair<unsigned int, unsigned int>
     uvtrick(unsigned int col_index, unsigned int index) const {
         // for index 0 u = v = 0
@@ -319,6 +375,11 @@ private:
         }
     }
 
+    /**
+     * @brief function to extend matching statistics matches with matching
+     * rows indices
+     * @param ms_matches matching statistics matches that will be extended
+     */
     void extend_haplos(ms_matches &ms_matches) {
         for (unsigned int i = 0; i < ms_matches.basic_matches.size(); i++) {
             std::vector<unsigned int> haplos;
@@ -402,13 +463,34 @@ private:
     }
 
 public:
+    /**
+    * @brief height of the panel
+    */
     unsigned int width{};
+
+    /**
+     * @brief width of the panel
+     */
     unsigned int height{};
-    sdsl::int_vector<> last_pref;
 
-    rlpbwt_ra() = default;
+    /**
+     * @brief default constructor
+     */
+    rlpbwt_ms() = default;
 
-    explicit rlpbwt_ra(const char *filename, bool thr = false,
+    /**
+    * @brief default destructor
+    */
+    virtual ~rlpbwt_ms() = default;
+
+    /**
+     * @brief costructor of a RLPBWT that support matching statistics
+     * @param filename file with the panel
+     * @param thr bool to enable thresholds computation
+     * @param verbose bool fro extra prints
+     * @param slp_filename file with the slp of the panel
+     */
+    explicit rlpbwt_ms(const char *filename, bool thr = false,
                        bool verbose = false, const char *slp_filename = "") {
         std::ifstream input_matrix(filename);
         if constexpr (!std::is_same_v<ra_t, panel_ra>) {
@@ -437,7 +519,7 @@ public:
             std::cout << "w: " << tmp_width << "\n";
             input_matrix.clear();
             input_matrix.seekg(0, std::ios::beg);
-            this->cols = std::vector<column_thr>(tmp_width);
+            this->cols = std::vector<column_ms>(tmp_width);
             std::vector<unsigned int> pref(tmp_height);
             std::vector<unsigned int> lpref(tmp_height);
             sdsl::int_vector<> div(tmp_height);
@@ -474,7 +556,7 @@ public:
                               << this->cols[count].v
                               << "\n-------------------------------\n";
                 }
-                auto col = rlpbwt_ra::build_column(new_column, pref, div);
+                auto col = rlpbwt_ms::build_column(new_column, pref, div);
                 if constexpr (std::is_same_v<ra_t, panel_ra>) {
                     for (unsigned int k = 0; k < new_column.size(); k++) {
                         if (new_column[k] != '0') {
@@ -502,7 +584,7 @@ public:
                 if (count == tmp_width - 1) {
                     lpref = pref;
                 }
-                rlpbwt_ra::update(new_column, pref, div);
+                rlpbwt_ms::update(new_column, pref, div);
                 count++;
             }
             for (unsigned int i = 0; i < lpref.size(); i++) {
@@ -518,6 +600,10 @@ public:
         }
     }
 
+    /**
+     * @brief function to extend the RLPBWT with the phi/phi_inv structure
+     * @param verbose bool for extra prints
+     */
     void extend(bool verbose = false) {
         if (!this->is_extended) {
             this->phi = new phi_support<ra_t>(this->cols, this->panel,
@@ -526,13 +612,28 @@ public:
         }
     }
 
-    void unextend(bool verbose = false) {
+    /**
+     * @brief function to delete the phi/phi_inv structure
+     */
+    void unextend() {
         if (this->is_extended) {
             this->phi = nullptr;
             this->is_extended = false;
         }
     }
 
+    /**
+     * @brief function to check if longest common extension between two rows is
+     * equal or greater than a bound ending at a given column
+     * @param col ending column column
+     * @param curr current row
+     * @param other other row
+     * @param bound boiund to check
+     * @param verbose bool for extra prints
+     * @return true if ongest common extension between two rows is
+     * equal or greater than the bound
+     * @attention this function is enabled iff the panel is an SLP
+     */
     template<typename U = ra_t>
     std::enable_if_t<sizeof(U) && (!std::is_same<ra_t, panel_ra>::value), bool>
     lceBound(unsigned int col, unsigned int curr, unsigned int other,
@@ -561,7 +662,16 @@ public:
         return false;
     }
 
-
+    /**
+     * @brief cunction to compute longest common extension between two rows
+     * ending at a given column
+     * @param col ending column
+     * @param curr current row
+     * @param other other row
+     * @param verbose
+     * @return the lce value and the other row index
+     * @attention this function is enabled iff the panel is an SLP
+     */
     template<typename U = ra_t>
     std::enable_if_t<sizeof(U) && (!std::is_same<ra_t, panel_ra>::value),
             std::pair<unsigned int, unsigned int>>
@@ -579,15 +689,26 @@ public:
             std::cout << "at " << rev_col << ": " << pos_curr << ", "
                       << pos_other << "\n";
         }
-        unsigned int lcp_prev = lceToR(this->panel->panel, pos_other,
-                                       pos_curr);
-        if (lcp_prev >= col) {
-            lcp_prev = col;
+        unsigned int lcp_other = lceToR(this->panel->panel, pos_other,
+                                        pos_curr);
+        if (lcp_other >= col) {
+            lcp_other = col;
         }
-        return std::make_pair(other, lcp_prev);
+        return std::make_pair(other, lcp_other);
     }
 
-    //std::pair<unsigned int, unsigned int>
+    /**
+     * @brief function to compute longest common extension between a row and
+     * other two rows ending at a given column
+     * @param col ending column
+     * @param curr current row
+     * @param prev first row to compare
+     * @param next second row to compare
+     * @param verbose bool
+     * @return the best lce value and the best row index between curr row and
+     * the other two
+     * @attention this function is enabled iff the panel is an SLP
+     */
     template<typename U = ra_t>
     std::enable_if_t<sizeof(U) && (!std::is_same<ra_t, panel_ra>::value),
             std::pair<unsigned int, unsigned int>>
@@ -624,6 +745,16 @@ public:
         }
     }
 
+    /**
+     * @brief function to compute matching statistics matches with a given query
+     * usning lce queries
+     * @param query haplotype query as std::string
+     * @param extend_matches bool to check if extend matching statistics matches
+     * with rows
+     * @param verbose bool for extra prints
+     * @return matching statistics matches
+     * @attention this function is enabled iff the panel is an SLP
+     */
     template<typename U = ra_t>
     std::enable_if_t<sizeof(U) && (!std::is_same<ra_t, panel_ra>::value),
             ms_matches>
@@ -896,7 +1027,16 @@ public:
         return ms_matches;
     }
 
-
+    /**
+     * @brief function to compute matching statistics matches with a given query
+     * using thresholds
+     * @param query haplotype query as std::string
+     * @param extend_matches bool to check if extend matching statistics matches
+     * with rows
+     * @param verbose bool for extra prints
+     * @return matching statistics matches
+     * @attention use this function is enabled iff thresholds are calculated
+     */
     ms_matches
     match_thr(const std::string &query, bool extend_matches = false,
               bool verbose = false) {
@@ -1097,7 +1237,13 @@ public:
         return ms_matches;
     }
 
-
+    /**
+     * @brief function to compute queries from a tsv file and output them
+     * on a file
+     * @param filename queries file
+     * @param out output file
+     * @param verbose bool for extra prints
+     */
     void
     match_tsv(const char *filename, const char *out,
               bool extend_matches = false, bool thr = false,
@@ -1163,6 +1309,13 @@ public:
         }
     }
 
+    /**
+     * @brief function to compute queries from a transposed tsv file and output
+     * them on a file
+     * @param filename queries file
+     * @param out output file
+     * @param verbose bool for extra prints
+     */
     void
     match_tsv_tr(const char *filename, const char *out, bool extend_matches,
                  bool thr = false, bool verbose = false) {
@@ -1222,7 +1375,12 @@ public:
         }
     }
 
-
+    /**
+     * @brief function to obtain size in bytes of the matching statistics
+     * supported RLPBWT
+     * @param verbose bool for extra prints
+     * @return size in bytes
+    */
     unsigned long long size_in_bytes(bool verbose = false) {
         unsigned long long size = 0;
         unsigned long long size_run = 0;
@@ -1270,6 +1428,12 @@ public:
         return size;
     }
 
+    /**
+     * @brief function to obtain size in megabytes of the matching statistics
+     * supported RLPBWT
+     * @param verbose bool for extra prints
+     * @return size in megabytes
+    */
     double size_in_mega_bytes(bool verbose = true) {
         double size = 0;
         double to_mega = ((double) 1 / (double) 1024) / (double) 1024;
@@ -1318,6 +1482,11 @@ public:
         return size;
     }
 
+    /**
+     * @brief function to serialize the matching statistics supported RLPBWT
+     * @param out std::ostream object to stream the serialization
+     * @return size of the serialization
+     */
     size_t serialize(std::ostream &out, sdsl::structure_tree_node *v = nullptr,
                      const std::string &name = "") {
         sdsl::structure_tree_node *child =
@@ -1343,6 +1512,11 @@ public:
         return written_bytes;
     }
 
+    /**
+     * @brief function to load the matching statistics supported RLPBWT object
+     * @param in std::istream object from which load the matching statistics
+     * supported RLPBWT structure object
+     */
     void load(std::istream &in, const char *slp_filename = "") {
         in.read((char *) &this->is_thr_enabled, sizeof(this->is_thr_enabled));
         in.read((char *) &this->is_extended, sizeof(this->is_extended));
@@ -1361,7 +1535,7 @@ public:
             this->panel = _panel;
         }
         for (unsigned int i = 0; i < this->panel->w; i++) {
-            auto c = new column_thr();
+            auto c = new column_ms();
             c->load(in);
             this->cols.emplace_back(*c);
         }
@@ -1375,4 +1549,4 @@ public:
 };
 
 
-#endif //RLPBWT_RLPBWT_RA_H
+#endif //RLPBWT_RLPBWT_MS_H

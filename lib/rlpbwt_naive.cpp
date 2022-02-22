@@ -698,5 +698,37 @@ double rlpbwt_naive::size_in_mega_bytes(bool verbose) {
     return size;
 }
 
+size_t rlpbwt_naive::serialize(std::ostream &out, sdsl::structure_tree_node *v,
+                               const std::string &name) {
+    sdsl::structure_tree_node *child =
+            sdsl::structure_tree::add_child(v, name,
+                                            sdsl::util::class_name(
+                                                    *this));
+    size_t written_bytes = 0;
+    out.write((char *) &this->height, sizeof(this->height));
+    written_bytes += sizeof(this->height);
+
+    out.write((char *) &this->width, sizeof(this->width));
+    written_bytes += sizeof(this->width);
+
+    for (unsigned int i = 0; i < this->cols.size(); i++) {
+        std::string label = "col_" + std::to_string(i);
+        written_bytes += this->cols[i].serialize(out, child, label);
+    }
+
+    sdsl::structure_tree::add_size(child, written_bytes);
+    return written_bytes;
+}
+
+void rlpbwt_naive::load(std::istream &in) {
+    in.read((char *) &this->height, sizeof(this->height));
+    in.read((char *) &this->width, sizeof(this->width));
+    auto c = new column_naive();
+    for (unsigned int i = 0; i <= this->width; i++) {
+        c->load(in);
+        this->cols.emplace_back(*c);
+    }
+}
+
 
 
