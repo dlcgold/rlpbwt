@@ -404,12 +404,14 @@ rlpbwt_naive::external_match(const std::string &query, bool verbose) {
                 std::cout << "f: " << curr_tmp << ", g: " << end_tmp << "\n";
             }
             if (i > 0) {
-                if (verbose) {
-                    std::cout << "match at (" << curr_beg << ", " << i - 1
-                              << ") with " << curr_len << " haplotypes \n";
+                if(i - curr_beg > 1) {
+                    if (verbose) {
+                        std::cout << "match at (" << curr_beg << ", " << i - 1
+                                  << ") with " << curr_len << " haplotypes \n";
+                    }
+                    matches.basic_matches.emplace_back(curr_len, i - curr_beg,
+                                                       i - 1);
                 }
-                matches.basic_matches.emplace_back(curr_len, i - curr_beg,
-                                                   i - 1);
             }
 
             // update e
@@ -532,9 +534,11 @@ rlpbwt_naive::external_match(const std::string &query, bool verbose) {
             std::cout << "match at (" << curr_beg << ", " << query.size() - 1
                       << ") with " << curr_len << " haplotypes \n";
         }
-        matches.basic_matches.emplace_back(curr_len, query.size() - curr_beg,
-                                           query.size() - 1);
-
+        if (query.size() - curr_beg > 1) {
+            matches.basic_matches.emplace_back(curr_len,
+                                               query.size() - curr_beg,
+                                               query.size() - 1);
+        }
     }
     return matches;
 }
@@ -549,8 +553,8 @@ rlpbwt_naive::match_tsv(const char *filename, const char *out, bool verbose) {
         std::string line;
         std::string garbage;
         std::string new_column;
-        getline(input_matrix, line);
-        getline(input_matrix, line);
+        getline(input_matrix, header1);
+        getline(input_matrix, header2);
         std::vector<std::string> queries_panel;
         while (getline(input_matrix, line) && !line.empty()) {
             std::istringstream is_col(line);
@@ -564,11 +568,12 @@ rlpbwt_naive::match_tsv(const char *filename, const char *out, bool verbose) {
         input_matrix.close();
         std::string query;
         if (out_match.is_open()) {
-            for (unsigned int i = 0; i < queries_panel[0].size(); i++) {
-                for (auto &j: queries_panel) {
-                    query.push_back(j[i]);
-                }
+            for (unsigned int i = 0; i < queries_panel.size(); i++) {
+                query = queries_panel[i];
                 matches_naive matches;
+                if (verbose) {
+                    std::cout << query << "\n";
+                }
                 matches = this->external_match(query, verbose);
                 if (verbose) {
                     std::cout << i << ": ";
@@ -606,8 +611,8 @@ void rlpbwt_naive::match_tsv_tr(const char *filename, const char *out,
         std::string line;
         std::string garbage;
         std::string new_column;
-        getline(input_matrix, line);
-        getline(input_matrix, line);
+        getline(input_matrix, header1);
+        getline(input_matrix, header2);
         std::vector<std::string> queries_panel;
         while (getline(input_matrix, line) && !line.empty()) {
             std::istringstream is_col(line);
@@ -619,11 +624,17 @@ void rlpbwt_naive::match_tsv_tr(const char *filename, const char *out,
             queries_panel.push_back(new_column);
         }
         input_matrix.close();
+        std::string query = "";
         if (out_match.is_open()) {
-            for (unsigned int i = 0; i < queries_panel.size(); i++) {
+            for (unsigned int i = 0; i < queries_panel[0].size(); i++) {
+                for(auto &j: queries_panel){
+                    query.push_back(j[i]);
+                }
+                if (verbose) {
+                    std::cout << query << "\n";
+                }
                 matches_naive matches;
-
-                matches = this->external_match(queries_panel[i], verbose);
+                matches = this->external_match(query, verbose);
                 if (verbose) {
                     std::cout << i << ": ";
                 }
@@ -638,6 +649,7 @@ void rlpbwt_naive::match_tsv_tr(const char *filename, const char *out,
                     std::cout << "\n";
                 }
                 out_match << "\n";
+                query.clear();
             }
             out_match.close();
         } else {
@@ -696,6 +708,38 @@ double rlpbwt_naive::size_in_mega_bytes(bool verbose) {
     size += (double) (sizeof(unsigned int) * to_mega);
 
     return size;
+}
+
+size_t rlpbwt_naive::serialize(std::ostream &out, sdsl::structure_tree_node *v,
+                               const std::string &name) {
+    sdsl::structure_tree_node *child =
+            sdsl::structure_tree::add_child(v, name,
+                                            sdsl::util::class_name(
+                                                    *this));
+    size_t written_bytes = 0;
+    out.write((char *) &this->height, sizeof(this->height));
+    written_bytes += sizeof(this->height);
+
+    out.write((char *) &this->width, sizeof(this->width));
+    written_bytes += sizeof(this->width);
+
+    for (unsigned int i = 0; i < this->cols.size(); i++) {
+        std::string label = "col_" + std::to_string(i);
+        written_bytes += this->cols[i].serialize(out, child, label);
+    }
+
+    sdsl::structure_tree::add_size(child, written_bytes);
+    return written_bytes;
+}
+
+void rlpbwt_naive::load(std::istream &in) {
+    in.read((char *) &this->height, sizeof(this->height));
+    in.read((char *) &this->width, sizeof(this->width));
+    auto c = new column_naive();
+    for (unsigned int i = 0; i <= this->width; i++) {
+        c->load(in);
+        this->cols.emplace_back(*c);
+    }
 }
 
 

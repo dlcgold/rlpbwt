@@ -21,99 +21,133 @@
 #include "column_bv.h"
 #include "matches_naive.h"
 
+/**
+ * @brief data structure for RLPBWT using sparse bitvectors
+ */
 class rlpbwt_bv {
 public:
     /**
-    * @brief vector with all the structs for every column in run-length encoded
-    * PBWT matrix
-    */
+     * @brief vector of bitvectors columns
+     */
     std::vector<column_bv> cols;
 
     /**
-     * @brief height of the original panel
+     * @brief height of the panel
      */
     unsigned int height{};
 
     /**
-     * @brief width of the original panel
+     * @brief width of the panel
      */
     unsigned int width{};
 
     /**
-     * @brief constructor for run-length encoded PBWT matrix
-     * @param filename path of the file with the panel, every row of the file is
-     * one column of the panel
-     * @param verbose bool for extra print
+     * @brief costructor of the bitvectors RLPBWT
+     * @param filename file with the original panel
+     * @param verbose bool for extra prints
      */
-    //explicit rlpbwt_bv(const char *filename, bool vcf, bool verbose = false);
     explicit rlpbwt_bv(const char *filename, bool verbose = false);
 
+    /**
+     * @brief default constructor
+     */
     rlpbwt_bv();
 
     /**
-     * @brief function to obtain the struct for the run-length encoded PBWT
-     * column, except for next_perm values
-     * @param column current column
+     * @brief function to obtain size in bytes of the bitvectors RLPBWT
+     * @param verbose bool for extra prints
+     * @return size in bytes
+    */
+    unsigned long long size_in_bytes(bool verbose = false);
+
+    /**
+     * @brief function to obtain size in megabytes of the bitvectors RLPBWT
+     * @param verbose bool for extra prints
+     * @return size in megabytes
+     */
+    double size_in_mega_bytes(bool verbose = false);
+
+    /**
+     * @brief function to produce naive matches from a query haplotype
+     * @param query std::string with the query
+     * @param verbose bool for extra prints
+     * @return a matches_naive object with naive matches
+     */
+    matches_naive
+    external_match(const std::string &query, bool verbose = false);
+
+    //void external_match_vcf(const char *filename, unsigned int min_len = 1,
+    //                        bool verbose = false);
+
+
+    /**
+     * @brief function to compute queries from a tsv file and output them
+     * on a file
+     * @param filename queries file
+     * @param out output file
+     * @param verbose bool for extra prints
+     */
+    void
+    match_tsv(const char *filename, const char *out,
+              bool verbose = false);
+
+    /**
+     * @brief function to compute queries from a transposed tsv file and output
+     * them on a file
+     * @param filename queries file
+     * @param out output file
+     * @param verbose bool for extra prints
+     */
+    void
+    match_tsv_tr(const char *filename, const char *out, bool verbose = false);
+
+    /**
+     * @brief function to serialize the bitvector RLPBWT
+     * @param out std::ostream object to stream the serialization
+     * @return size of the serialization
+     */
+    size_t serialize(std::ostream &out, sdsl::structure_tree_node *v = nullptr,
+                     const std::string &name = "");
+
+    /**
+     * @brief function to load the bitvector RLPBWT object
+     * @param in std::istream object from which load the bitvector RLPBWT
+     * structure object
+     */
+    void load(std::istream &in);
+
+private:
+
+    /**
+     * @brief function to build a sparse bitvectors column for a column of the
+     * panel
+     * @param column column of the panel
      * @param pref current prefix array
-     * @param div current divergence array
-     * @return the struct for the run-length encoded PBWT column
+     * @param div current divergence array (as lcp array)
+     * @return the new naive column
      */
     static column_bv
     build_column(std::string &column, std::vector<unsigned int> &pref,
                  sdsl::int_vector<> &div);
 
     /**
-     * @brief utility to compute prefix and divergence array
-     * @param column the current column
-     * @param pref the previous prefix array
-     * @param div the previous divergence array
+     * @brief function to update prefix/divergence (lcp) arrays as in Durbin
+     * @param column column of the panel
+     * @param pref current prefix array
+     * @param div current divergence array (as lcp array)
      */
     static void
     update(std::string &column, std::vector<unsigned int> &pref,
            sdsl::int_vector<> &div);
 
-    unsigned long long size_in_bytes(bool verbose = false);
-    double size_in_mega_bytes(bool verbose = false);
     /**
-     * @brief function to compute basic_matches between the panel and a new query
-     *
-     * @param query an haplotype string of the same length of the panel
-     * @param min_len minimum length of a match
+     * @brief function to compute the lf mapping, w(i, s) function in Durbin
+     * @param col_index index of the column
+     * @param index index of the row
+     * @param symbol symbol s
      * @param verbose bool for extra print
-     * @return a vector of basic_matches (begin, end, number of basic_matches)
+     * @return the index computed with the lf-mapping
      */
-    matches_naive
-    external_match(const std::string &query, unsigned int min_len = 1,
-                   bool verbose = false);
-
-    /**
-     * @brief function to compute basic_matches between the panel and a new query
-     * from a vcf file
-     * @param query an haplotype string of the same length of the panel
-     * @param min_len minimum length of a match
-     * @param verbose bool for extra print
-     * @return a vector of basic_matches (begin, end, number of basic_matches)
-     */
-    void external_match_vcf(const char *filename, unsigned int min_len = 1,
-                            bool verbose = false);
-
-    void
-    match_tsv(const char *filename, const char *out,
-              bool verbose = false);
-
-    void
-    match_tsv_tr(const char *filename, const char *out, bool verbose = false);
-
-    /**
-    * @brief function to compute the lf mapping, w(i, s) function in Durbin
-    *
-    * @param col_index index of the column
-    * @param row_index index of the run
-    * @param symbol symbol s
-    * @param offset offset to correctly calculate the mapping
-    * @param verbose bool for extra print
-    * @return the index computed with the lf-mapping
-    */
     unsigned int
     lf(unsigned int col_index, unsigned int index, char symbol,
        bool verbose = false) const;
@@ -122,16 +156,15 @@ public:
     /**
      * @brief trick to extract u and v value from a run in rlpbwt column
      * @param col_index index of the column
-     * @param row_index index of the run
+     * @param index virtual index of the row of the original panel
      * @return a std::pair with u as first and v as second
      */
     std::pair<unsigned int, unsigned int>
     uvtrick(unsigned int col_index, unsigned int index) const;
 
     /**
-     * @brief function to get the run in previous column which come from the
-     * current run, like a "reverse lf-mapping"
-     *
+     * @brief function to get the run in previous column from which come the
+     * current run (a sort of reverse lf mapping)
      * @param col_index index of the column
      * @param index virtual index of the row of the original panel
      * @param verbose bool for extra print
@@ -140,11 +173,6 @@ public:
     unsigned int
     reverse_lf(unsigned int col_index, unsigned int index,
                bool verbose) const;
-
-    size_t serialize(std::ostream &out, sdsl::structure_tree_node *v = nullptr,
-                     const std::string &name = "");
-
-    void load(std::istream &in);
 };
 
 

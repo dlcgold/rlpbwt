@@ -3,7 +3,7 @@
 #include <sdsl/int_vector.hpp>
 #include <sdsl/bit_vectors.hpp>
 #include "include/exceptions.h"
-#include "include/rlpbwt_ra.h"
+#include "include/rlpbwt_ms.h"
 //#include "include/slp_panel_ra.h"
 
 
@@ -165,8 +165,8 @@ int main(int argc, char **argv) {
     std::string in_filename("../input/sample_new.txt");
     std::string out_filename("../output/samplenew.txt.pbwt");
 
-    build<rlpbwt_ra<panel_ra>>(in_filename, out_filename);
-    print_size<rlpbwt_ra<panel_ra>>(out_filename);
+    build<rlpbwt_ms<panel_ra>>(in_filename, out_filename);
+    print_size<rlpbwt_ms<panel_ra>>(out_filename);
 
     return 0;
 }

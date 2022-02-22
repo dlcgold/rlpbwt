@@ -25,10 +25,10 @@ if (${BUILD_TESTS})
             include/exceptions.h
             lib/rlpbwt_bv.cpp include/rlpbwt_bv.h
             lib/column_bv.cpp include/column_bv.h
-            lib/column_thr.cpp include/column_thr.h
+            lib/column_ms.cpp include/column_ms.h
             lib/panel_ra.cpp include/panel_ra.h
             lib/slp_panel_ra.cpp include/slp_panel_ra.h
-            include/rlpbwt_ra.h
+            include/rlpbwt_ms.h
             include/phi_support.h
             lib/ms.cpp include/ms.h
             lib/ms_matches.cpp include/ms_matches.h
@@ -53,8 +53,8 @@ else ()
             lib/column_bv.cpp include/column_bv.h
             lib/panel_ra.cpp include/panel_ra.h
             lib/slp_panel_ra.cpp include/slp_panel_ra.h
-            lib/column_thr.cpp include/column_thr.h
-            include/rlpbwt_ra.h
+            lib/column_ms.cpp include/column_ms.h
+            include/rlpbwt_ms.h
             include/phi_support.h
             lib/ms.cpp include/ms.h
             lib/ms_matches.cpp include/ms_matches.h

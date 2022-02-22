@@ -443,8 +443,7 @@ void rlpbwt_bv::update(std::string &column, std::vector<unsigned int> &pref,
 }
 
 matches_naive
-rlpbwt_bv::external_match(const std::string &query, unsigned int min_len,
-                         bool verbose) {
+rlpbwt_bv::external_match(const std::string &query, bool verbose) {
     // query allowed iff |query| is uqual to RLPBWT width
     if (query.size() != this->width) {
         throw NotEqualLengthException{};
@@ -514,7 +513,7 @@ rlpbwt_bv::external_match(const std::string &query, unsigned int min_len,
             // report basic_matches if longer than a minimum length
             // TODO this is a row solution regarding the minimum length aspect
             if (i > 0) {
-                if ((i - 1) - curr_beg >= min_len) {
+                if (i  - curr_beg > 1) {
                     if (verbose) {
                         std::cout << "match at (" << curr_beg << ", " << i - 1
                                   << ") with " << curr_len << " haplotypes \n";
@@ -692,7 +691,7 @@ rlpbwt_bv::external_match(const std::string &query, unsigned int min_len,
                       << ") with " << curr_len << " haplotypes \n";
         }
         // TODO this is a row solution regarding the minimum length aspect
-        if ((query.size() - 1) - curr_beg >= min_len) {
+        if ((query.size() - 1) - curr_beg > 1) {
             matches.basic_matches.emplace_back(curr_len,
                                                query.size() - curr_beg,
                                                query.size() - 1);
@@ -897,7 +896,7 @@ rlpbwt_bv::reverse_lf(unsigned int col_index, unsigned int index,
     }
 }
 
-
+/*
 void rlpbwt_bv::external_match_vcf(const char *filename, unsigned int min_len,
                                   bool verbose) {
     std::ifstream in(filename);
@@ -991,7 +990,7 @@ void rlpbwt_bv::external_match_vcf(const char *filename, unsigned int min_len,
         count++;
     }
 }
-
+*/
 size_t rlpbwt_bv::serialize(std::ostream &out, sdsl::structure_tree_node *v,
                            const std::string &name) {
     sdsl::structure_tree_node *child =
@@ -1049,10 +1048,8 @@ rlpbwt_bv::match_tsv(const char *filename, const char *out, bool verbose) {
         input_matrix.close();
         std::string query;
         if (out_match.is_open()) {
-            for (unsigned int i = 0; i < queries_panel[0].size(); i++) {
-                for (auto &j: queries_panel) {
-                    query.push_back(j[i]);
-                }
+            for (unsigned int i = 0; i < queries_panel.size(); i++) {
+                query = queries_panel[i];
                 matches_naive matches;
                 matches = this->external_match(query, verbose);
                 if (verbose) {
@@ -1104,11 +1101,17 @@ rlpbwt_bv::match_tsv_tr(const char *filename, const char *out, bool verbose) {
             queries_panel.push_back(new_column);
         }
         input_matrix.close();
+        std::string query = "";
         if (out_match.is_open()) {
-            for (unsigned int i = 0; i < queries_panel.size(); i++) {
+            for (unsigned int i = 0; i < queries_panel[0].size(); i++) {
+                for(auto &j: queries_panel){
+                    query.push_back(j[i]);
+                }
+                if (verbose) {
+                    std::cout << query << "\n";
+                }
                 matches_naive matches;
-
-                matches = this->external_match(queries_panel[i], verbose);
+                matches = this->external_match(query, verbose);
                 if (verbose) {
                     std::cout << i << ": ";
                 }
@@ -1123,6 +1126,7 @@ rlpbwt_bv::match_tsv_tr(const char *filename, const char *out, bool verbose) {
                     std::cout << "\n";
                 }
                 out_match << "\n";
+                query.clear();
             }
             out_match.close();
         } else {

@@ -53,7 +53,7 @@ class WrongRaTypeException: public std::exception {
 };
 
 /**
- * @brief exception file not found
+ * @brief exception RLPBWT not build with thresholds support
  */
 class NoThrException: public std::exception {
     const char* what() const noexcept override {

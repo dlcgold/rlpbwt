@@ -1,25 +1,26 @@
 //
-// Created by dlcgold on 28/01/22.
+// Created by dlcgold on 02/02/22.
 //
 
-#ifndef RLPBWT_COLUMN_BV_H
-#define RLPBWT_COLUMN_BV_H
+#ifndef RLPBWT_COLUMN_MS_H
+#define RLPBWT_COLUMN_MS_H
 
 #include <vector>
+#include <ostream>
+#include <utility>
 #include <sdsl/int_vector.hpp>
 #include <sdsl/bit_vectors.hpp>
-#include <ostream>
+#include "utils.h"
 
 /**
- * @brief class to represent a column that supports naive matching using
- * sparse bitvectors
+ * @brief class to represent a column that supports matching statistics
  */
-class column_bv {
+class column_ms {
 public:
     /**
-    * @brief bool to check first value of the column in PBWT matrix
-    * (assuming biallelic)
-    */
+     * @brief bool to check first value of the column in PBWT matrix
+     * (assuming biallelic)
+     */
     bool zero_first{};
 
     /**
@@ -73,37 +74,62 @@ public:
     sdsl::sd_vector<>::select_1_type select_v;
 
     /**
-     * @brief compressed sdsl int vector for lcp
+     * @brief sparse bit vector representing the thresholds (min lcp in a run)
      */
-    sdsl::int_vector<> lcp;
+    sdsl::sd_vector<> thr;
 
     /**
-     * @brief constructor for a column that supports naive matching using
-     * sparse bitvectors
+    * @brief rank support for thresholds sparse bitvector
+    */
+    sdsl::sd_vector<>::rank_1_type rank_thr;
+
+    /**
+     * @brief select support for thresholds sparse bitvector
+     */
+    sdsl::sd_vector<>::select_1_type select_thr;
+
+    /**
+     * @brief sdsl compressed int vector for runs-head prefix array values
+     */
+    sdsl::int_vector<> sample_beg;
+
+    /**
+     * @brief sdsl compressed int vector for runs-tail prefix array values
+     */
+    sdsl::int_vector<> sample_end;
+
+    /**
+     * @brief constructor for a column supporting matching statistics
+     * use
+     *
      * @param zeroFirst
      * @param count0
      * @param runs
      * @param u
      * @param v
-     * @param lcp
+     * @param thr
+     * @param sample_beg
+     * @param sample_end
      */
-    column_bv(bool zeroFirst, unsigned int count0,
-             const sdsl::bit_vector& runs,
-             const sdsl::bit_vector& u,
-             const sdsl::bit_vector& v,
-             sdsl::int_vector<> lcp);
+    column_ms(bool zeroFirst, unsigned int count0,
+               const sdsl::bit_vector &runs,
+               const sdsl::bit_vector &u,
+               const sdsl::bit_vector &v,
+               const sdsl::bit_vector &thr,
+               sdsl::int_vector<> sample_beg,
+               sdsl::int_vector<> sample_end);
 
     /**
      * @brief default constructor
      */
-    column_bv();
+    column_ms();
 
     /**
      * @brief default destructor
      */
-    virtual ~column_bv();
+    virtual ~column_ms();
 
-    friend std::ostream &operator<<(std::ostream &os, const column_bv &columnbv);
+    friend std::ostream &operator<<(std::ostream &os, const column_ms &thr);
 
     /**
      * @brief function to obtain size in bytes of the column
@@ -113,10 +139,10 @@ public:
     unsigned long long size_in_bytes(bool verbose = false) const;
 
     /**
-    * @brief function to obtain size in megabytes of the column
-    * @param verbose bool for extra prints
-    * @return size in megabytes
-    */
+     * @brief function to obtain size in megabytes of the column
+     * @param verbose bool for extra prints
+     * @return size in megabytes
+     */
     double size_in_mega_bytes(bool verbose = false) const;
 
     /**
@@ -125,7 +151,7 @@ public:
      * @return size of the serialization
      */
     size_t serialize(std::ostream &out, sdsl::structure_tree_node *v = nullptr,
-                     const std::string& name = "");
+                     const std::string &name = "");
 
     /**
      * @brief function to load the column object
@@ -135,4 +161,4 @@ public:
 };
 
 
-#endif //RLPBWT_COLUMN_BV_H
+#endif //RLPBWT_COLUMN_MS_H

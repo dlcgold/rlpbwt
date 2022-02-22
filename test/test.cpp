@@ -4,7 +4,7 @@
 #include "../include/exceptions.h"
 #include "../include/rlpbwt_bv.h"
 #include "../include/panel_ra.h"
-#include "../include/rlpbwt_ra.h"
+#include "../include/rlpbwt_ms.h"
 #include "../include/rlpbwt_naive.h"
 
 /*
@@ -70,10 +70,10 @@ TEST (BuildRlpbwtBVVCF, TestBuildQuery) {
 }*/
 
 TEST(RlpbwtRaTest, TestBuildQuery) {
-    rlpbwt_ra<panel_ra> rlpbwtRa("../input/sample_new.txt", true);
+    rlpbwt_ms<panel_ra> rlpbwtRa("../input/sample_new.txt", true);
     auto matches = rlpbwtRa.match_thr("010010100011101", true);
     std::cout << matches << "\n";
-    rlpbwt_ra<slp_panel_ra> rlpbwtSlp("../input/sample_new.txt", true,
+    rlpbwt_ms<slp_panel_ra> rlpbwtSlp("../input/sample_new.txt", true,
                                       false, "../input/sample.slp");
 
     matches = rlpbwtRa.match_thr("010010100011101", false);
@@ -91,9 +91,9 @@ TEST(RlpbwtRaTest, TestBuildQuery) {
     file_o.close();
     std::ifstream file_i;
     file_i.open(filename);
-    auto rlpbwt = new rlpbwt_ra<slp_panel_ra>();
+    auto rlpbwt = new rlpbwt_ms<slp_panel_ra>();
     rlpbwt->load(file_i, "../input/sample.slp");
-
+    file_i.close();
     for (unsigned int i = 0; i < rlpbwt->panel->h; i++) {
         std::cout << i << ": ";
         for (unsigned int j = 0; j < rlpbwt->panel->w; j++) {
@@ -115,7 +115,7 @@ TEST(RlpbwtRaTest, TestBuildQuery) {
 }
 
 TEST(Lce, Test) {
-    rlpbwt_ra<slp_panel_ra> rlpbwtSlp("../input/sample_new.txt", true, false,
+    rlpbwt_ms<slp_panel_ra> rlpbwtSlp("../input/sample_new.txt", true, false,
                                       "../input/sample.slp");
     //rlpbwtSlp.extend();
     auto matches = rlpbwtSlp.match_thr("010010100011101", true, false);
@@ -150,7 +150,7 @@ TEST(MixRlpbwt, TestBuildSize) {
     std::cout << "rlpbwt_bv:\n" << rlpbwtbv.size_in_mega_bytes(size_verbose)
               << " megabytes\n----\n";
 
-    rlpbwt_ra<slp_panel_ra> rlpbwtSlp(input, true,
+    rlpbwt_ms<slp_panel_ra> rlpbwtSlp(input, true,
                                       false, slp);
     std::cout << "rlpbwt_slp:\n" << rlpbwtSlp.size_in_mega_bytes(size_verbose)
               << " megabytes\n----\n";
@@ -159,7 +159,7 @@ TEST(MixRlpbwt, TestBuildSize) {
               << rlpbwtSlp.size_in_mega_bytes(size_verbose)
               << " megabytes\n----\n";
 
-    rlpbwt_ra<panel_ra> rlpbwtPan(input, true, false);
+    rlpbwt_ms<panel_ra> rlpbwtPan(input, true, false);
     std::cout << "rlpbwt_pa:\n" << rlpbwtPan.size_in_mega_bytes(size_verbose)
               << " megabytes\n----\n";
     rlpbwtPan.extend();
@@ -224,6 +224,77 @@ TEST(MixRlpbwt, TestBuildSize) {
               << (float) (clock() - START) / CLOCKS_PER_SEC << " s\n";
 }
 
+TEST(Benchmark, Query) {
+    bool size_verbose = false;
+    bool match_verbose = false;
+    auto input = "../input/sample_new.txt";
+    auto slp = "../input/sample.slp";
+    auto queries = "../input/query.txt";
+    auto queries_tr = "../input/query_tr.txt";
+
+    rlpbwt_naive rlpbwt(input);
+    std::cout << "rlpbwt:\n" << rlpbwt.size_in_mega_bytes(size_verbose)
+              << " megabytes\n----\n";
+
+    rlpbwt_bv rlpbwtbv(input);
+    std::cout << "rlpbwt_bv:\n" << rlpbwtbv.size_in_mega_bytes(size_verbose)
+              << " megabytes\n----\n";
+
+    rlpbwt_ms<slp_panel_ra> rlpbwtSlp(input, true,
+                                      false, slp);
+    std::cout << "rlpbwt_slp:\n" << rlpbwtSlp.size_in_mega_bytes(size_verbose)
+              << " megabytes\n----\n";
+
+    rlpbwt_ms<panel_ra> rlpbwtPan(input, true, false);
+    std::cout << "rlpbwt_pa:\n" << rlpbwtPan.size_in_mega_bytes(size_verbose)
+              << " megabytes\n----\n";
+
+    rlpbwt.match_tsv(queries, "../output/rlpbwt_queries.txt", false);
+    rlpbwt.match_tsv_tr(queries_tr, "../output/rlpbwt_queries_tr.txt");
+
+
+    rlpbwtbv.match_tsv(queries, "../output/rlpbwtbv_queries.txt", false);
+    rlpbwtbv.match_tsv_tr(queries_tr, "../output/rlpbwtbv_queries_tr.txt");
+
+
+   rlpbwtSlp.match_tsv_thr(queries,
+                            "../output/rlpbwtSlp_thr_noext_queries.txt",
+                            false);
+    rlpbwtSlp.match_tsv_lce(queries,
+                            "../output/rlpbwtSlp_lce_noext_queries.txt",
+                            false);
+    rlpbwtSlp.match_tsv_thr(queries, "../output/rlpbwtSlp_thr_ext_queries.txt",
+                            true);
+    rlpbwtSlp.match_tsv_lce(queries, "../output/rlpbwtSlp_lce_ext_queries.txt",
+                            true);
+    rlpbwtSlp.match_tsv_tr_thr(queries_tr,
+                               "../output/rlpbwtSlp_thr_noext_queries_tr.txt",
+                               false);
+    rlpbwtSlp.match_tsv_tr_lce(queries_tr,
+                               "../output/rlpbwtSlp_lce_noext_queries_tr.txt",
+                               false);
+    rlpbwtSlp.match_tsv_tr_thr(queries_tr,
+                               "../output/rlpbwtSlp_thr_ext_queries_tr.txt",
+                               true);
+    rlpbwtSlp.match_tsv_tr_lce(queries_tr,
+                               "../output/rlpbwtSlp_lce_ext_queries_tr.txt",
+                               true);
+
+
+    rlpbwtPan.match_tsv_thr(queries,
+                            "../output/rlpbwtPan_thr_noext_queries.txt",
+                            false);
+    rlpbwtPan.match_tsv_thr(queries, "../output/rlpbwtPan_thr_ext_queries.txt",
+                            true);
+    rlpbwtPan.match_tsv_tr_thr(queries_tr,
+                               "../output/rlpbwtPan_thr_noext_queries_tr.txt",
+                               false);
+    rlpbwtPan.match_tsv_tr_thr(queries_tr,
+                               "../output/rlpbwtPan_thr_ext_queries_tr.txt",
+                               true);
+
+}
+
 int main(int argc, char **argv) {
     ::testing::InitGoogleTest(&argc, argv);
     //::testing::GTEST_FLAG(filter) = "BuildRlpbwtSerBV*";
@@ -235,6 +306,8 @@ int main(int argc, char **argv) {
     //::testing::GTEST_FLAG(filter) = "RlpbwtRaTest*";
     //::testing::GTEST_FLAG(filter) = "Lce*";
     //::testing::GTEST_FLAG(filter) = "RlpbwtNaive*";
-    ::testing::GTEST_FLAG(filter) = "MixRlpbwt*";
+    //::testing::GTEST_FLAG(filter) = "MixRlpbwt*";
+    ::testing::GTEST_FLAG(filter) = "Benchmark*";
+
     return RUN_ALL_TESTS();
 }

@@ -12,27 +12,80 @@
 #include <optional>
 #include "panel_ra.h"
 #include "slp_panel_ra.h"
-#include "column_thr.h"
+#include "column_ms.h"
 
+/**
+ * @brief class to rapresent the additional data structure for phi and phi_inv
+ * support
+ * @tparam ra_t type of the random access used in RLPBWT
+ */
 template<typename ra_t>
 class phi_support {
-
 private:
+    /**
+     * @brief default value (used to return null from the two functions)
+     */
     unsigned int def{};
 public:
+    /**
+     * @brief panel of sparse bitvectors for phi function
+     */
     std::vector<sdsl::sd_vector<>> phi_vec;
+
+    /**
+     * @brief panel of sparse bitvectors for phi_inv function
+     */
     std::vector<sdsl::sd_vector<>> phi_inv_vec;
+
+    /**
+     * @brief panel of rank support for phi function
+     */
     std::vector<sdsl::sd_vector<>::rank_1_type> phi_rank;
+
+    /**
+     * @brief panel of rank support for phi_inv function
+     */
     std::vector<sdsl::sd_vector<>::rank_1_type> phi_inv_rank;
+
+    /**
+     * @brief panel of select support for phi function
+     */
     std::vector<sdsl::sd_vector<>::select_1_type> phi_select;
+
+    /**
+     * @brief panel of select support for phi_inv function
+     */
     std::vector<sdsl::sd_vector<>::select_1_type> phi_inv_select;
+
+    /**
+     * @brief compressed int vector for prefix samples used by phi function
+     */
     std::vector<sdsl::int_vector<>> phi_supp;
+
+    /**
+     * @brief compressed int vector for prefix samples used by phi_inv function
+     */
     std::vector<sdsl::int_vector<>> phi_inv_supp;
 
+    /**
+     * @brief default constructor
+     */
     phi_support() = default;
 
-    explicit phi_support(std::vector<column_thr> &cols, ra_t *panelbv,
-                        sdsl::int_vector<> &last_pref, bool verbose = false) {
+    /**
+     * @brief default destructor
+     */
+    virtual ~phi_support() = default;
+
+    /**
+     * @brief constructor of the phi/phi_inv support data structure
+     * @param cols vector of the columns of the RLPBWT
+     * @param panelbv random access data structure for the panel of RLPBWT
+     * @param last_pref last prefix array of the PBWT
+     * @param verbose bool for extra prints
+     */
+    explicit phi_support(std::vector<column_ms> &cols, ra_t *panelbv,
+                         sdsl::int_vector<> &last_pref, bool verbose = false) {
         this->def = panelbv->h;
         auto phi_tmp = std::vector<sdsl::bit_vector>(panelbv->h,
                                                      sdsl::bit_vector(
@@ -53,10 +106,10 @@ public:
         this->phi_inv_select = std::vector<sdsl::sd_vector<>::select_1_type>(
                 panelbv->h);
         this->phi_supp = std::vector(panelbv->h,
-                                        sdsl::int_vector(panelbv->w));
+                                     sdsl::int_vector(panelbv->w));
         this->phi_inv_supp = std::vector(panelbv->h,
                                          sdsl::int_vector(
-                                                    panelbv->w));
+                                                 panelbv->w));
 
         std::vector<std::pair<unsigned int, unsigned int>> counts(
                 panelbv->h, std::make_pair(0, 0));
@@ -91,29 +144,41 @@ public:
         for (unsigned int j = 0; j < counts.size(); j++) {
             if (!phi_tmp[j][phi_tmp[j].size() - 1]) {
                 phi_tmp[j][phi_tmp[j].size() - 1] = true;
-                if (j == 0) {
+            }
+            if (j == 0) {
+                if (counts[last_pref[j]].first == 0 || this->phi_supp[last_pref[j]]
+                    [counts[last_pref[j]].first - 1] != panelbv->h) {
                     this->phi_supp[last_pref[j]]
                     [counts[last_pref[j]].first] = panelbv->h;
-                } else {
-                    this->phi_supp[last_pref[j]]
-                    [counts[last_pref[j]].first] =
-                            last_pref[j - 1];
                 }
-                counts[last_pref[j]].first++;
+            } else {
+                if (counts[last_pref[j]].first == 0 || this->phi_supp[last_pref[j]]
+                    [counts[last_pref[j]].first - 1] != last_pref[j - 1]) {
+                    this->phi_supp[last_pref[j]]
+                    [counts[last_pref[j]].first] = last_pref[j - 1];
+                }
             }
+            counts[last_pref[j]].first++;
 
-            if (!phi_inv_tmp[j][phi_tmp[j].size() - 1]) {
+            if (!phi_inv_tmp[j][phi_inv_tmp[j].size() - 1]) {
                 phi_inv_tmp[j][phi_inv_tmp[j].size() - 1] = true;
-                if (j == counts.size() - 1) {
+            }
+            if (j == counts.size() - 1) {
+                if (counts[last_pref[j]].second == 0 || this->phi_inv_supp[last_pref[j]]
+                    [counts[last_pref[j]].second - 1] != panelbv->h) {
                     this->phi_inv_supp[last_pref[j]]
                     [counts[last_pref[j]].second] = panelbv->h;
-                } else {
-                    this->phi_inv_supp[last_pref[j]]
-                    [counts[last_pref[j]].second] =
-                            last_pref[j + 1];
                 }
-                counts[last_pref[j]].second++;
+            } else {
+                if (counts[last_pref[j]].second == 0 || this->phi_inv_supp[last_pref[j]]
+                    [counts[last_pref[j]].second - 1] !=
+                    last_pref[j + 1]) {
+                    this->phi_inv_supp[last_pref[j]]
+                    [counts[last_pref[j]].second] = last_pref[j + 1];
+                }
             }
+            counts[last_pref[j]].second++;
+
         }
         for (unsigned int i = 0; i < counts.size(); i++) {
             this->phi_supp[i].resize(counts[i].first);
@@ -178,6 +243,12 @@ public:
         }
     }
 
+    /**
+     * @brief phi function that return an optional
+     * @param pref prefix array value
+     * @param col current column index
+     * @return previous prefix array value at current column (if exists)
+     */
     std::optional<unsigned int> phi(unsigned int pref, unsigned int col) {
         auto res = static_cast<unsigned int>(this->phi_supp[pref][this->phi_rank[pref](
                 col)]);
@@ -188,6 +259,12 @@ public:
         }
     }
 
+    /**
+     * @brief phi_inv function that return an optional
+     * @param pref prefix array value
+     * @param col current column index
+     * @return next prefix array value at current column (if exists)
+    */
     std::optional<unsigned int> phi_inv(unsigned int pref, unsigned int col) {
         auto res = static_cast<unsigned int>(this->phi_inv_supp[pref][this->phi_inv_rank[pref](
                 col)]);
@@ -198,6 +275,12 @@ public:
         }
     }
 
+    /**
+     * @brief function to obtain size in bytes of the phi/phi_inv support data
+     * structure
+     * @param verbose bool for extra prints
+     * @return size in bytes
+    */
     unsigned long long size_in_bytes(bool verbose = false) {
         unsigned long long size = 0;
         for (unsigned int i = 0; i < this->phi_vec.size(); ++i) {
@@ -210,12 +293,18 @@ public:
             size += sdsl::size_in_bytes(phi_supp[i]);
             size += sdsl::size_in_bytes(phi_inv_supp[i]);
         }
-        if(verbose){
+        if (verbose) {
             std::cout << "phi: " << size << " bytes\n";
         }
         return size;
     }
 
+    /**
+     * @brief function to obtain size in megabytes of the phi/phi_inv support data
+     * structure
+     * @param verbose bool for extra prints
+     * @return size in megabytes
+     */
     double size_in_mega_bytes(bool verbose = false) {
         double size = 0;
         for (unsigned int i = 0; i < this->phi_vec.size(); ++i) {
@@ -228,12 +317,17 @@ public:
             size += sdsl::size_in_mega_bytes(phi_supp[i]);
             size += sdsl::size_in_mega_bytes(phi_inv_supp[i]);
         }
-        if(verbose){
+        if (verbose) {
             std::cout << "phi: " << size << " megabytes\n";
         }
         return size;
     }
 
+    /**
+     * @brief function to serialize the phi/phi_inv data structure object
+     * @param out std::ostream object to stream the serialization
+     * @return size of the serialization
+     */
     size_t serialize(std::ostream &out, sdsl::structure_tree_node *v = nullptr,
                      const std::string &name = "") {
         sdsl::structure_tree_node *child =
@@ -265,6 +359,11 @@ public:
         return written_bytes;
     }
 
+    /**
+     * @brief function to load the phi/phi_inv data structure object
+     * @param in std::istream object from which load the phi/phi_inv data
+     * structure object
+     */
     void load(std::istream &in) {
         in.read((char *) &this->def, sizeof(this->def));
 
