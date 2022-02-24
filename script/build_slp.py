@@ -14,28 +14,9 @@ dirname = '../build/' + os.path.dirname(os.path.relpath(__file__))
 currdir = 'tmp/'
 bigrepair_dirname = os.path.join(dirname, "_deps/bigrepair-src")
 shaped_slp_dirname = os.path.join(dirname, "_deps/shaped_slp-build")
-repair_dirname = os.path.join(bigrepair_dirname, "repair")
-largeb_repair_dirname = os.path.join(bigrepair_dirname, "largeb_repair")
-
-repair_exe = os.path.join(repair_dirname, "irepair")
-largerepair_exe = os.path.join(largeb_repair_dirname, "largeb_irepair")
-bigrepair_exe = os.path.join(bigrepair_dirname, "bigrepair")
-despair_exe = os.path.join(repair_dirname, "despair")
-integer_despair_exe = os.path.join(repair_dirname, "idespair")
-preprocess_exe = os.path.join(bigrepair_dirname, "procdic")
-integer_preprocess_exe = os.path.join(bigrepair_dirname, "iprocdic")
-postprocess_exe = os.path.join(bigrepair_dirname, "postproc")
-integer_postprocess_exe = os.path.join(bigrepair_dirname, "ipostproc")
-shaped_slp = os.path.join(shaped_slp_dirname, "SlpEncBuild")
-
-print(dirname)
-print(bigrepair_dirname)
-print(shaped_slp_dirname)
-print(repair_dirname)
-print(largeb_repair_dirname)
 
 
-class extract():
+class extract:
     def __init__(self, filename, output):
         self.filename = filename
         self.output = output
@@ -51,7 +32,7 @@ class extract():
             return
 
 
-class bigrepair():
+class bigrepair:
     def __init__(self, filename):
         self.filename = filename
 
@@ -65,7 +46,7 @@ class bigrepair():
             return
 
 
-class shapedslp():
+class shapedslp:
     def __init__(self, filename, output):
         self.filename = filename
         self.output = output
@@ -81,7 +62,7 @@ class shapedslp():
             file=filename, out=outfile, g=grammar)
 
         print("==== ShapedSLP construction.\nCommand:", command, flush=True)
-        if execute_command(command) != True:
+        if not execute_command(command):
             return
 
 
@@ -117,8 +98,18 @@ def main(argv):
     slp = shapedslp(outname, outputfile)
     slp.run()
 
-    os.remove("rs_temp_output")
-    os.rmdir("tmp")
+    if os.path.isfile("rs_temp_output"):
+        os.remove("rs_temp_output")
+
+    if os.path.isdir("tmp"):
+        directory = "tmp"
+        for filename in os.listdir(directory):
+            f = os.path.join(directory, filename)
+            if os.path.isfile(f):
+                os.remove(f)
+
+        os.rmdir("tmp")
+
 
 if __name__ == "__main__":
     main(sys.argv[1:])
