@@ -9,11 +9,11 @@ def main(argv):
     try:
         opts, args = getopt.getopt(argv, "hi:o:", ["ifile=", "ofile="])
     except getopt.GetoptError:
-        print('matrix_to_slp.py -i <inputfile> -o <outputfile>')
+        print('tsv_to_single_row.py -i <inputfile> -o <outputfile>')
         sys.exit(2)
     for opt, arg in opts:
         if opt == '-h':
-            print('matrix_to_slp.py -i <inputfile> -o <outputfile>')
+            print('tsv_to_single_row.py -i <inputfile> -o <outputfile>')
             sys.exit()
         elif opt in ("-i", "--ifile"):
             inputfile = arg
@@ -36,7 +36,6 @@ def main(argv):
             for c in range(0, len(col[0])):
                 for r in range(0, len(col)):
                     out.write(col[r][c])
-    ## shapedslp
 
 
 if __name__ == "__main__":
