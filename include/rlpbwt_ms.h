@@ -79,9 +79,14 @@ private:
         // bool to check first symbol fo the column
         bool start = true;
 
-        std::vector<std::pair<unsigned int, unsigned int>> rows;
+        // support vector to store prefix array samples
+        std::vector<std::pair<unsigned int, unsigned int>> samples;
+
+        // support index to set bit in runs/thr bitvectors
         unsigned int tmp_beg = 0;
         unsigned int thr_tmp = 0;
+
+        // temporary variable to compute thresholds
         unsigned int lcs = 0;
         // update start and "c" value
         for (unsigned int i = 0; i < height_tmp; i++) {
@@ -131,7 +136,7 @@ private:
             }
 
 
-            // stuff for thresholds
+            // updating thresholds (iff thresholds are required)
             if (this->is_thr_enabled) {
                 if ((i == 0) || (column[pref[i]] != column[pref[i - 1]])) {
                     thr_tmp = i;
@@ -143,6 +148,7 @@ private:
                 }
             }
 
+            // do stuff at runs breakpoint
             if ((i == height_tmp - 1) ||
                 (column[pref[i]] != column[pref[i + 1]])) {
                 // 1 in bitvectors for runs et every end of a run
@@ -151,7 +157,7 @@ private:
                 if (this->is_thr_enabled) {
                     thr[thr_tmp] = true;
                 }
-                rows.emplace_back(tmp_beg, pref[i]);
+                samples.emplace_back(tmp_beg, pref[i]);
                 // update bitvectors for "u" and "v" and swap the case to study in
                 // next run
                 if (pusho) {
@@ -179,14 +185,18 @@ private:
 
         // compress div array
         sdsl::util::bit_compress(div);
-        sdsl::int_vector<> sample_beg(rows.size());
-        sdsl::int_vector<> sample_end(rows.size());
-        for (unsigned int i = 0; i < rows.size(); i++) {
-            sample_beg[i] = rows[i].first;
-            sample_end[i] = rows[i].second;
+
+        // create and compress samples sdsl int_vector
+        sdsl::int_vector<> sample_beg(samples.size());
+        sdsl::int_vector<> sample_end(samples.size());
+        for (unsigned int i = 0; i < samples.size(); i++) {
+            sample_beg[i] = samples[i].first;
+            sample_end[i] = samples[i].second;
         }
         sdsl::util::bit_compress(sample_beg);
         sdsl::util::bit_compress(sample_end);
+
+        // if not required delete threholds bitvector
         if (!this->is_thr_enabled) {
             thr = sdsl::bit_vector(0);
         }
@@ -381,8 +391,12 @@ private:
      * @param ms_matches matching statistics matches that will be extended
      */
     void extend_haplos(ms_matches &ms_matches) {
+        // iterate over every basic match
         for (unsigned int i = 0; i < ms_matches.basic_matches.size(); i++) {
+            // initialize the vector that will contain row indices
             std::vector<unsigned int> haplos;
+
+            // extract information from the current basic match
             unsigned int start_row = std::get<0>(
                     ms_matches.basic_matches[i]);
             haplos.emplace_back(start_row);
@@ -390,12 +404,18 @@ private:
                     ms_matches.basic_matches[i]);
             unsigned int curr_col = std::get<2>(
                     ms_matches.basic_matches[i]);
+
+            // initialize boolean and temporary variables for go up/down in
+            // search of matching rows
             bool check_down = true;
             unsigned int down_row = 0;
             bool check_up = true;
             unsigned int up_row = 0;
-            //down
+            // go down/up and add row that has a lce of at least current len in
+            // matching statistics (if panel is not saved as SLP the computation
+            // of lce is simulated with random access to the panel)
             if constexpr (std::is_same_v<ra_t, slp_panel_ra>) {
+                // down
                 while (check_down) {
                     auto phi_res = this->phi->phi_inv(start_row, curr_col);
                     if (!phi_res.has_value()) {
@@ -410,7 +430,7 @@ private:
                         check_down = false;
                     }
                 }
-                //up
+                // up
                 while (check_up) {
                     auto phi_res = this->phi->phi(start_row, curr_col);
                     if (!phi_res.has_value()) {
@@ -427,7 +447,7 @@ private:
                 }
 
             } else {
-                // TODO use panelbv
+                // down
                 while (check_down) {
                     auto phi_res = this->phi->phi_inv(start_row, curr_col);
                     if (!phi_res.has_value()) {
@@ -442,7 +462,7 @@ private:
                         check_down = false;
                     }
                 }
-                //up
+                // up
                 while (check_up) {
                     auto phi_res = this->phi->phi(start_row, curr_col);
                     if (!phi_res.has_value()) {
@@ -458,7 +478,7 @@ private:
                     }
                 }
             }
-
+            // record the haplotypes
             ms_matches.haplos.emplace_back(haplos);
         }
     }
@@ -566,6 +586,8 @@ public:
                     }
                 }
                 this->cols[count] = col;
+
+                // create rank/select outside build_column due to references problems
                 this->cols[count].rank_runs = sdsl::sd_vector<>::rank_1_type(
                         &this->cols[count].runs);
                 this->cols[count].select_runs = sdsl::sd_vector<>::select_1_type(
@@ -639,24 +661,28 @@ public:
     std::enable_if_t<sizeof(U) && (!std::is_same<ra_t, panel_ra>::value), bool>
     lceBound(unsigned int col, unsigned int curr, unsigned int other,
              unsigned int bound, bool verbose = false) {
-
+        // by design if we are at first column we don't compute any lce
         if (col == 0) {
             return false;
         }
+        // obtain the column in the reverse order (as the SLP is saved)
         unsigned int rev_col = (this->panel->w - 1) - col + 1;
-
+        // obtain indices of the symbols required in the SLP (built from the
+        // reverse matrix saved as a single line string)
         unsigned int pos_curr = rev_col + ((this->panel->w) * curr);
         unsigned int pos_other = rev_col + ((this->panel->w) * other);
         if (verbose) {
             std::cout << "at " << rev_col << ": " << pos_curr << ", "
                       << pos_other << "\n";
         }
-//        unsigned int lcp_pair_naive = lceToR_NaiveBounded(this->panel->panel, pos_other,
-//                                              pos_curr, bound);
+        // compute lce and return true if equal (or greater) than the bound
+//        unsigned int lcp_pair_naive = lceToR_NaiveBounded(this->panel->panel,
+//                                                          pos_other,
+//                                                          pos_curr, bound);
         // TODO check the bound in no naive version, it doesn't work
         unsigned int lcp_pair = lceToRBounded(this->panel->panel, pos_other,
                                               pos_curr, bound);
-        // TODO if the bound wotks it should be lcp_pair == bound
+        // TODO if the bound works it should be lcp_pair == bound
         if (lcp_pair >= bound) {
             return true;
         }
@@ -664,7 +690,7 @@ public:
     }
 
     /**
-     * @brief cunction to compute longest common extension between two rows
+     * @brief function to compute longest common extension between two rows
      * ending at a given column
      * @param col ending column
      * @param curr current row
@@ -678,18 +704,23 @@ public:
             std::pair<unsigned int, unsigned int>>
     lce(unsigned int col, unsigned int curr, unsigned int other,
         bool verbose = false) {
-
+        // by design if we are at first column we don't compute any lce
         if (col == 0) {
             return std::make_pair(other, 0);
         }
-        unsigned int rev_col = (this->panel->w - 1) - col + 1;
 
+        // obtain the column in the reverse order (as the SLP is saved)
+        unsigned int rev_col = (this->panel->w - 1) - col + 1;
+        // obtain indices of the symbols required in the SLP (built from the
+        // reverse matrix saved as a single line string)
         unsigned int pos_curr = rev_col + ((this->panel->w) * curr);
         unsigned int pos_other = rev_col + ((this->panel->w) * other);
         if (verbose) {
             std::cout << "at " << rev_col << ": " << pos_curr << ", "
                       << pos_other << "\n";
         }
+        // compute lce (eventually bounded with the column index value) and
+        // return the length (and the prefix value of the other position)
         unsigned int lcp_other = lceToR(this->panel->panel, pos_other,
                                         pos_curr);
         if (lcp_other >= col) {
@@ -715,12 +746,16 @@ public:
             std::pair<unsigned int, unsigned int>>
     lce_pair(unsigned int col, unsigned int curr, unsigned int prev,
              unsigned int next, bool verbose = false) {
-
+        // by design if we are at first column we don't compute any lce
         if (col == 0) {
             return std::make_pair(next, 0);
         }
+
+        // obtain the column in the reverse order (as the SLP is saved)
         unsigned int rev_col = (this->panel->w - 1) - col + 1;
 
+        // obtain indices of the symbols required in the SLP (built from the
+        // reverse matrix saved as a single line string)
         unsigned int pos_curr = rev_col + ((this->panel->w) * curr);
         unsigned int pos_prev = rev_col + ((this->panel->w) * prev);
         unsigned int pos_next = rev_col + ((this->panel->w) * next);
@@ -729,6 +764,8 @@ public:
                       << pos_prev
                       << ", " << pos_next << "\n";
         }
+        // compute lce for both requested indices (eventually bounded with the
+        // column index value)
         unsigned int lcp_prev = lceToR(this->panel->panel, pos_prev,
                                        pos_curr);
         if (lcp_prev >= col) {
@@ -739,6 +776,8 @@ public:
         if (lcp_next >= col) {
             lcp_next = col;
         }
+        // select the greater lce and return the length plus the relative prefix
+        // array index
         if (lcp_prev > lcp_next) {
             return std::make_pair(prev, lcp_prev);
         } else {
@@ -761,20 +800,29 @@ public:
             ms_matches>
     match_lce(const std::string &query, bool extend_matches = false,
               bool verbose = false) {
+        // compute the match iff |query| is equal to the width of the panel
         if (query.size() != this->panel->w) {
             throw NotEqualLengthException{};
         }
+        // if required extend with the phi support struct (iff not already
+        // extended)
         if (extend_matches && !this->is_extended) {
             this->extend();
         }
 
+        // initialize matching statistics
         ms ms(query.size());
+
+        // algorithm begin from the last row of the first column
+        // so we obtain the prefix array value (from the samples), the run index
+        // and the relative symbol
         auto curr_pos = static_cast<unsigned int>(this->cols[0].sample_end[
                 this->cols[0].sample_end.size() - 1]);
         auto curr_index = curr_pos;
         unsigned int curr_run = this->cols[0].rank_runs(curr_index);
         char symbol = get_next_char(this->cols[0].zero_first, curr_run);
 
+        // iterate over every query's symbol/column index
         for (unsigned int i = 0; i < query.size(); i++) {
             std::cout << "processed " << i << "\r";
             if (verbose) {
@@ -784,20 +832,29 @@ public:
                           << " "
                           << symbol << "\n";
             }
+            // a lot of cases:
+            // - if the pointer in the RLPBWT match the symbol in the query
+            //   we proceed simply using lf-mapping (if we are not at the end)
+            // - if the pointer in the RLPBWT mismatch the symbol in the query
+            //   and we have only that symbol in the column we restart from that
+            //   column as we are in column 0 (from the last row of the original
+            //   panle)
+            // - otherwise we proceeed using lce queries to select the best
+            //   symbol, between the previous and next good symbol (if the
+            //   exists), to jump
             if (query[i] == symbol) {
                 if (verbose) {
                     std::cout << "match:\n";
                 }
-                // save in matching statistics row vector
+                // report in matching statistics row/len vector
                 ms.row[i] = curr_pos;
                 if (i != 0) {
                     ms.len[i] = ms.len[i - 1] + 1;
                 } else {
                     ms.len[i] = 1;
                 }
+                // update index, run, symbol if we are not at the end
                 if (i != query.size() - 1) {
-                    // update index, run, symbol
-                    // TODO maybe make a function for this update
                     curr_index = lf(i, curr_index, query[i]);
                     curr_run = this->cols[i + 1].rank_runs(curr_index);
                     symbol = get_next_char(this->cols[i + 1].zero_first,
@@ -814,8 +871,13 @@ public:
                     if (verbose) {
                         std::cout << "complete mismatch\n";
                     }
+                    // report in matching statistics row vector using panel
+                    // height as sentinel
                     ms.row[i] = this->panel->h;
+                    // report in matching statistics len vector
                     ms.len[i] = 0;
+                    // update index, run, symbol (as explained before) if we are
+                    // not at the end
                     if (i != query.size() - 1) {
                         curr_pos = static_cast<unsigned int>(this->cols[0].sample_end[
                                 this->cols[0].sample_end.size() - 1]);
@@ -831,7 +893,10 @@ public:
                         }
                     }
                 } else {
+                    // if we are in the last run we check lce only with the
+                    // previous correct symbol
                     if (curr_run == this->cols[i].sample_beg.size() - 1) {
+                        // select symbol
                         curr_index =
                                 (this->cols[i].select_runs(curr_run) + 1) - 1;
                         auto prev_pos = static_cast<unsigned int>(this->cols[i].sample_end[
@@ -840,16 +905,18 @@ public:
                             std::cout << "end_run with " << curr_pos << ", "
                                       << prev_pos << "\n";
                         }
+                        // compute lce
                         auto lce_value = lce(i, curr_pos, prev_pos, false);
+                        // report in matching statistics row/len vector
                         ms.row[i] = prev_pos;
                         if (i == 0) {
                             ms.len[i] = 1;
                         } else {
                             ms.len[i] =
-                                    std::min(ms.len[i - 1],
-                                             lce_value.second) +
+                                    std::min(ms.len[i - 1], lce_value.second) +
                                     1;
                         }
+                        // update current position
                         curr_pos = prev_pos;
                         if (verbose) {
                             std::cout << "update: " << curr_index << " "
@@ -857,7 +924,7 @@ public:
                                       << " "
                                       << symbol << "\n";
                         }
-
+                        // update index, run, symbol if we are not at the end
                         if (i != query.size() - 1) {
                             curr_index = lf(i, curr_index, query[i]);
                             curr_run = this->cols[i + 1].rank_runs(curr_index);
@@ -871,6 +938,10 @@ public:
                             }
                         }
                     } else if (curr_run == 0) {
+                        // if we are in the first run we check lce only with the
+                        // next correct symbol
+
+                        // select index
                         curr_index = (this->cols[i].select_runs(curr_run + 1) +
                                       1);
                         auto next_pos = static_cast<unsigned int>(this->cols[i].sample_beg[
@@ -879,7 +950,9 @@ public:
                             std::cout << "first_run with " << curr_pos << ", "
                                       << next_pos << "\n";
                         }
+                        // compute lce
                         auto lce_value = lce(i, curr_pos, next_pos, false);
+                        // report in matching statistics row/len vector
                         ms.row[i] = next_pos;
                         if (i == 0) {
                             ms.len[i] = 1;
@@ -889,6 +962,7 @@ public:
                                              lce_value.second) +
                                     1;
                         }
+                        // update current position
                         curr_pos = next_pos;
                         if (verbose) {
                             std::cout << "update: " << curr_index << " "
@@ -896,6 +970,7 @@ public:
                                       << " "
                                       << symbol << "\n";
                         }
+                        // update index, run, symbol if we are not at the end
                         if (i != query.size() - 1) {
                             curr_index = lf(i, curr_index, query[i]);
                             curr_run = this->cols[i + 1].rank_runs(curr_index);
@@ -909,6 +984,11 @@ public:
                             }
                         }
                     } else {
+                        // in every other case we have to choice the best
+                        // solution
+
+                        // select the two indices of the previous/next correct
+                        // symbol
                         auto prev_pos = static_cast<unsigned int>(this->cols[i].sample_end[
                                 curr_run - 1]);
                         auto next_pos = static_cast<unsigned int>(this->cols[i].sample_beg[
@@ -918,6 +998,7 @@ public:
                                       << prev_pos << ", next: " << next_pos
                                       << " -> ";
                         }
+                        // compute lce
                         auto lce = this->lce_pair(i, curr_pos, prev_pos,
                                                   next_pos,
                                                   false);
@@ -925,6 +1006,10 @@ public:
                             std::cout << lce.first << ", " << lce.second
                                       << "\n";
                         }
+
+                        // select best choice, report in matching statistics
+                        // row/len vector and update index, run, symbol if we
+                        // are not at the end
                         if (lce.first == next_pos) {
                             curr_pos = next_pos;
                             ms.row[i] = curr_pos;
@@ -986,9 +1071,11 @@ public:
                 }
             }
         }
+        // initialize struct for matches
         ms_matches ms_matches;
+        // save every match from matching statistics (when we have a "peak" in
+        // ms len vector)
         for (unsigned int i = 0; i < ms.len.size(); i++) {
-            // TODO check if for last match
             if ((ms.len[i] != 0 && ms.len[i] > ms.len[i + 1]) ||
                 (i == ms.len.size() - 1 && ms.len[i] != 0)) {
                 ms_matches.basic_matches.emplace_back(ms.row[i], ms.len[i], i);
@@ -1017,6 +1104,7 @@ public:
             }
         }
 
+        // compute every row that are matching if required
         if (extend_matches) {
             if (verbose) {
                 std::cout << "extending\n";
@@ -1044,23 +1132,32 @@ public:
     ms_matches
     match_thr(const std::string &query, bool extend_matches = false,
               bool verbose = false) {
+        // if RLPBWT is built without thresholds throw relative exception
         if (!this->is_thr_enabled) {
             throw NoThrException{};
         }
+        // compute the match iff |query| is equal to the width of the panel
         if (query.size() != this->panel->w) {
             throw NotEqualLengthException{};
         }
+        // if required extend with the phi support struct (iff not already
+        // extended)
         if (extend_matches && !this->is_extended) {
             this->extend();
         }
-
+        // initialize matching statistics
         ms ms(query.size());
+
+        // algorithm begin from the last row of the first column
+        // so we obtain the prefix array value (from the samples), the run index
+        // and the relative symbol
         auto curr_pos = static_cast<unsigned int>(this->cols[0].sample_end[
                 this->cols[0].sample_end.size() - 1]);
         auto curr_index = curr_pos;
         unsigned int curr_run = this->cols[0].rank_runs(curr_index);
         char symbol = get_next_char(this->cols[0].zero_first, curr_run);
 
+        // iterate over every query's symbol/column index
         for (unsigned int i = 0; i < query.size(); i++) {
             std::cout << "processed " << i << "\r";
             if (verbose) {
@@ -1070,15 +1167,24 @@ public:
                           << " "
                           << symbol << "\n";
             }
+            // a lot of cases:
+            // - if the pointer in the RLPBWT match the symbol in the query
+            //   we proceed simply using lf-mapping (if we are not at the end)
+            // - if the pointer in the RLPBWT mismatch the symbol in the query
+            //   and we have only that symbol in the column we restart from that
+            //   column as we are in column 0 (from the last row of the original
+            //   panle)
+            // - otherwise we proceeed using thresholds to select the best
+            //   symbol, between the previous and next good symbol (if the
+            //   exists), to jump
             if (query[i] == symbol) {
                 if (verbose) {
                     std::cout << "match:\n";
                 }
-                // save in matching statistics row vector
+                // report in matching statistics row vector
                 ms.row[i] = curr_pos;
+                // update index, run, symbol if we are not at the end
                 if (i != query.size() - 1) {
-                    // update index, run, symbol
-                    // TODO maybe make a function for this update
                     curr_index = lf(i, curr_index, query[i]);
                     curr_run = this->cols[i + 1].rank_runs(curr_index);
                     symbol = get_next_char(this->cols[i + 1].zero_first,
@@ -1091,6 +1197,7 @@ public:
                     }
                 }
             } else {
+                // check if we are in a threshold
                 auto thr = this->cols[i].rank_thr(curr_index);
                 /* TODO if index is in the position of a thresholds
                  * understand what to do
@@ -1105,7 +1212,12 @@ public:
                     if (verbose) {
                         std::cout << "complete mismatch\n";
                     }
+                    // report in matching statistics row vector using panel
+                    // height as sentinel
                     ms.row[i] = this->panel->h;
+
+                    // update index, run, symbol (as explained before) if we are
+                    // not at the end
                     if (i != query.size() - 1) {
                         curr_pos = static_cast<unsigned int>(this->cols[0].sample_end[
                                 this->cols[0].sample_end.size() - 1]);
@@ -1122,12 +1234,12 @@ public:
                     }
                 } else if ((curr_run != 0 && !in_thr && curr_run == thr) ||
                            curr_run == this->cols[i].sample_beg.size() - 1) {
+                    // if we are above the threshold we go up (if we are not in
+                    // the first run). We also go up if we are in the last run
                     if (verbose) {
                         std::cout << "mismatch_up: ";
                     }
-                    // threshold below index so we go up
                     curr_index = (this->cols[i].select_runs(curr_run) + 1) - 1;
-                    //curr_prefs = this->cols[i].rows[curr_run - 1];
                     curr_pos = static_cast<unsigned int>(this->cols[i].sample_end[
                             curr_run - 1]);
                     if (verbose) {
@@ -1135,7 +1247,9 @@ public:
                                   << " "
                                   << symbol << "\n";
                     }
+                    // report in matching statistics row vector
                     ms.row[i] = curr_pos;
+                    // update index, run, symbol if we are not at the end
                     if (i != query.size() - 1) {
                         curr_index = lf(i, curr_index, query[i]);
                         curr_run = this->cols[i + 1].rank_runs(curr_index);
@@ -1149,19 +1263,22 @@ public:
                         }
                     }
                 } else {
+                    // we are below threshold  so we go down
                     if (verbose) {
                         std::cout << "mismatch_down: ";
                     }
-                    // threshold above index so we go down
                     curr_index = (this->cols[i].select_runs(curr_run + 1) + 1);
                     curr_pos = static_cast<unsigned int>(this->cols[i].sample_beg[
                             curr_run + 1]);
+
+                    // report in matching statistics row vector
                     ms.row[i] = curr_pos;
                     if (verbose) {
                         std::cout << "update: " << curr_index << " " << curr_pos
                                   << " "
                                   << symbol << "\n";
                     }
+                    // update index, run, symbol if we are not at the end
                     if (i != query.size() - 1) {
                         curr_index = lf(i, curr_index, query[i]);
                         curr_run = this->cols[i + 1].rank_runs(curr_index);
@@ -1178,13 +1295,16 @@ public:
             }
         }
 
+        // compute the len vector using random access on the panel, proceeding
+        // from right to left
         int tmp_index = 0;
-
         for (int i = (int) ms.row.size() - 1; i >= 0; i--) {
+            // if we have the sentinel in row vector than the length is 0
             if (ms.row[i] == this->panel->h) {
                 ms.len[i] = 0;
                 continue;
             }
+            // if row is the same we can simply use the previous computed length
             if (i != (int) ms.row.size() - 1 && ms.row[i] == ms.row[i + 1]) {
                 ms.len[i] = ms.len[i + 1] - 1;
                 continue;
@@ -1196,7 +1316,11 @@ public:
             }
             ms.len[i] = i - tmp_index;
         }
+
+        // initialize struct for matches
         ms_matches ms_matches;
+        // save every match from matching statistics (when we have a "peak" in
+        // ms len vector)
         for (unsigned int i = 0; i < ms.len.size(); i++) {
             if ((ms.len[i] != 0 && ms.len[i] > ms.len[i + 1]) ||
                 (i == ms.len.size() - 1 && ms.len[i] != 0)) {
@@ -1226,6 +1350,7 @@ public:
             }
         }
 
+        // compute every row that are matching if required
         if (extend_matches) {
             if (verbose) {
                 std::cout << "\nextending\n";

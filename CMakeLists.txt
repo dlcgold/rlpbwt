@@ -19,6 +19,7 @@ set(SUX_SOURCE_DIR ${shaped_slp_SOURCE_DIR}/external/sux/sux)
 option(BUILD_TESTS "Set OFF to not compile the tests" ON)
 
 if (${BUILD_TESTS})
+    find_package(benchmark REQUIRED)
     enable_testing()
     add_executable(rlpbwt_test test/test.cpp
             lib/utils.cpp include/utils.h
@@ -34,7 +35,8 @@ if (${BUILD_TESTS})
             lib/ms_matches.cpp include/ms_matches.h
             lib/column_naive.cpp include/column_naive.h
             lib/rlpbwt_naive.cpp include/rlpbwt_naive.h
-            lib/matches_naive.cpp include/matches_naive.h)
+            lib/matches_naive.cpp include/matches_naive.h
+            test/benchmark_test.h)
 
     target_include_directories(rlpbwt_test PUBLIC
             "${shaped_slp_SOURCE_DIR}"
@@ -42,7 +44,8 @@ if (${BUILD_TESTS})
             "${SUX_SOURCE_DIR}/function"
             "${SUX_SOURCE_DIR}/support")
 
-    target_link_libraries(rlpbwt_test sdsl divsufsort divsufsort64 -lgtest)
+    target_link_libraries(rlpbwt_test sdsl divsufsort divsufsort64 -lgtest
+            benchmark::benchmark)
 
     add_test(NAME rlpbwt_test COMMAND rlpbwt_test)
 else ()

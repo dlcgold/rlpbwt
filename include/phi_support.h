@@ -86,7 +86,10 @@ public:
      */
     explicit phi_support(std::vector<column_ms> &cols, ra_t *panelbv,
                          sdsl::int_vector<> &last_pref, bool verbose = false) {
+        // TODO select are useless at the moment
+        // default value is the panel height
         this->def = panelbv->h;
+        // initialize temporary panel of no-sparse bitvectors
         auto phi_tmp = std::vector<sdsl::bit_vector>(panelbv->h,
                                                      sdsl::bit_vector(
                                                              panelbv->w,
@@ -95,6 +98,7 @@ public:
                                                          sdsl::bit_vector(
                                                                  panelbv->w,
                                                                  0));
+        // initialize panels and vectors of the data structure
         this->phi_vec = std::vector<sdsl::sd_vector<>>(panelbv->h);
         this->phi_inv_vec = std::vector<sdsl::sd_vector<>>(panelbv->h);
         this->phi_rank = std::vector<sdsl::sd_vector<>::rank_1_type>(
@@ -111,13 +115,21 @@ public:
                                          sdsl::int_vector(
                                                  panelbv->w));
 
+        // support vector of pair in order to record how many elements are saved
+        // in the support vectors in order to resize (sdsl::int_vector not allow
+        // push_back() operation)
         std::vector<std::pair<unsigned int, unsigned int>> counts(
                 panelbv->h, std::make_pair(0, 0));
 
+        // iterate over every column
         for (unsigned int i = 0; i < cols.size(); i++) {
-            for (unsigned int j = 0;
-                 j < cols[i].sample_beg.size(); j++) {
+            // iterate over every run index
+            for (unsigned int j = 0; j < cols[i].sample_beg.size(); j++) {
+                // use sample beg to compute phi panel
                 phi_tmp[cols[i].sample_beg[j]][i] = true;
+                // use sample_end and counts (the first value) to compute
+                // support phi panel (if we are in the first run we use default
+                // value)
                 if (j == 0) {
                     this->phi_supp[cols[i].sample_beg[j]]
                     [counts[cols[i].sample_beg[j]].first] =
@@ -127,8 +139,15 @@ public:
                     [counts[cols[i].sample_beg[j]].first] =
                             cols[i].sample_end[j - 1];
                 }
+                // update counts first value
                 counts[cols[i].sample_beg[j]].first++;
+
+                // use sample end to compute phi_inv panel
                 phi_inv_tmp[cols[i].sample_end[j]][i] = true;
+
+                // use sample_beg and counts (the second value) to compute
+                // support phi panel (if we are in the last run we use default
+                // value)
                 if (j == cols[i].sample_beg.size() - 1) {
                     this->phi_inv_supp[cols[i].sample_end[j]]
                     [counts[cols[i].sample_end[j]].second] =
@@ -138,21 +157,28 @@ public:
                     [counts[cols[i].sample_end[j]].second] =
                             cols[i].sample_beg[j + 1];
                 }
+                // update counts second value
                 counts[cols[i].sample_end[j]].second++;
             }
         }
+
+        // use the last prefix array to compute the remain values for the
+        // phi support data structure (with the same "rules" of the previous
+        // case)
         for (unsigned int j = 0; j < counts.size(); j++) {
             if (!phi_tmp[j][phi_tmp[j].size() - 1]) {
                 phi_tmp[j][phi_tmp[j].size() - 1] = true;
             }
             if (j == 0) {
-                if (counts[last_pref[j]].first == 0 || this->phi_supp[last_pref[j]]
+                if (counts[last_pref[j]].first == 0 ||
+                    this->phi_supp[last_pref[j]]
                     [counts[last_pref[j]].first - 1] != panelbv->h) {
                     this->phi_supp[last_pref[j]]
                     [counts[last_pref[j]].first] = panelbv->h;
                 }
             } else {
-                if (counts[last_pref[j]].first == 0 || this->phi_supp[last_pref[j]]
+                if (counts[last_pref[j]].first == 0 ||
+                    this->phi_supp[last_pref[j]]
                     [counts[last_pref[j]].first - 1] != last_pref[j - 1]) {
                     this->phi_supp[last_pref[j]]
                     [counts[last_pref[j]].first] = last_pref[j - 1];
@@ -164,13 +190,15 @@ public:
                 phi_inv_tmp[j][phi_inv_tmp[j].size() - 1] = true;
             }
             if (j == counts.size() - 1) {
-                if (counts[last_pref[j]].second == 0 || this->phi_inv_supp[last_pref[j]]
+                if (counts[last_pref[j]].second == 0 ||
+                    this->phi_inv_supp[last_pref[j]]
                     [counts[last_pref[j]].second - 1] != panelbv->h) {
                     this->phi_inv_supp[last_pref[j]]
                     [counts[last_pref[j]].second] = panelbv->h;
                 }
             } else {
-                if (counts[last_pref[j]].second == 0 || this->phi_inv_supp[last_pref[j]]
+                if (counts[last_pref[j]].second == 0 ||
+                    this->phi_inv_supp[last_pref[j]]
                     [counts[last_pref[j]].second - 1] !=
                     last_pref[j + 1]) {
                     this->phi_inv_supp[last_pref[j]]
@@ -180,12 +208,14 @@ public:
             counts[last_pref[j]].second++;
 
         }
+        // resize and compress the support sdsl int_vector
         for (unsigned int i = 0; i < counts.size(); i++) {
             this->phi_supp[i].resize(counts[i].first);
             sdsl::util::bit_compress(this->phi_supp[i]);
             this->phi_inv_supp[i].resize(counts[i].second);
             sdsl::util::bit_compress(this->phi_inv_supp[i]);
         }
+        // create sparse bit vector and relative rank/select for phi panel
         unsigned int count = 0;
         for (auto &i: phi_tmp) {
             this->phi_vec[count] = sdsl::sd_vector<>(i);
@@ -195,6 +225,7 @@ public:
                     &this->phi_vec[count]);
             count++;
         }
+        // create sparse bit vector and relative rank/select for phi_inv panel
         count = 0;
         for (auto &i: phi_inv_tmp) {
             this->phi_inv_vec[count] = sdsl::sd_vector<>(i);

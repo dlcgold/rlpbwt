@@ -72,6 +72,8 @@ rlpbwt_bv::rlpbwt_bv(const char *filename, bool verbose) {
         }
         auto col = rlpbwt_bv::build_column(last_col, pref, div);
         this->cols[count] = col;
+
+        // create rank/select outside build_column due to references problems
         this->cols[count].rank_runs = sdsl::sd_vector<>::rank_1_type(
                 &this->cols[count].runs);
         this->cols[count].select_runs = sdsl::sd_vector<>::select_1_type(
@@ -310,8 +312,6 @@ rlpbwt_bv::build_column(std::string &column, std::vector<unsigned int> &pref,
     // temporary variables for compute "u" and "v" values
     unsigned int count0tmp = 0;
     unsigned int count1 = 0;
-    // variable to compute curr lcs in order to eventually compute thresholds
-    // unsigned int lcs = 0;
     // bool to check first symbol fo the column
     bool start = true;
 
@@ -360,16 +360,7 @@ rlpbwt_bv::build_column(std::string &column, std::vector<unsigned int> &pref,
             count0tmp++;
         }
 
-        /*
-        // stuff for thresholds
-        if ((i == 0) || (column[pref[i]] != column[pref[i - 1]])) {
-            lcs = div[i];
-        }
-        if (div[i] < lcs) {
-            lcs = div[i];
-
-        }*/
-
+        // do stuff at run change
         if ((i == height - 1) || (column[pref[i]] != column[pref[i + 1]])) {
             // 1 in bitvectors for runs et every end of a run
             runvec[i] = true;
@@ -405,7 +396,7 @@ rlpbwt_bv::build_column(std::string &column, std::vector<unsigned int> &pref,
 }
 
 
-// algorithm 2 from Durbin's paper
+// algorithm 2 from Durbin's paper to update prefix and divergence arrays
 void rlpbwt_bv::update(std::string &column, std::vector<unsigned int> &pref,
                       sdsl::int_vector<> &div) {
     unsigned int height = pref.size();
@@ -444,7 +435,7 @@ void rlpbwt_bv::update(std::string &column, std::vector<unsigned int> &pref,
 
 matches_naive
 rlpbwt_bv::external_match(const std::string &query, bool verbose) {
-    // query allowed iff |query| is uqual to RLPBWT width
+    // query allowed iff |query| is equal to RLPBWT width
     if (query.size() != this->width) {
         throw NotEqualLengthException{};
     }
@@ -510,8 +501,7 @@ rlpbwt_bv::external_match(const std::string &query, bool verbose) {
                 std::cout << "f: " << curr_tmp << ", g: " << end_tmp << "\n";
             }
 
-            // report basic_matches if longer than a minimum length
-            // TODO this is a row solution regarding the minimum length aspect
+            // save basic_matches if longer than a 1
             if (i > 0) {
                 if (i  - curr_beg > 1) {
                     if (verbose) {
@@ -541,7 +531,7 @@ rlpbwt_bv::external_match(const std::string &query, bool verbose) {
             //   In this case end index won't be updated while curr index will
             //   be decreased
             // - every other situation. In this case curr index won't be updated
-            //   while end index will be inreased
+            //   while end index will be increased
             if ((query[curr_beg] == '0' && curr_tmp > 0) ||
                 curr_tmp == this->height) {
                 if (verbose) {
@@ -660,7 +650,7 @@ rlpbwt_bv::external_match(const std::string &query, bool verbose) {
                 if (verbose) {
                     std::cout << "end curr beg: " << curr_beg << "\n";
                 }
-                // after the computation of the new beginnoing of a match we use
+                // after the computation of the new beginning of a match we use
                 // lcp array in order to calculate how many rows are matching at
                 // this point of the query, updating the end index
                 while (end_tmp < this->height &&
@@ -683,14 +673,13 @@ rlpbwt_bv::external_match(const std::string &query, bool verbose) {
                       << "\n";
         }
     }
-    // check basic_matches at the end
+    // check/save matches at the end (iff length > 1)
     if (curr_index < end_index) {
         curr_len = end_index - curr_index;
         if (verbose) {
             std::cout << "match at (" << curr_beg << ", " << query.size() - 1
                       << ") with " << curr_len << " haplotypes \n";
         }
-        // TODO this is a row solution regarding the minimum length aspect
         if ((query.size() - 1) - curr_beg > 1) {
             matches.basic_matches.emplace_back(curr_len,
                                                query.size() - curr_beg,
@@ -719,10 +708,9 @@ rlpbwt_bv::lf(unsigned int col_index, unsigned int index, char symbol,
     }
 }
 
-// TODO this function is written very bad
 std::pair<unsigned int, unsigned int>
 rlpbwt_bv::uvtrick(unsigned int col_index, unsigned int index) const {
-    // for index 0 u = v = 0
+    // if index is 0 u = v = 0
     if (index == 0) {
         return {0, 0};
     }

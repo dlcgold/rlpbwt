@@ -1,6 +1,7 @@
 #include <iostream>
 #include <gtest/gtest.h>
 #include <gperftools/heap-profiler.h>
+#include "benchmark_test.h"
 #include "../include/exceptions.h"
 #include "../include/rlpbwt_bv.h"
 #include "../include/panel_ra.h"
@@ -293,6 +294,8 @@ TEST(Benchmark, Query) {
                                "../output/rlpbwtPan_thr_ext_queries_tr.txt",
                                true);
 
+    //BENCHMARK(BM_Query)->ArgName("test") ;
+    //BENCHMARK_MAIN();
 }
 
 int main(int argc, char **argv) {

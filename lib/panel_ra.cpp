@@ -6,7 +6,6 @@
 
 
 panel_ra::panel_ra(unsigned int h, unsigned int w) : h(h), w(w) {
-    //this->panel = sdsl::bit_vector(h * w, 0);
     this->panel = std::vector<sdsl::bit_vector>(w, sdsl::bit_vector(h, 0));
 }
 
@@ -37,34 +36,6 @@ std::ostream &operator<<(std::ostream &os, const panel_ra &ra) {
 
 panel_ra::panel_ra() = default;
 
-size_t panel_ra::serialize(std::ostream &out, sdsl::structure_tree_node *v,
-                           const std::string &name) {
-    sdsl::structure_tree_node *child =
-            sdsl::structure_tree::add_child(v, name,
-                                            sdsl::util::class_name(
-                                                    *this));
-    size_t written_bytes = 0;
-    out.write((char *) &this->h, sizeof(this->h));
-    written_bytes += sizeof(this->h);
-
-    out.write((char *) &this->w, sizeof(this->w));
-    written_bytes += sizeof(this->w);
-    //written_bytes += this->panel.serialize(out, child, "panel");
-    for (const auto &bv: panel) {
-        bv.serialize(out, child, "panel");
-    }
-    sdsl::structure_tree::add_size(child, written_bytes);
-    return written_bytes;
-}
-
-void panel_ra::load(std::istream &in) {
-    in.read((char *) &this->h, sizeof(this->h));
-    in.read((char *) &this->w, sizeof(this->w));
-    this->panel = std::vector<sdsl::bit_vector>(w, sdsl::bit_vector(h, 0));
-    for (unsigned int i = 0; i < this->w; i++) {
-        this->panel[i].load(in);
-    }
-}
 
 bool
 panel_ra::lceToRCheck(unsigned int col, unsigned int f_r, unsigned int s_r,
@@ -102,6 +73,35 @@ panel_ra::lceToR(unsigned int col, unsigned int f_r, unsigned int s_r) const {
 
     return col - tmp_col;
 }
+
+size_t panel_ra::serialize(std::ostream &out, sdsl::structure_tree_node *v,
+                           const std::string &name) {
+    sdsl::structure_tree_node *child =
+            sdsl::structure_tree::add_child(v, name,
+                                            sdsl::util::class_name(
+                                                    *this));
+    size_t written_bytes = 0;
+    out.write((char *) &this->h, sizeof(this->h));
+    written_bytes += sizeof(this->h);
+
+    out.write((char *) &this->w, sizeof(this->w));
+    written_bytes += sizeof(this->w);
+    for (const auto &bv: panel) {
+        bv.serialize(out, child, "panel");
+    }
+    sdsl::structure_tree::add_size(child, written_bytes);
+    return written_bytes;
+}
+
+void panel_ra::load(std::istream &in) {
+    in.read((char *) &this->h, sizeof(this->h));
+    in.read((char *) &this->w, sizeof(this->w));
+    this->panel = std::vector<sdsl::bit_vector>(w, sdsl::bit_vector(h, 0));
+    for (unsigned int i = 0; i < this->w; i++) {
+        this->panel[i].load(in);
+    }
+}
+
 
 unsigned long long panel_ra::size_in_bytes(bool verbose) {
     unsigned long long size = 0;
