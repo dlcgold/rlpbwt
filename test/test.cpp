@@ -2,6 +2,7 @@
 #include <gtest/gtest.h>
 #include <gperftools/heap-profiler.h>
 #include "benchmark_test.h"
+#include "../include/utils.h"
 #include "../include/exceptions.h"
 #include "../include/rlpbwt_bv.h"
 #include "../include/panel_ra.h"
@@ -118,11 +119,12 @@ TEST(RlpbwtRaTest, TestBuildQuery) {
 TEST(Lce, Test) {
     rlpbwt_ms<slp_panel_ra> rlpbwtSlp("../input/sample_new.txt", true, false,
                                       "../input/sample.slp");
-    //rlpbwtSlp.extend();
-    auto matches = rlpbwtSlp.match_thr("010010100011101", true, false);
+    rlpbwtSlp.extend();
+
+    auto matches = rlpbwtSlp.match_lce("010010100011101", true, false);
     std::cout << matches;
-    std::cout << rlpbwtSlp.panel->size_in_bytes() << " "
-              << rlpbwtSlp.panel->size_in_mega_bytes();
+    matches = rlpbwtSlp.match_lce("000000000000000", true, false);
+    std::cout << matches;
 }
 
 TEST(RlpbwtNaive, BuildQuery) {
@@ -250,6 +252,10 @@ TEST(Benchmark, Query) {
     std::cout << "rlpbwt_pa:\n" << rlpbwtPan.size_in_mega_bytes(size_verbose)
               << " megabytes\n----\n";
 
+    std::cout << "estimated dense size: "
+              << dense_size_megabyte(rlpbwt.height, rlpbwt.width)
+              << " megabytes\n----\n";
+
     rlpbwt.match_tsv(queries, "../output/rlpbwt_queries.txt", false);
     rlpbwt.match_tsv_tr(queries_tr, "../output/rlpbwt_queries_tr.txt");
 
@@ -258,7 +264,7 @@ TEST(Benchmark, Query) {
     rlpbwtbv.match_tsv_tr(queries_tr, "../output/rlpbwtbv_queries_tr.txt");
 
 
-   rlpbwtSlp.match_tsv_thr(queries,
+    rlpbwtSlp.match_tsv_thr(queries,
                             "../output/rlpbwtSlp_thr_noext_queries.txt",
                             false);
     rlpbwtSlp.match_tsv_lce(queries,
@@ -294,6 +300,11 @@ TEST(Benchmark, Query) {
                                "../output/rlpbwtPan_thr_ext_queries_tr.txt",
                                true);
 
+    std::cout << "\n\n";
+    std::cout << "runs rlpbwt: " << rlpbwt.get_run_number() << "\n";
+    std::cout << "runs rlpbwtbv: " << rlpbwtbv.get_run_number() << "\n";
+    std::cout << "runs rlpbwtSlp: " << rlpbwtSlp.get_run_number() << "\n";
+    std::cout << "runs rlpbwtPan: " << rlpbwtPan.get_run_number() << "\n";
     //BENCHMARK(BM_Query)->ArgName("test") ;
     //BENCHMARK_MAIN();
 }

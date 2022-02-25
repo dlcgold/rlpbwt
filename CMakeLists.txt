@@ -49,7 +49,7 @@ if (${BUILD_TESTS})
 
     add_test(NAME rlpbwt_test COMMAND rlpbwt_test)
 else ()
-    add_executable(rlpbwt build_rlpbwt_thr.cpp
+    add_executable(rlpbwt rlpbwt_main.cpp
             lib/utils.cpp include/utils.h
             include/exceptions.h
             lib/rlpbwt_bv.cpp include/rlpbwt_bv.h

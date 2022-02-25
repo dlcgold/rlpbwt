@@ -330,7 +330,8 @@ flycheck_*.el
 # End of https://www.toptal.com/developers/gitignore/api/emacs,c++,clion,clion+all,clion+iml,cmake
 
 output/
+output_old/
 build/
 build_test/
 venv/
-old
+old/
