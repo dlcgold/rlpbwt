@@ -54,6 +54,12 @@ public:
     rlpbwt_bv();
 
     /**
+     * function to get the total number of runs in the RLPBWT
+     * @return total number of run
+     */
+    unsigned int get_run_number();
+
+    /**
      * @brief function to obtain size in bytes of the bitvectors RLPBWT
      * @param verbose bool for extra prints
      * @return size in bytes

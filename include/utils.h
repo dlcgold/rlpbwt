@@ -10,6 +10,7 @@
 #include <sdsl/config.hpp>
 #include <sdsl/structure_tree.hpp>
 #include <sdsl/io.hpp>
+#include <sdsl/int_vector.hpp>
 #include <climits>
 
 /**
@@ -26,6 +27,21 @@ double vectorsizeof(const typename std::vector<T> &vec) {
     return (sizeof(T) * vec.size()) * 0.000001;
 }
 
+inline unsigned int dense_size_byte(unsigned int h, unsigned int w) {
+    sdsl::int_vector<> ext_size(1, h);
+    unsigned int size = 0;
+    size += (sdsl::size_in_bytes(ext_size) * h * w);
+    size = (size * 5) + (sdsl::size_in_bytes(ext_size) * w);
+    return size;
+}
+
+inline double dense_size_megabyte(unsigned int h, unsigned int w) {
+    sdsl::int_vector<> ext_size(1, h);
+    double size = 0;
+    size += (sdsl::size_in_mega_bytes(ext_size) * h * w);
+    size = (size * 5) + (sdsl::size_in_mega_bytes(ext_size) * w);
+    return size;
+}
 
 // THANKS to Massimiliano Rossi:
 // https://github.com/maxrossi91/moni/blob/595da8cb01376074ba74e13273fc9072f5af410f/include/common/common.hpp
@@ -95,7 +111,7 @@ my_serialize_vector(const std::vector<T> &vec, std::ostream &out,
 /**
  * @brief function to serialize custom objects
  * @tparam X type of the object
- * @param x object to serialzie
+ * @param x object to serialize
  * @param in std::ostream object in which serialize the data
  */
 template<typename X>

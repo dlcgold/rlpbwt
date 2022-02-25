@@ -49,7 +49,6 @@ public:
     phi_support<ra_t> *phi;
 
 private:
-
     /**
      * @brief compressed int vector for last prefix array
      */
@@ -417,8 +416,9 @@ private:
             if constexpr (std::is_same_v<ra_t, slp_panel_ra>) {
                 // down
                 while (check_down) {
-                    auto phi_res = this->phi->phi_inv(start_row, curr_col);
+                    auto phi_res = this->phi->phi_inv(start_row, curr_col + 1);
                     if (!phi_res.has_value()) {
+                        check_down = false;
                         break;
                     }
                     down_row = phi_res.value();
@@ -430,14 +430,15 @@ private:
                         check_down = false;
                     }
                 }
+                start_row = std::get<0>(ms_matches.basic_matches[i]);
                 // up
                 while (check_up) {
-                    auto phi_res = this->phi->phi(start_row, curr_col);
+                    auto phi_res = this->phi->phi(start_row, curr_col + 1);
                     if (!phi_res.has_value()) {
+                        check_up = false;
                         break;
                     }
                     up_row = phi_res.value();
-
                     if (lceBound(curr_col, start_row, up_row, curr_len)) {
                         haplos.emplace_back(up_row);
                         start_row = up_row;
@@ -449,7 +450,7 @@ private:
             } else {
                 // down
                 while (check_down) {
-                    auto phi_res = this->phi->phi_inv(start_row, curr_col);
+                    auto phi_res = this->phi->phi_inv(start_row, curr_col + 1);
                     if (!phi_res.has_value()) {
                         break;
                     }
@@ -462,9 +463,10 @@ private:
                         check_down = false;
                     }
                 }
+                start_row = std::get<0>(ms_matches.basic_matches[i]);
                 // up
                 while (check_up) {
-                    auto phi_res = this->phi->phi(start_row, curr_col);
+                    auto phi_res = this->phi->phi(start_row, curr_col + 1);
                     if (!phi_res.has_value()) {
                         break;
                     }
@@ -540,9 +542,8 @@ public:
             std::cout << "w: " << tmp_width << "\n";
             input_matrix.clear();
             input_matrix.seekg(0, std::ios::beg);
-            this->cols = std::vector<column_ms>(tmp_width);
+            this->cols = std::vector<column_ms>(tmp_width + 1);
             std::vector<unsigned int> pref(tmp_height);
-            std::vector<unsigned int> lpref(tmp_height);
             sdsl::int_vector<> div(tmp_height);
             this->last_pref.resize(tmp_height);
             for (unsigned int i = 0; i < tmp_height; i++) {
@@ -560,7 +561,7 @@ public:
             std::string last_col;
             getline(input_matrix, line);
             getline(input_matrix, line);
-
+            std::string last_column;
             while (getline(input_matrix, line) && !line.empty()) {
                 std::cout << count << "\r";
                 std::istringstream is_col(line);
@@ -586,7 +587,6 @@ public:
                     }
                 }
                 this->cols[count] = col;
-
                 // create rank/select outside build_column due to references problems
                 this->cols[count].rank_runs = sdsl::sd_vector<>::rank_1_type(
                         &this->cols[count].runs);
@@ -604,15 +604,34 @@ public:
                         &this->cols[count].thr);
                 this->cols[count].select_thr = sdsl::sd_vector<>::select_1_type(
                         &this->cols[count].thr);
-                if (count == tmp_width - 1) {
-                    lpref = pref;
-                }
                 rlpbwt_ms::update(new_column, pref, div);
+                last_col = new_column;
                 count++;
             }
-            for (unsigned int i = 0; i < lpref.size(); i++) {
-                this->last_pref[i] = lpref[i];
+            for (unsigned int i = 0; i < pref.size(); i++) {
+                this->last_pref[i] = pref[i];
             }
+
+            auto col = rlpbwt_ms::build_column(last_col, pref, div);
+            this->cols[count] = col;
+
+            // create rank/select outside build_column due to references problems
+            this->cols[count].rank_runs = sdsl::sd_vector<>::rank_1_type(
+                    &this->cols[count].runs);
+            this->cols[count].select_runs = sdsl::sd_vector<>::select_1_type(
+                    &this->cols[count].runs);
+            this->cols[count].rank_u = sdsl::sd_vector<>::rank_1_type(
+                    &this->cols[count].u);
+            this->cols[count].select_u = sdsl::sd_vector<>::select_1_type(
+                    &this->cols[count].u);
+            this->cols[count].rank_v = sdsl::sd_vector<>::rank_1_type(
+                    &this->cols[count].v);
+            this->cols[count].select_v = sdsl::sd_vector<>::select_1_type(
+                    &this->cols[count].v);
+            this->cols[count].rank_thr = sdsl::sd_vector<>::rank_1_type(
+                    &this->cols[count].thr);
+            this->cols[count].select_thr = sdsl::sd_vector<>::select_1_type(
+                    &this->cols[count].thr);
             sdsl::util::bit_compress(this->last_pref);
             this->is_extended = false;
             this->width = tmp_width;
@@ -666,7 +685,7 @@ public:
             return false;
         }
         // obtain the column in the reverse order (as the SLP is saved)
-        unsigned int rev_col = (this->panel->w - 1) - col + 1;
+        unsigned int rev_col = (this->panel->w - 1) - col;
         // obtain indices of the symbols required in the SLP (built from the
         // reverse matrix saved as a single line string)
         unsigned int pos_curr = rev_col + ((this->panel->w) * curr);
@@ -710,6 +729,7 @@ public:
         }
 
         // obtain the column in the reverse order (as the SLP is saved)
+        // the previous one in order to compute lce for MS
         unsigned int rev_col = (this->panel->w - 1) - col + 1;
         // obtain indices of the symbols required in the SLP (built from the
         // reverse matrix saved as a single line string)
@@ -723,6 +743,9 @@ public:
         // return the length (and the prefix value of the other position)
         unsigned int lcp_other = lceToR(this->panel->panel, pos_other,
                                         pos_curr);
+        if (verbose) {
+            std::cout << "at " << rev_col << " lce is : " << lcp_other << "\n";
+        }
         if (lcp_other >= col) {
             lcp_other = col;
         }
@@ -752,6 +775,7 @@ public:
         }
 
         // obtain the column in the reverse order (as the SLP is saved)
+        // the previous one in order to compute lce for MS
         unsigned int rev_col = (this->panel->w - 1) - col + 1;
 
         // obtain indices of the symbols required in the SLP (built from the
@@ -1076,10 +1100,14 @@ public:
         // save every match from matching statistics (when we have a "peak" in
         // ms len vector)
         for (unsigned int i = 0; i < ms.len.size(); i++) {
-            if ((ms.len[i] != 0 && ms.len[i] > ms.len[i + 1]) ||
+            if ((ms.len[i] > 1 && ms.len[i] > ms.len[i + 1]) ||
                 (i == ms.len.size() - 1 && ms.len[i] != 0)) {
                 ms_matches.basic_matches.emplace_back(ms.row[i], ms.len[i], i);
-            } else if (ms.len[i] != 0 && i < ms.len.size() - 1 &&
+            } else if (ms.len[i] > 1 && i < ms.len.size() - 2 &&
+                       ms.len[i] == ms.len[i + 1] &&
+                       ms.row[i + 1] != ms.row[i + 2]) {
+                ms_matches.basic_matches.emplace_back(ms.row[i], ms.len[i], i);
+            } else if (ms.len[i] > 1 && i < ms.len.size() - 1 &&
                        ms.len[i] == ms.len[i + 1]) {
                 unsigned int pos = 0;
                 for (unsigned int j = i + 1; j < ms.len.size(); j++) {
@@ -1322,10 +1350,14 @@ public:
         // save every match from matching statistics (when we have a "peak" in
         // ms len vector)
         for (unsigned int i = 0; i < ms.len.size(); i++) {
-            if ((ms.len[i] != 0 && ms.len[i] > ms.len[i + 1]) ||
+            if ((ms.len[i] > 1 && ms.len[i] > ms.len[i + 1]) ||
                 (i == ms.len.size() - 1 && ms.len[i] != 0)) {
                 ms_matches.basic_matches.emplace_back(ms.row[i], ms.len[i], i);
-            } else if (ms.len[i] != 0 && i < ms.len.size() - 1 &&
+            } else if (ms.len[i] > 1 && i < ms.len.size() - 2 &&
+                       ms.len[i] == ms.len[i + 1] &&
+                       ms.row[i + 1] != ms.row[i + 2]) {
+                ms_matches.basic_matches.emplace_back(ms.row[i], ms.len[i], i);
+            } else if (ms.len[i] > 1 && i < ms.len.size() - 1 &&
                        ms.len[i] == ms.len[i + 1]) {
                 unsigned int pos = 0;
                 for (unsigned int j = i + 1; j < ms.len.size(); j++) {
@@ -1636,6 +1668,18 @@ public:
         } else {
             throw FileNotFoundException{};
         }
+    }
+
+    /**
+     * function to get the total number of runs in the RLPBWT
+     * @return total number of run
+     */
+    unsigned int get_run_number() {
+        unsigned int count_run = 0;
+        for (unsigned int i = 0; i < this->cols.size(); ++i) {
+            count_run += cols[i].sample_beg.size();
+        }
+        return count_run;
     }
 
     /**

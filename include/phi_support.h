@@ -92,11 +92,11 @@ public:
         // initialize temporary panel of no-sparse bitvectors
         auto phi_tmp = std::vector<sdsl::bit_vector>(panelbv->h,
                                                      sdsl::bit_vector(
-                                                             panelbv->w,
+                                                             panelbv->w+1,
                                                              0));
         auto phi_inv_tmp = std::vector<sdsl::bit_vector>(panelbv->h,
                                                          sdsl::bit_vector(
-                                                                 panelbv->w,
+                                                                 panelbv->w+1,
                                                                  0));
         // initialize panels and vectors of the data structure
         this->phi_vec = std::vector<sdsl::sd_vector<>>(panelbv->h);
@@ -110,10 +110,10 @@ public:
         this->phi_inv_select = std::vector<sdsl::sd_vector<>::select_1_type>(
                 panelbv->h);
         this->phi_supp = std::vector(panelbv->h,
-                                     sdsl::int_vector(panelbv->w));
+                                     sdsl::int_vector(panelbv->w+1));
         this->phi_inv_supp = std::vector(panelbv->h,
                                          sdsl::int_vector(
-                                                 panelbv->w));
+                                                 panelbv->w+1));
 
         // support vector of pair in order to record how many elements are saved
         // in the support vectors in order to resize (sdsl::int_vector not allow

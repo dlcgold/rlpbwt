@@ -99,6 +99,12 @@ public:
     operator<<(std::ostream &os, const rlpbwt_naive &naive);
 
     /**
+     * function to get the total number of runs in the RLPBWT
+     * @return total number of run
+     */
+    unsigned int get_run_number();
+
+    /**
      * @brief function to serialize the naive RLPBWT
      * @param out std::ostream object to stream the serialization
      * @return size of the serialization

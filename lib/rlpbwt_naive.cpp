@@ -494,7 +494,7 @@ rlpbwt_naive::external_match(const std::string &query, bool verbose) {
             }
             // save basic_matches if longer than 1
             if (i > 0) {
-                if(i - curr_beg > 1) {
+                if (i - curr_beg > 1) {
                     if (verbose) {
                         std::cout << "match at (" << curr_beg << ", " << i - 1
                                   << ") with " << curr_len << " haplotypes \n";
@@ -756,7 +756,7 @@ void rlpbwt_naive::match_tsv_tr(const char *filename, const char *out,
         std::string query = "";
         if (out_match.is_open()) {
             for (unsigned int i = 0; i < queries_panel[0].size(); i++) {
-                for(auto &j: queries_panel){
+                for (auto &j: queries_panel) {
                     query.push_back(j[i]);
                 }
                 if (verbose) {
@@ -869,6 +869,14 @@ void rlpbwt_naive::load(std::istream &in) {
         c->load(in);
         this->cols.emplace_back(*c);
     }
+}
+
+unsigned int rlpbwt_naive::get_run_number() {
+    unsigned int count_run = 0;
+    for (unsigned int i = 0; i < this->cols.size(); ++i) {
+        count_run += this->cols[i].p.size();
+    }
+    return count_run;
 }
 
 

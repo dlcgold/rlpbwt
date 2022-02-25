@@ -72,7 +72,6 @@ rlpbwt_bv::rlpbwt_bv(const char *filename, bool verbose) {
         }
         auto col = rlpbwt_bv::build_column(last_col, pref, div);
         this->cols[count] = col;
-
         // create rank/select outside build_column due to references problems
         this->cols[count].rank_runs = sdsl::sd_vector<>::rank_1_type(
                 &this->cols[count].runs);
@@ -86,7 +85,6 @@ rlpbwt_bv::rlpbwt_bv(const char *filename, bool verbose) {
                 &this->cols[count].v);
         this->cols[count].select_v = sdsl::sd_vector<>::select_1_type(
                 &this->cols[count].v);
-        this->cols[count] = col;
         this->height = tmp_height;
         this->width = tmp_width;
         input_matrix.close();
@@ -302,7 +300,7 @@ rlpbwt_bv::rlpbwt_bv() = default;
 
 column_bv
 rlpbwt_bv::build_column(std::string &column, std::vector<unsigned int> &pref,
-                       sdsl::int_vector<> &div) {
+                        sdsl::int_vector<> &div) {
     unsigned int height = pref.size();
     // variable for "c" value
     unsigned int count0 = 0;
@@ -398,7 +396,7 @@ rlpbwt_bv::build_column(std::string &column, std::vector<unsigned int> &pref,
 
 // algorithm 2 from Durbin's paper to update prefix and divergence arrays
 void rlpbwt_bv::update(std::string &column, std::vector<unsigned int> &pref,
-                      sdsl::int_vector<> &div) {
+                       sdsl::int_vector<> &div) {
     unsigned int height = pref.size();
     std::vector<unsigned int> new_pref(height);
     sdsl::int_vector<> new_div(height);
@@ -503,7 +501,7 @@ rlpbwt_bv::external_match(const std::string &query, bool verbose) {
 
             // save basic_matches if longer than a 1
             if (i > 0) {
-                if (i  - curr_beg > 1) {
+                if (i - curr_beg > 1) {
                     if (verbose) {
                         std::cout << "match at (" << curr_beg << ", " << i - 1
                                   << ") with " << curr_len << " haplotypes \n";
@@ -680,7 +678,7 @@ rlpbwt_bv::external_match(const std::string &query, bool verbose) {
             std::cout << "match at (" << curr_beg << ", " << query.size() - 1
                       << ") with " << curr_len << " haplotypes \n";
         }
-        if ((query.size() - 1) - curr_beg > 1) {
+        if (query.size() - curr_beg > 1) {
             matches.basic_matches.emplace_back(curr_len,
                                                query.size() - curr_beg,
                                                query.size() - 1);
@@ -691,7 +689,7 @@ rlpbwt_bv::external_match(const std::string &query, bool verbose) {
 
 unsigned int
 rlpbwt_bv::lf(unsigned int col_index, unsigned int index, char symbol,
-             bool verbose) const {
+              bool verbose) const {
     // obtain "u" and "v"
     auto uv = uvtrick(col_index, index);
     if (verbose) {
@@ -812,7 +810,7 @@ rlpbwt_bv::uvtrick(unsigned int col_index, unsigned int index) const {
 
 unsigned int
 rlpbwt_bv::reverse_lf(unsigned int col_index, unsigned int index,
-                     bool verbose) const {
+                      bool verbose) const {
     // by design if we try to work on first column the function return 0
     if (col_index == 0) {
         return 0;
@@ -980,7 +978,7 @@ void rlpbwt_bv::external_match_vcf(const char *filename, unsigned int min_len,
 }
 */
 size_t rlpbwt_bv::serialize(std::ostream &out, sdsl::structure_tree_node *v,
-                           const std::string &name) {
+                            const std::string &name) {
     sdsl::structure_tree_node *child =
             sdsl::structure_tree::add_child(v, name,
                                             sdsl::util::class_name(
@@ -1092,7 +1090,7 @@ rlpbwt_bv::match_tsv_tr(const char *filename, const char *out, bool verbose) {
         std::string query = "";
         if (out_match.is_open()) {
             for (unsigned int i = 0; i < queries_panel[0].size(); i++) {
-                for(auto &j: queries_panel){
+                for (auto &j: queries_panel) {
                     query.push_back(j[i]);
                 }
                 if (verbose) {
@@ -1195,6 +1193,14 @@ double rlpbwt_bv::size_in_mega_bytes(bool verbose) {
     size += (double) (sizeof(unsigned int) * to_mega);
 
     return size;
+}
+
+unsigned int rlpbwt_bv::get_run_number() {
+    unsigned int count_run = 0;
+    for (unsigned int i = 0; i < this->cols.size(); ++i) {
+        count_run += (this->cols[i].rank_runs(this->height));
+    }
+    return count_run;
 }
 
 
