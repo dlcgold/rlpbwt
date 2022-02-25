@@ -485,6 +485,151 @@ private:
         }
     }
 
+    /**
+     * @brief function to check if longest common extension between two rows is
+     * equal or greater than a bound ending at a given column
+     * @param col ending column column
+     * @param curr current row
+     * @param other other row
+     * @param bound boiund to check
+     * @param verbose bool for extra prints
+     * @return true if ongest common extension between two rows is
+     * equal or greater than the bound
+     * @attention this function is enabled iff the panel is an SLP
+     */
+    template<typename U = ra_t>
+    std::enable_if_t<sizeof(U) && (!std::is_same<ra_t, panel_ra>::value), bool>
+    lceBound(unsigned int col, unsigned int curr, unsigned int other,
+             unsigned int bound, bool verbose = false) {
+        // by design if we are at first column we don't compute any lce
+        if (col == 0) {
+            return false;
+        }
+        // obtain the column in the reverse order (as the SLP is saved)
+        unsigned int rev_col = (this->panel->w - 1) - col;
+        // obtain indices of the symbols required in the SLP (built from the
+        // reverse matrix saved as a single line string)
+        unsigned int pos_curr = rev_col + ((this->panel->w) * curr);
+        unsigned int pos_other = rev_col + ((this->panel->w) * other);
+        if (verbose) {
+            std::cout << "at " << rev_col << ": " << pos_curr << ", "
+                      << pos_other << "\n";
+        }
+        // compute lce and return true if equal (or greater) than the bound
+//        unsigned int lcp_pair_naive = lceToR_NaiveBounded(this->panel->panel,
+//                                                          pos_other,
+//                                                          pos_curr, bound);
+        // TODO check the bound in no naive version, it doesn't work
+        unsigned int lcp_pair = lceToRBounded(this->panel->panel, pos_other,
+                                              pos_curr, bound);
+        // TODO if the bound works it should be lcp_pair == bound
+        if (lcp_pair >= bound) {
+            return true;
+        }
+        return false;
+    }
+
+    /**
+     * @brief function to compute longest common extension between two rows
+     * ending at a given column
+     * @param col ending column
+     * @param curr current row
+     * @param other other row
+     * @param verbose
+     * @return the lce value and the other row index
+     * @attention this function is enabled iff the panel is an SLP
+     */
+    template<typename U = ra_t>
+    std::enable_if_t<sizeof(U) && (!std::is_same<ra_t, panel_ra>::value),
+            std::pair<unsigned int, unsigned int>>
+    lce(unsigned int col, unsigned int curr, unsigned int other,
+        bool verbose = false) {
+        // by design if we are at first column we don't compute any lce
+        if (col == 0) {
+            return std::make_pair(other, 0);
+        }
+
+        // obtain the column in the reverse order (as the SLP is saved)
+        // the previous one in order to compute lce for MS
+        unsigned int rev_col = (this->panel->w - 1) - col + 1;
+        // obtain indices of the symbols required in the SLP (built from the
+        // reverse matrix saved as a single line string)
+        unsigned int pos_curr = rev_col + ((this->panel->w) * curr);
+        unsigned int pos_other = rev_col + ((this->panel->w) * other);
+        if (verbose) {
+            std::cout << "at " << rev_col << ": " << pos_curr << ", "
+                      << pos_other << "\n";
+        }
+        // compute lce (eventually bounded with the column index value) and
+        // return the length (and the prefix value of the other position)
+        unsigned int lcp_other = lceToR(this->panel->panel, pos_other,
+                                        pos_curr);
+        if (verbose) {
+            std::cout << "at " << rev_col << " lce is : " << lcp_other << "\n";
+        }
+        if (lcp_other >= col) {
+            lcp_other = col;
+        }
+        return std::make_pair(other, lcp_other);
+    }
+
+    /**
+     * @brief function to compute longest common extension between a row and
+     * other two rows ending at a given column
+     * @param col ending column
+     * @param curr current row
+     * @param prev first row to compare
+     * @param next second row to compare
+     * @param verbose bool
+     * @return the best lce value and the best row index between curr row and
+     * the other two
+     * @attention this function is enabled iff the panel is an SLP
+     */
+    template<typename U = ra_t>
+    std::enable_if_t<sizeof(U) && (!std::is_same<ra_t, panel_ra>::value),
+            std::pair<unsigned int, unsigned int>>
+    lce_pair(unsigned int col, unsigned int curr, unsigned int prev,
+             unsigned int next, bool verbose = false) {
+        // by design if we are at first column we don't compute any lce
+        if (col == 0) {
+            return std::make_pair(next, 0);
+        }
+
+        // obtain the column in the reverse order (as the SLP is saved)
+        // the previous one in order to compute lce for MS
+        unsigned int rev_col = (this->panel->w - 1) - col + 1;
+
+        // obtain indices of the symbols required in the SLP (built from the
+        // reverse matrix saved as a single line string)
+        unsigned int pos_curr = rev_col + ((this->panel->w) * curr);
+        unsigned int pos_prev = rev_col + ((this->panel->w) * prev);
+        unsigned int pos_next = rev_col + ((this->panel->w) * next);
+        if (verbose) {
+            std::cout << "at " << rev_col << ": " << pos_curr << ", "
+                      << pos_prev
+                      << ", " << pos_next << "\n";
+        }
+        // compute lce for both requested indices (eventually bounded with the
+        // column index value)
+        unsigned int lcp_prev = lceToR(this->panel->panel, pos_prev,
+                                       pos_curr);
+        if (lcp_prev >= col) {
+            lcp_prev = col;
+        }
+        unsigned int lcp_next = lceToR(this->panel->panel, pos_curr,
+                                       pos_next);
+        if (lcp_next >= col) {
+            lcp_next = col;
+        }
+        // select the greater lce and return the length plus the relative prefix
+        // array index
+        if (lcp_prev > lcp_next) {
+            return std::make_pair(prev, lcp_prev);
+        } else {
+            return std::make_pair(next, lcp_next);
+        }
+    }
+
 public:
     /**
     * @brief height of the panel
@@ -661,151 +806,6 @@ public:
         if (this->is_extended) {
             this->phi = nullptr;
             this->is_extended = false;
-        }
-    }
-
-    /**
-     * @brief function to check if longest common extension between two rows is
-     * equal or greater than a bound ending at a given column
-     * @param col ending column column
-     * @param curr current row
-     * @param other other row
-     * @param bound boiund to check
-     * @param verbose bool for extra prints
-     * @return true if ongest common extension between two rows is
-     * equal or greater than the bound
-     * @attention this function is enabled iff the panel is an SLP
-     */
-    template<typename U = ra_t>
-    std::enable_if_t<sizeof(U) && (!std::is_same<ra_t, panel_ra>::value), bool>
-    lceBound(unsigned int col, unsigned int curr, unsigned int other,
-             unsigned int bound, bool verbose = false) {
-        // by design if we are at first column we don't compute any lce
-        if (col == 0) {
-            return false;
-        }
-        // obtain the column in the reverse order (as the SLP is saved)
-        unsigned int rev_col = (this->panel->w - 1) - col;
-        // obtain indices of the symbols required in the SLP (built from the
-        // reverse matrix saved as a single line string)
-        unsigned int pos_curr = rev_col + ((this->panel->w) * curr);
-        unsigned int pos_other = rev_col + ((this->panel->w) * other);
-        if (verbose) {
-            std::cout << "at " << rev_col << ": " << pos_curr << ", "
-                      << pos_other << "\n";
-        }
-        // compute lce and return true if equal (or greater) than the bound
-//        unsigned int lcp_pair_naive = lceToR_NaiveBounded(this->panel->panel,
-//                                                          pos_other,
-//                                                          pos_curr, bound);
-        // TODO check the bound in no naive version, it doesn't work
-        unsigned int lcp_pair = lceToRBounded(this->panel->panel, pos_other,
-                                              pos_curr, bound);
-        // TODO if the bound works it should be lcp_pair == bound
-        if (lcp_pair >= bound) {
-            return true;
-        }
-        return false;
-    }
-
-    /**
-     * @brief function to compute longest common extension between two rows
-     * ending at a given column
-     * @param col ending column
-     * @param curr current row
-     * @param other other row
-     * @param verbose
-     * @return the lce value and the other row index
-     * @attention this function is enabled iff the panel is an SLP
-     */
-    template<typename U = ra_t>
-    std::enable_if_t<sizeof(U) && (!std::is_same<ra_t, panel_ra>::value),
-            std::pair<unsigned int, unsigned int>>
-    lce(unsigned int col, unsigned int curr, unsigned int other,
-        bool verbose = false) {
-        // by design if we are at first column we don't compute any lce
-        if (col == 0) {
-            return std::make_pair(other, 0);
-        }
-
-        // obtain the column in the reverse order (as the SLP is saved)
-        // the previous one in order to compute lce for MS
-        unsigned int rev_col = (this->panel->w - 1) - col + 1;
-        // obtain indices of the symbols required in the SLP (built from the
-        // reverse matrix saved as a single line string)
-        unsigned int pos_curr = rev_col + ((this->panel->w) * curr);
-        unsigned int pos_other = rev_col + ((this->panel->w) * other);
-        if (verbose) {
-            std::cout << "at " << rev_col << ": " << pos_curr << ", "
-                      << pos_other << "\n";
-        }
-        // compute lce (eventually bounded with the column index value) and
-        // return the length (and the prefix value of the other position)
-        unsigned int lcp_other = lceToR(this->panel->panel, pos_other,
-                                        pos_curr);
-        if (verbose) {
-            std::cout << "at " << rev_col << " lce is : " << lcp_other << "\n";
-        }
-        if (lcp_other >= col) {
-            lcp_other = col;
-        }
-        return std::make_pair(other, lcp_other);
-    }
-
-    /**
-     * @brief function to compute longest common extension between a row and
-     * other two rows ending at a given column
-     * @param col ending column
-     * @param curr current row
-     * @param prev first row to compare
-     * @param next second row to compare
-     * @param verbose bool
-     * @return the best lce value and the best row index between curr row and
-     * the other two
-     * @attention this function is enabled iff the panel is an SLP
-     */
-    template<typename U = ra_t>
-    std::enable_if_t<sizeof(U) && (!std::is_same<ra_t, panel_ra>::value),
-            std::pair<unsigned int, unsigned int>>
-    lce_pair(unsigned int col, unsigned int curr, unsigned int prev,
-             unsigned int next, bool verbose = false) {
-        // by design if we are at first column we don't compute any lce
-        if (col == 0) {
-            return std::make_pair(next, 0);
-        }
-
-        // obtain the column in the reverse order (as the SLP is saved)
-        // the previous one in order to compute lce for MS
-        unsigned int rev_col = (this->panel->w - 1) - col + 1;
-
-        // obtain indices of the symbols required in the SLP (built from the
-        // reverse matrix saved as a single line string)
-        unsigned int pos_curr = rev_col + ((this->panel->w) * curr);
-        unsigned int pos_prev = rev_col + ((this->panel->w) * prev);
-        unsigned int pos_next = rev_col + ((this->panel->w) * next);
-        if (verbose) {
-            std::cout << "at " << rev_col << ": " << pos_curr << ", "
-                      << pos_prev
-                      << ", " << pos_next << "\n";
-        }
-        // compute lce for both requested indices (eventually bounded with the
-        // column index value)
-        unsigned int lcp_prev = lceToR(this->panel->panel, pos_prev,
-                                       pos_curr);
-        if (lcp_prev >= col) {
-            lcp_prev = col;
-        }
-        unsigned int lcp_next = lceToR(this->panel->panel, pos_curr,
-                                       pos_next);
-        if (lcp_next >= col) {
-            lcp_next = col;
-        }
-        // select the greater lce and return the length plus the relative prefix
-        // array index
-        if (lcp_prev > lcp_next) {
-            return std::make_pair(prev, lcp_prev);
-        } else {
-            return std::make_pair(next, lcp_next);
         }
     }
 

@@ -873,8 +873,8 @@ void rlpbwt_naive::load(std::istream &in) {
 
 unsigned int rlpbwt_naive::get_run_number() {
     unsigned int count_run = 0;
-    for (unsigned int i = 0; i < this->cols.size(); ++i) {
-        count_run += this->cols[i].p.size();
+    for (auto & col : this->cols) {
+        count_run += col.p.size();
     }
     return count_run;
 }

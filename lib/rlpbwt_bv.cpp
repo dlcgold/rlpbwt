@@ -1197,8 +1197,8 @@ double rlpbwt_bv::size_in_mega_bytes(bool verbose) {
 
 unsigned int rlpbwt_bv::get_run_number() {
     unsigned int count_run = 0;
-    for (unsigned int i = 0; i < this->cols.size(); ++i) {
-        count_run += (this->cols[i].rank_runs(this->height));
+    for (auto & col : this->cols) {
+        count_run += (col.rank_runs(this->height));
     }
     return count_run;
 }
