@@ -1694,8 +1694,8 @@ public:
         unsigned long long size_thr = 0;
         unsigned long long size_u = 0;
         unsigned long long size_v = 0;
-        unsigned long long size_samples = 0;
         auto lp_size = sdsl::size_in_bytes(this->last_pref);
+        unsigned long long size_samples = lp_size;
         size += lp_size;
         for (unsigned int i = 0; i < this->cols.size(); ++i) {
             size += this->cols[i].size_in_bytes();
@@ -1712,8 +1712,7 @@ public:
                       sdsl::size_in_bytes(this->cols[i].rank_v) +
                       sdsl::size_in_bytes(this->cols[i].select_v);
             size_samples += sdsl::size_in_bytes(this->cols[i].sample_beg) +
-                            sdsl::size_in_bytes(this->cols[i].sample_end) +
-                            lp_size;
+                            sdsl::size_in_bytes(this->cols[i].sample_end);
         }
         if (verbose) {
             std::cout << "run: " << size_run << " bytes\n";
@@ -1729,7 +1728,9 @@ public:
         size += (sizeof(unsigned int) * 2);
         size += this->panel->size_in_bytes(verbose);
         if (this->is_extended) {
-            size += this->phi->size_in_bytes(verbose);
+            auto size_phi = this->phi->size_in_bytes(verbose);
+            size += size_phi;
+            std::cout << "phi support: " << size_phi << " bytes\n";
         }
 
         return size;
@@ -1748,8 +1749,8 @@ public:
         double size_thr = 0;
         double size_u = 0;
         double size_v = 0;
-        double size_samples = 0;
         auto lp_size = sdsl::size_in_mega_bytes(this->last_pref);
+        double size_samples = lp_size;
         size += lp_size;
         for (unsigned int i = 0; i < this->cols.size(); ++i) {
             size += this->cols[i].size_in_mega_bytes();
@@ -1766,8 +1767,7 @@ public:
                       sdsl::size_in_mega_bytes(this->cols[i].rank_v) +
                       sdsl::size_in_mega_bytes(this->cols[i].select_v);
             size_samples += sdsl::size_in_mega_bytes(this->cols[i].sample_beg) +
-                            sdsl::size_in_mega_bytes(this->cols[i].sample_end) +
-                            lp_size;
+                            sdsl::size_in_mega_bytes(this->cols[i].sample_end);
         }
         if (verbose) {
             std::cout << "run: " << size_run << " megabytes\n";
@@ -1783,9 +1783,10 @@ public:
         size += (sizeof(unsigned int) * 2 * to_mega);
         size += this->panel->size_in_mega_bytes(verbose);
         if (this->is_extended) {
-            size += this->phi->size_in_mega_bytes(verbose);
+            auto size_phi = this->phi->size_in_mega_bytes(verbose);
+            size += size_phi;
+            std::cout << "phi support: " << size_phi << " megabytes\n";
         }
-
         return size;
     }
 

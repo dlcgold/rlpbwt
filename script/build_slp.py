@@ -89,15 +89,18 @@ def main(argv):
         outputfile.split('/')[1::-2]) + "/"
     outname = outputfile.split('/')[-1].split('.')[0]
 
+    print("extract matrix")
     matr = extract(inputfile, outname)
     matr.run()
 
+    print("end extract matrix \nbegin bigrepair")
     bigr = bigrepair(outname)
     bigr.run()
 
+    print("end bigrepair \nbegin shapedslp")
     slp = shapedslp(outname, outputfile)
     slp.run()
-
+    print("end shapedslp \nclearing")
     if os.path.isfile("rs_temp_output"):
         os.remove("rs_temp_output")
 

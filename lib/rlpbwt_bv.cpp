@@ -1127,7 +1127,6 @@ rlpbwt_bv::match_tsv_tr(const char *filename, const char *out, bool verbose) {
 unsigned long long rlpbwt_bv::size_in_bytes(bool verbose) {
     unsigned long long size = 0;
     unsigned long long size_run = 0;
-    unsigned long long size_thr = 0;
     unsigned long long size_u = 0;
     unsigned long long size_v = 0;
     unsigned long long size_lcp = 0;
@@ -1146,7 +1145,6 @@ unsigned long long rlpbwt_bv::size_in_bytes(bool verbose) {
     }
     if (verbose) {
         std::cout << "run: " << size_run << " bytes\n";
-        std::cout << "thr: " << size_thr << " bytes\n";
         std::cout << "u: " << size_u << " bytes\n";
         std::cout << "v: " << size_v << " bytes\n";
         std::cout << "lcp: " << size_lcp << " bytes\n";
@@ -1162,7 +1160,6 @@ unsigned long long rlpbwt_bv::size_in_bytes(bool verbose) {
 double rlpbwt_bv::size_in_mega_bytes(bool verbose) {
     double size = 0;
     double size_run = 0;
-    double size_thr = 0;
     double size_u = 0;
     double size_v = 0;
     double size_lcp = 0;
@@ -1182,7 +1179,6 @@ double rlpbwt_bv::size_in_mega_bytes(bool verbose) {
     }
     if (verbose) {
         std::cout << "run: " << size_run << " megabytes\n";
-        std::cout << "thr: " << size_thr << " megabytes\n";
         std::cout << "u: " << size_u << " megabytes\n";
         std::cout << "v: " << size_v << " megabytes\n";
         std::cout << "lcp: " << size_lcp << " megabytes\n";

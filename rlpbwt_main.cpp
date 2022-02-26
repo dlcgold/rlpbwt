@@ -1,8 +1,5 @@
 #include <iostream>
 #include <getopt.h>
-//#include <sdsl/int_vector.hpp>
-//#include <sdsl/bit_vectors.hpp>
-//#include "include/exceptions.h"
 #include "include/rlpbwt_ms.h"
 #include "include/rlpbwt_bv.h"
 #include "include/rlpbwt_naive.h"
@@ -213,7 +210,9 @@ int main(int argc, char **argv) {
         if (thr) {
             std::cout << "thresholds will not be used\n";
         }
+        clock_t START = clock();
         rlpbwt_naive rlpbwt(matrix_input.c_str(), verbose);
+        auto time_build = (float) (clock() - START) / CLOCKS_PER_SEC;
         std::cout << "rlpbwt: " << rlpbwt.size_in_bytes(verbose)
                   << " bytes\n";
         std::cout << "rlpbwt: " << rlpbwt.size_in_mega_bytes(verbose)
@@ -224,7 +223,11 @@ int main(int argc, char **argv) {
         std::cout << "estimated dense size: "
                   << dense_size_megabyte(rlpbwt.height, rlpbwt.width)
                   << " megabytes\n----\n";
+        std::cout << "built in " << time_build << " s\n";
+        START = clock();
         rlpbwt.match_tsv_tr(query_input.c_str(), output.c_str());
+        auto time_query = (float) (clock() - START) / CLOCKS_PER_SEC;
+        std::cout << "queried in " << time_query << " s\n";
     }
 
     if (bv) {
@@ -247,7 +250,9 @@ int main(int argc, char **argv) {
         if (thr) {
             std::cout << "thresholds will not be used\n";
         }
+        clock_t START = clock();
         rlpbwt_bv rlpbwt(matrix_input.c_str(), verbose);
+        auto time_build = (float) (clock() - START) / CLOCKS_PER_SEC;
         std::cout << "rlpbwt: " << rlpbwt.size_in_bytes(verbose)
                   << " bytes\n";
         std::cout << "rlpbwt: " << rlpbwt.size_in_mega_bytes(verbose)
@@ -258,7 +263,11 @@ int main(int argc, char **argv) {
         std::cout << "estimated dense size: "
                   << dense_size_megabyte(rlpbwt.height, rlpbwt.width)
                   << " megabytes\n----\n";
+        std::cout << "built in " << time_build << " s\n";
+        START = clock();
         rlpbwt.match_tsv_tr(query_input.c_str(), output.c_str());
+        auto time_query = (float) (clock() - START) / CLOCKS_PER_SEC;
+        std::cout << "queried in " << time_query << " s\n";
     }
 
     if (slp) {
@@ -285,12 +294,13 @@ int main(int argc, char **argv) {
         } else {
             std::cout << "thresholds are not enabled\n";
         }
-
+        clock_t START = clock();
         rlpbwt_ms<slp_panel_ra> rlpbwt(matrix_input.c_str(), thr, verbose,
                                        slp_input.c_str());
         if (extend) {
             rlpbwt.extend();
         }
+        auto time_build = (float) (clock() - START) / CLOCKS_PER_SEC;
         std::cout << "rlpbwt: " << rlpbwt.size_in_bytes(verbose)
                   << " bytes\n";
         std::cout << "rlpbwt: " << rlpbwt.size_in_mega_bytes(verbose)
@@ -301,6 +311,8 @@ int main(int argc, char **argv) {
         std::cout << "estimated dense size: "
                   << dense_size_megabyte(rlpbwt.height, rlpbwt.width)
                   << " megabytes\n----\n";
+        std::cout << "built in " << time_build << " s\n";
+        START = clock();
         if (thr) {
             rlpbwt.match_tsv_tr_thr(query_input.c_str(), output.c_str(),
                                     extend);
@@ -308,6 +320,8 @@ int main(int argc, char **argv) {
             rlpbwt.match_tsv_tr_lce(query_input.c_str(), output.c_str(),
                                     extend);
         }
+        auto time_query = (float) (clock() - START) / CLOCKS_PER_SEC;
+        std::cout << "queried in " << time_query << " s\n";
     }
 
     if (panel) {
@@ -331,9 +345,10 @@ int main(int argc, char **argv) {
         if (!slp_input.empty()) {
             std::cout << "slp will not be used\n";
         }
-
+        clock_t START = clock();
         rlpbwt_ms<panel_ra> rlpbwt(matrix_input.c_str(), thr, verbose,
                                    slp_input.c_str());
+        auto time_build = (float) (clock() - START) / CLOCKS_PER_SEC;
         if (extend) {
             rlpbwt.extend();
         }
@@ -347,8 +362,11 @@ int main(int argc, char **argv) {
         std::cout << "estimated dense size: "
                   << dense_size_megabyte(rlpbwt.height, rlpbwt.width)
                   << " megabytes\n----\n";
-
+        std::cout << "built in " << time_build << " s\n";
+        START = clock();
         rlpbwt.match_tsv_tr_thr(query_input.c_str(), output.c_str(), extend);
+        auto time_query = (float) (clock() - START) / CLOCKS_PER_SEC;
+        std::cout << "queried in " << time_query << " s\n";
     }
 
     /*std::string in_filename("../input/sample_new.txt");

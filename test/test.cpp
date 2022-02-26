@@ -309,6 +309,20 @@ TEST(Benchmark, Query) {
     //BENCHMARK_MAIN();
 }
 
+TEST(BigMatrix, Build) {
+    auto input = "../input_big/pbwt_matrix_10";
+    rlpbwt_ms<slp_panel_ra> rlpbwt(input, false, false,
+                                   "../output_big/pbwt_matrix_10.slp");
+    std::cout << "rlpbwt:\n" << rlpbwt.size_in_mega_bytes(true)
+              << " megabytes\n----\n";
+    std::cout << "extending...\n";
+    rlpbwt.extend();
+    std::cout << "extended...\n";
+    std::cout << "rlpbwt:\n" << rlpbwt.size_in_mega_bytes(true)
+              << " megabytes\n----\n";
+
+}
+
 int main(int argc, char **argv) {
     ::testing::InitGoogleTest(&argc, argv);
     //::testing::GTEST_FLAG(filter) = "BuildRlpbwtSerBV*";
@@ -321,7 +335,7 @@ int main(int argc, char **argv) {
     //::testing::GTEST_FLAG(filter) = "Lce*";
     //::testing::GTEST_FLAG(filter) = "RlpbwtNaive*";
     //::testing::GTEST_FLAG(filter) = "MixRlpbwt*";
-    ::testing::GTEST_FLAG(filter) = "Benchmark*";
-
+    //::testing::GTEST_FLAG(filter) = "Benchmark*";
+    ::testing::GTEST_FLAG(filter) = "BigMatrix*";
     return RUN_ALL_TESTS();
 }

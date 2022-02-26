@@ -23,19 +23,26 @@ def main(argv):
         count = 0
         with open(outputfile, 'w') as out:
             col = []
+            print("read file")
             for line in f:
-                if line.strip().split(" ")[0] == 'TOTAL_SAMPLES:':
+                if line.strip().split()[0] == 'TOTAL_SAMPLES:':
                     break
                 if count > 1:
                     # out.write(line.strip().split("\t")[4])
-                    col.append(line.strip().split("\t")[4])
+                    col.append(line.strip().split()[4])
                 count += 1
+            print("end read file")
+            print("inverse matrix")
             col = col[::-1]
+            print("end inverse matrix of measures: ")
             print(len(col[0]))
             print(len(col))
+            print("begin \"stretch\" matrix")
+            ## TODO too slow
             for c in range(0, len(col[0])):
                 for r in range(0, len(col)):
                     out.write(col[r][c])
+            print("end \"stretch\" matrix")
 
 
 if __name__ == "__main__":
