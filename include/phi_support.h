@@ -92,11 +92,11 @@ public:
         // initialize temporary panel of no-sparse bitvectors
         auto phi_tmp = std::vector<sdsl::bit_vector>(panelbv->h,
                                                      sdsl::bit_vector(
-                                                             panelbv->w+1,
+                                                             panelbv->w + 1,
                                                              0));
         auto phi_inv_tmp = std::vector<sdsl::bit_vector>(panelbv->h,
                                                          sdsl::bit_vector(
-                                                                 panelbv->w+1,
+                                                                 panelbv->w + 1,
                                                                  0));
         // initialize panels and vectors of the data structure
         this->phi_vec = std::vector<sdsl::sd_vector<>>(panelbv->h);
@@ -109,17 +109,10 @@ public:
                 panelbv->h);
         this->phi_inv_select = std::vector<sdsl::sd_vector<>::select_1_type>(
                 panelbv->h);
-        this->phi_supp = std::vector(panelbv->h,
-                                     sdsl::int_vector(panelbv->w+1));
-        this->phi_inv_supp = std::vector(panelbv->h,
-                                         sdsl::int_vector(
-                                                 panelbv->w+1));
-
-        // support vector of pair in order to record how many elements are saved
-        // in the support vectors in order to resize (sdsl::int_vector not allow
-        // push_back() operation)
-        std::vector<std::pair<unsigned int, unsigned int>> counts(
-                panelbv->h, std::make_pair(0, 0));
+        this->phi_supp = std::vector<sdsl::int_vector<>>(panelbv->h);
+        this->phi_inv_supp = std::vector<sdsl::int_vector<>>(panelbv->h);
+        std::vector<std::vector<unsigned int>> phi_supp_tmp(panelbv->h);
+        std::vector<std::vector<unsigned int>> phi_inv_supp_tmp(panelbv->h);
 
         // iterate over every column
         for (unsigned int i = 0; i < cols.size(); i++) {
@@ -131,16 +124,13 @@ public:
                 // support phi panel (if we are in the first run we use default
                 // value)
                 if (j == 0) {
-                    this->phi_supp[cols[i].sample_beg[j]]
-                    [counts[cols[i].sample_beg[j]].first] =
-                            panelbv->h;
+
+                    phi_supp_tmp[cols[i].sample_beg[j]].push_back(panelbv->h);
                 } else {
-                    this->phi_supp[cols[i].sample_beg[j]]
-                    [counts[cols[i].sample_beg[j]].first] =
-                            cols[i].sample_end[j - 1];
+
+                    phi_supp_tmp[cols[i].sample_beg[j]].push_back(
+                            cols[i].sample_end[j - 1]);
                 }
-                // update counts first value
-                counts[cols[i].sample_beg[j]].first++;
 
                 // use sample end to compute phi_inv panel
                 phi_inv_tmp[cols[i].sample_end[j]][i] = true;
@@ -149,71 +139,69 @@ public:
                 // support phi panel (if we are in the last run we use default
                 // value)
                 if (j == cols[i].sample_beg.size() - 1) {
-                    this->phi_inv_supp[cols[i].sample_end[j]]
-                    [counts[cols[i].sample_end[j]].second] =
-                            panelbv->h;
+                    phi_inv_supp_tmp[cols[i].sample_end[j]].push_back(
+                            panelbv->h);
                 } else {
-                    this->phi_inv_supp[cols[i].sample_end[j]]
-                    [counts[cols[i].sample_end[j]].second] =
-                            cols[i].sample_beg[j + 1];
+                    phi_inv_supp_tmp[cols[i].sample_end[j]].push_back(
+                            cols[i].sample_beg[j + 1]);
                 }
-                // update counts second value
-                counts[cols[i].sample_end[j]].second++;
             }
         }
 
         // use the last prefix array to compute the remain values for the
         // phi support data structure (with the same "rules" of the previous
         // case)
-        for (unsigned int j = 0; j < counts.size(); j++) {
+        for (unsigned int j = 0; j < phi_supp_tmp.size(); j++) {
             if (!phi_tmp[j][phi_tmp[j].size() - 1]) {
                 phi_tmp[j][phi_tmp[j].size() - 1] = true;
             }
             if (j == 0) {
-                if (counts[last_pref[j]].first == 0 ||
-                    this->phi_supp[last_pref[j]]
-                    [counts[last_pref[j]].first - 1] != panelbv->h) {
-                    this->phi_supp[last_pref[j]]
-                    [counts[last_pref[j]].first] = panelbv->h;
+                if (phi_supp_tmp[last_pref[j]].empty() ||
+                    phi_supp_tmp[last_pref[j]].back() != panelbv->h) {
+                    phi_supp_tmp[last_pref[j]].push_back(panelbv->h);
                 }
             } else {
-                if (counts[last_pref[j]].first == 0 ||
-                    this->phi_supp[last_pref[j]]
-                    [counts[last_pref[j]].first - 1] != last_pref[j - 1]) {
-                    this->phi_supp[last_pref[j]]
-                    [counts[last_pref[j]].first] = last_pref[j - 1];
+                if (phi_supp_tmp[last_pref[j]].empty() ||
+                    phi_supp_tmp[last_pref[j]].back() != last_pref[j - 1]) {
+                    phi_supp_tmp[last_pref[j]].push_back(last_pref[j - 1]);
                 }
             }
-            counts[last_pref[j]].first++;
-
             if (!phi_inv_tmp[j][phi_inv_tmp[j].size() - 1]) {
                 phi_inv_tmp[j][phi_inv_tmp[j].size() - 1] = true;
             }
-            if (j == counts.size() - 1) {
-                if (counts[last_pref[j]].second == 0 ||
-                    this->phi_inv_supp[last_pref[j]]
-                    [counts[last_pref[j]].second - 1] != panelbv->h) {
-                    this->phi_inv_supp[last_pref[j]]
-                    [counts[last_pref[j]].second] = panelbv->h;
+            if (j == phi_supp_tmp.size() - 1) {
+                if (phi_inv_supp_tmp[last_pref[j]].empty() ||
+                    phi_inv_supp_tmp[last_pref[j]].back() != panelbv->h) {
+                    phi_inv_supp_tmp[last_pref[j]].push_back(panelbv->h);
                 }
             } else {
-                if (counts[last_pref[j]].second == 0 ||
-                    this->phi_inv_supp[last_pref[j]]
-                    [counts[last_pref[j]].second - 1] !=
-                    last_pref[j + 1]) {
-                    this->phi_inv_supp[last_pref[j]]
-                    [counts[last_pref[j]].second] = last_pref[j + 1];
+                if (phi_inv_supp_tmp[last_pref[j]].empty() ||
+                    phi_inv_supp_tmp[last_pref[j]].back() != last_pref[j + 1]) {
+                    phi_inv_supp_tmp[last_pref[j]].push_back(last_pref[j + 1]);
                 }
             }
-            counts[last_pref[j]].second++;
-
         }
         // resize and compress the support sdsl int_vector
-        for (unsigned int i = 0; i < counts.size(); i++) {
+        /*for (unsigned int i = 0; i < counts.size(); i++) {
             this->phi_supp[i].resize(counts[i].first);
             sdsl::util::bit_compress(this->phi_supp[i]);
             this->phi_inv_supp[i].resize(counts[i].second);
             sdsl::util::bit_compress(this->phi_inv_supp[i]);
+        }*/
+        for (unsigned int i = 0; i < phi_supp_tmp.size(); i++) {
+            sdsl::int_vector<> tmp(phi_supp_tmp[i].size());
+            for (unsigned int j = 0; j < phi_supp_tmp[i].size(); j++) {
+                tmp[j] = phi_supp_tmp[i][j];
+            }
+            sdsl::util::bit_compress(tmp);
+            this->phi_supp[i] = tmp;
+
+            sdsl::int_vector<> tmp_inv(phi_inv_supp_tmp[i].size());
+            for (unsigned int j = 0; j < phi_inv_supp_tmp[i].size(); j++) {
+                tmp_inv[j] = phi_inv_supp_tmp[i][j];
+            }
+            sdsl::util::bit_compress(tmp_inv);
+            this->phi_inv_supp[i] = tmp_inv;
         }
         // create sparse bit vector and relative rank/select for phi panel
         unsigned int count = 0;
