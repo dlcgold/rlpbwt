@@ -111,6 +111,8 @@ public:
                 panelbv->h);
         this->phi_supp = std::vector<sdsl::int_vector<>>(panelbv->h);
         this->phi_inv_supp = std::vector<sdsl::int_vector<>>(panelbv->h);
+
+        // remporary vector for supports
         std::vector<std::vector<unsigned int>> phi_supp_tmp(panelbv->h);
         std::vector<std::vector<unsigned int>> phi_inv_supp_tmp(panelbv->h);
 
@@ -120,14 +122,12 @@ public:
             for (unsigned int j = 0; j < cols[i].sample_beg.size(); j++) {
                 // use sample beg to compute phi panel
                 phi_tmp[cols[i].sample_beg[j]][i] = true;
-                // use sample_end and counts (the first value) to compute
+                // use sample_end to compute
                 // support phi panel (if we are in the first run we use default
                 // value)
                 if (j == 0) {
-
                     phi_supp_tmp[cols[i].sample_beg[j]].push_back(panelbv->h);
                 } else {
-
                     phi_supp_tmp[cols[i].sample_beg[j]].push_back(
                             cols[i].sample_end[j - 1]);
                 }
@@ -135,7 +135,7 @@ public:
                 // use sample end to compute phi_inv panel
                 phi_inv_tmp[cols[i].sample_end[j]][i] = true;
 
-                // use sample_beg and counts (the second value) to compute
+                // use sample_beg to compute
                 // support phi panel (if we are in the last run we use default
                 // value)
                 if (j == cols[i].sample_beg.size() - 1) {
@@ -181,13 +181,7 @@ public:
                 }
             }
         }
-        // resize and compress the support sdsl int_vector
-        /*for (unsigned int i = 0; i < counts.size(); i++) {
-            this->phi_supp[i].resize(counts[i].first);
-            sdsl::util::bit_compress(this->phi_supp[i]);
-            this->phi_inv_supp[i].resize(counts[i].second);
-            sdsl::util::bit_compress(this->phi_inv_supp[i]);
-        }*/
+        // compress and push the support sdsl int_vectors
         for (unsigned int i = 0; i < phi_supp_tmp.size(); i++) {
             sdsl::int_vector<> tmp(phi_supp_tmp[i].size());
             for (unsigned int j = 0; j < phi_supp_tmp[i].size(); j++) {
