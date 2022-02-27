@@ -218,9 +218,6 @@ int main(int argc, char **argv) {
         std::cout << "rlpbwt: " << rlpbwt.size_in_mega_bytes(verbose)
                   << " megabytes\n----\n";
         std::cout << "estimated dense size: "
-                  << dense_size_byte(rlpbwt.height, rlpbwt.width)
-                  << " bytes\n";
-        std::cout << "estimated dense size: "
                   << dense_size_megabyte(rlpbwt.height, rlpbwt.width)
                   << " megabytes\n----\n";
         std::cout << "built in " << time_build << " s\n";

@@ -353,9 +353,15 @@ TEST(BigMatrix, Build) {
 
     rlpbwt->match_tsv_tr_lce("../output_big/pbwt_matrix_10_query3",
                              "../output_big/pbwt_matrix_10_le_matches3",
-                             false, false);
+                             true, false);
 
-
+//    auto rlpbwtn = new rlpbwt_naive();
+//    file_i.open("../output_big/pbwt_matrix_10_n.ser");
+//    rlpbwtn->load(file_i);
+//    file_i.close();
+//    rlpbwtn->match_tsv_tr("../output_big/pbwt_matrix_10_query3",
+//                             "../output_big/pbwt_matrix_10_n_matches3",
+//                             false);
     /*
     rlpbwt_naive rlpbwtn(input);
     auto filenamen = "../output_big/pbwt_matrix_10_n.ser";
