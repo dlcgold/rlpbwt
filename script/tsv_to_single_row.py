@@ -25,6 +25,8 @@ def main(argv):
             col = []
             print("read file")
             for line in f:
+                c = str(count)
+                print(c, end="\r")
                 if line.strip().split()[0] == 'TOTAL_SAMPLES:':
                     break
                 if count > 1:
@@ -40,6 +42,7 @@ def main(argv):
             print("begin \"stretch\" matrix")
             ## TODO too slow
             for c in range(0, len(col[0])):
+                print(c, end="\r")
                 for r in range(0, len(col)):
                     out.write(col[r][c])
             print("end \"stretch\" matrix")

@@ -22,7 +22,7 @@ rlpbwt_bv::rlpbwt_bv(const char *filename, bool verbose) {
         std::cout << "h: " << tmp_height << "\n";
         unsigned int tmp_width = std::count(
                 std::istreambuf_iterator<char>(input_matrix),
-                std::istreambuf_iterator<char>(), '\n') + 1;
+                std::istreambuf_iterator<char>(), '\n');
         std::cout << "w: " << tmp_width << "\n";
         input_matrix.clear();
         input_matrix.seekg(0, std::ios::beg);
@@ -458,6 +458,7 @@ rlpbwt_bv::external_match(const std::string &query, bool verbose) {
 
     // iterate over every column
     for (unsigned i = 0; i < query.size(); i++) {
+        std::cout << "processed " << i << "\r";
         if (verbose) {
             std::cout << "before at " << i << " from " << curr_index << " to "
                       << end_index

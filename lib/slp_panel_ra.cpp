@@ -21,8 +21,12 @@ slp_panel_ra::slp_panel_ra(const char *filename, unsigned int h, unsigned int w)
 slp_panel_ra::slp_panel_ra() = default;
 
 char slp_panel_ra::getElem(unsigned int i, unsigned int j) const {
-    unsigned rev_col = (this->w - 1) - j;
-    return this->panel.charAt(rev_col + (i * this->w));
+    auto w_l = (unsigned long long int) this->w;
+    auto i_l = (unsigned long long int) i;
+    auto j_l = (unsigned long long int) j;
+    auto rev_col = (w_l - (unsigned long long int) 1) - j_l;
+    unsigned long long int pos = rev_col + (i_l * w_l);
+    return this->panel.charAt(pos);
 }
 
 std::ostream &operator<<(std::ostream &os, const slp_panel_ra &ra) {
@@ -64,7 +68,7 @@ unsigned long long slp_panel_ra::size_in_bytes(bool verbose) {
     unsigned long long size = 0;
     std::filesystem::path slp{this->slp_file};
     size += std::filesystem::file_size(slp);
-    if(verbose){
+    if (verbose) {
         std::cout << "slp: " << size << " bytes\n";
     }
     size += (sizeof(unsigned int) * 2);
@@ -77,7 +81,7 @@ double slp_panel_ra::size_in_mega_bytes(bool verbose) {
     std::filesystem::path slp{this->slp_file};
     double to_mega = ((double) 1 / (double) 1024) / (double) 1024;
     size += ((double) std::filesystem::file_size(slp) * to_mega);
-    if(verbose){
+    if (verbose) {
         std::cout << "slp: " << size << " megabytes\n";
     }
     size += (sizeof(unsigned int) * 2);

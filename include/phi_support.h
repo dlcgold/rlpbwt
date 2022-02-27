@@ -307,7 +307,7 @@ public:
             size += sdsl::size_in_bytes(phi_inv_supp[i]);
         }
         if (verbose) {
-            std::cout << "phi: " << size << " bytes\n";
+            std::cout << "phi support: " << size << " bytes\n";
         }
         return size;
     }
@@ -331,7 +331,7 @@ public:
             size += sdsl::size_in_mega_bytes(phi_inv_supp[i]);
         }
         if (verbose) {
-            std::cout << "phi: " << size << " megabytes\n";
+            std::cout << "phi support: " << size << " megabytes\n";
         }
         return size;
     }

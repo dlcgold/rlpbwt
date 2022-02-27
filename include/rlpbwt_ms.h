@@ -505,23 +505,26 @@ private:
         if (col == 0) {
             return false;
         }
+        auto w_l = (unsigned long long int) this->panel->w;
         // obtain the column in the reverse order (as the SLP is saved)
-        unsigned int rev_col = (this->panel->w - 1) - col;
+        unsigned long long int rev_col =
+                (w_l - (unsigned long long int) 1) - col;
         // obtain indices of the symbols required in the SLP (built from the
         // reverse matrix saved as a single line string)
-        unsigned int pos_curr = rev_col + ((this->panel->w) * curr);
-        unsigned int pos_other = rev_col + ((this->panel->w) * other);
+        unsigned long long int pos_curr = rev_col + (w_l * curr);
+        unsigned long long int pos_other = rev_col + (w_l * other);
         if (verbose) {
             std::cout << "at " << rev_col << ": " << pos_curr << ", "
                       << pos_other << "\n";
         }
         // compute lce and return true if equal (or greater) than the bound
-//        unsigned int lcp_pair_naive = lceToR_NaiveBounded(this->panel->panel,
+//        auto lcp_pair_naive = lceToR_NaiveBounded(this->panel->panel,
 //                                                          pos_other,
 //                                                          pos_curr, bound);
         // TODO check the bound in no naive version, it doesn't work
-        unsigned int lcp_pair = lceToRBounded(this->panel->panel, pos_other,
-                                              pos_curr, bound);
+        auto lcp_pair = lceToRBounded(this->panel->panel,
+                                      pos_other,
+                                      pos_curr, bound);
         // TODO if the bound works it should be lcp_pair == bound
         if (lcp_pair >= bound) {
             return true;
@@ -548,22 +551,23 @@ private:
         if (col == 0) {
             return std::make_pair(other, 0);
         }
-
+        auto w_l = (unsigned long long int) this->panel->w;
         // obtain the column in the reverse order (as the SLP is saved)
         // the previous one in order to compute lce for MS
-        unsigned int rev_col = (this->panel->w - 1) - col + 1;
+        unsigned long long int rev_col =
+                (w_l - (unsigned long long int) 1) - col +
+                (unsigned long long int) 1;
         // obtain indices of the symbols required in the SLP (built from the
         // reverse matrix saved as a single line string)
-        unsigned int pos_curr = rev_col + ((this->panel->w) * curr);
-        unsigned int pos_other = rev_col + ((this->panel->w) * other);
+        unsigned long long int pos_curr = rev_col + (w_l * curr);
+        unsigned long long int pos_other = rev_col + (w_l * other);
         if (verbose) {
             std::cout << "at " << rev_col << ": " << pos_curr << ", "
                       << pos_other << "\n";
         }
         // compute lce (eventually bounded with the column index value) and
         // return the length (and the prefix value of the other position)
-        unsigned int lcp_other = lceToR(this->panel->panel, pos_other,
-                                        pos_curr);
+        auto lcp_other = lceToR(this->panel->panel, pos_other, pos_curr);
         if (verbose) {
             std::cout << "at " << rev_col << " lce is : " << lcp_other << "\n";
         }
@@ -595,15 +599,18 @@ private:
             return std::make_pair(next, 0);
         }
 
+        auto w_l = (unsigned long long int) this->panel->w;
         // obtain the column in the reverse order (as the SLP is saved)
         // the previous one in order to compute lce for MS
-        unsigned int rev_col = (this->panel->w - 1) - col + 1;
+        unsigned long long int rev_col =
+                (w_l - (unsigned long long int) 1) - col +
+                (unsigned long long int) 1;
 
         // obtain indices of the symbols required in the SLP (built from the
         // reverse matrix saved as a single line string)
-        unsigned int pos_curr = rev_col + ((this->panel->w) * curr);
-        unsigned int pos_prev = rev_col + ((this->panel->w) * prev);
-        unsigned int pos_next = rev_col + ((this->panel->w) * next);
+        unsigned long long int pos_curr = rev_col + (w_l  * curr);
+        unsigned long long int pos_prev = rev_col + (w_l  * prev);
+        unsigned long long int pos_next = rev_col + (w_l  * next);
         if (verbose) {
             std::cout << "at " << rev_col << ": " << pos_curr << ", "
                       << pos_prev
@@ -611,13 +618,13 @@ private:
         }
         // compute lce for both requested indices (eventually bounded with the
         // column index value)
-        unsigned int lcp_prev = lceToR(this->panel->panel, pos_prev,
-                                       pos_curr);
+        auto lcp_prev = lceToR(this->panel->panel, pos_prev,
+                               pos_curr);
         if (lcp_prev >= col) {
             lcp_prev = col;
         }
-        unsigned int lcp_next = lceToR(this->panel->panel, pos_curr,
-                                       pos_next);
+        auto lcp_next = lceToR(this->panel->panel, pos_curr,
+                               pos_next);
         if (lcp_next >= col) {
             lcp_next = col;
         }
@@ -666,6 +673,9 @@ public:
                 throw SlpNotFoundException{};
             }
         }
+        if constexpr (std::is_same_v<ra_t, panel_ra>) {
+            thr = true;
+        }
         if (input_matrix.is_open()) {
             this->is_thr_enabled = thr;
             std::string header1;
@@ -677,14 +687,17 @@ public:
             getline(input_matrix, header1);
             getline(input_matrix, header2);
             getline(input_matrix, line);
+
             std::istringstream is(line);
             is >> garbage >> garbage >> garbage >> garbage >> new_column;
             unsigned int tmp_height = new_column.size();
             std::cout << "h: " << tmp_height << "\n";
             unsigned int tmp_width = std::count(
                     std::istreambuf_iterator<char>(input_matrix),
-                    std::istreambuf_iterator<char>(), '\n') + 1;
+                    std::istreambuf_iterator<char>(), '\n');
             std::cout << "w: " << tmp_width << "\n";
+            this->width = tmp_width;
+            this->height = tmp_height;
             input_matrix.clear();
             input_matrix.seekg(0, std::ios::beg);
             this->cols = std::vector<column_ms>(tmp_width + 1);
@@ -779,8 +792,6 @@ public:
                     &this->cols[count].thr);
             sdsl::util::bit_compress(this->last_pref);
             this->is_extended = false;
-            this->width = tmp_width;
-            this->height = tmp_height;
             input_matrix.close();
         } else {
             throw FileNotFoundException{};
@@ -826,6 +837,7 @@ public:
               bool verbose = false) {
         // compute the match iff |query| is equal to the width of the panel
         if (query.size() != this->panel->w) {
+            std::cout << query.size() << " != " << this->panel->w << "\n";
             throw NotEqualLengthException{};
         }
         // if required extend with the phi support struct (iff not already
@@ -1342,6 +1354,7 @@ public:
                    query[tmp_index] == panel->getElem(ms.row[i], tmp_index)) {
                 tmp_index--;
             }
+
             ms.len[i] = i - tmp_index;
         }
 
@@ -1497,17 +1510,16 @@ public:
                 queries_panel.push_back(new_column);
             }
             input_matrix.close();
-            std::string query = "";
+            std::string query;
             if (out_match.is_open()) {
                 for (unsigned int i = 0; i < queries_panel[0].size(); i++) {
+                    if (verbose) {
+                        std::cout << i << ": \n";
+                    }
                     for (auto &j: queries_panel) {
                         query.push_back(j[i]);
                     }
-                    if (verbose) {
-                        std::cout << query << "\n";
-                    }
                     ms_matches matches;
-
                     matches = this->match_lce(query, extend_matches, verbose);
                     if (verbose) {
                         std::cout << i << ": ";
@@ -1632,14 +1644,16 @@ public:
                 queries_panel.push_back(new_column);
             }
             input_matrix.close();
-            std::string query = "";
+            std::string query;
             if (out_match.is_open()) {
                 for (unsigned int i = 0; i < queries_panel[0].size(); i++) {
                     for (auto &j: queries_panel) {
                         query.push_back(j[i]);
                     }
-                    if (verbose) {
-                        std::cout << query << "\n";
+                    if(i==1){
+                        verbose = true;
+                    }else{
+                        verbose = false;
                     }
                     ms_matches matches;
 
@@ -1730,7 +1744,7 @@ public:
         if (this->is_extended) {
             auto size_phi = this->phi->size_in_bytes(verbose);
             size += size_phi;
-            std::cout << "phi support: " << size_phi << " bytes\n";
+            //std::cout << "phi support: " << size_phi << " bytes\n";
         }
 
         return size;
@@ -1785,7 +1799,7 @@ public:
         if (this->is_extended) {
             auto size_phi = this->phi->size_in_mega_bytes(verbose);
             size += size_phi;
-            std::cout << "phi support: " << size_phi << " megabytes\n";
+            //std::cout << "phi support: " << size_phi << " megabytes\n";
         }
         return size;
     }
@@ -1802,6 +1816,10 @@ public:
                                                 sdsl::util::class_name(
                                                         *this));
         size_t written_bytes = 0;
+        out.write((char *) &this->width, sizeof(this->width));
+        written_bytes += sizeof(this->width);
+        out.write((char *) &this->height, sizeof(this->height));
+        written_bytes += sizeof(this->height);
         out.write((char *) &this->is_thr_enabled, sizeof(this->is_thr_enabled));
         written_bytes += sizeof(this->is_thr_enabled);
         out.write((char *) &this->is_extended, sizeof(this->is_extended));
@@ -1826,6 +1844,8 @@ public:
      * supported RLPBWT structure object
      */
     void load(std::istream &in, const char *slp_filename = "") {
+        in.read((char *) &this->width, sizeof(this->width));
+        in.read((char *) &this->height, sizeof(this->height));
         in.read((char *) &this->is_thr_enabled, sizeof(this->is_thr_enabled));
         in.read((char *) &this->is_extended, sizeof(this->is_extended));
         if constexpr (!std::is_same_v<ra_t, panel_ra>) {
@@ -1842,7 +1862,7 @@ public:
             _panel->load(in);
             this->panel = _panel;
         }
-        for (unsigned int i = 0; i < this->panel->w; i++) {
+        for (unsigned int i = 0; i <= this->panel->w; i++) {
             auto c = new column_ms();
             c->load(in);
             this->cols.emplace_back(*c);

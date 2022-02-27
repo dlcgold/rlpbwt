@@ -33,7 +33,7 @@ def main(argv):
         count = 0
         with open(outputfile, "w") as out, open(queryfile, "w") as outq:
             for line in f:
-                if line.strip().split(" ")[0] == 'TOTAL_SAMPLES:':
+                if line.strip().split()[0] == 'TOTAL_SAMPLES:':
                     out.write(line)
                     outq.write(line)
                     break
@@ -42,8 +42,8 @@ def main(argv):
                     outq.write(line)
                 if count > 1:
                     out.write(line[:-querynumber])
-                    restline = "\t".join(line.strip().split("\t")[:-1]) +"\t"
-                    query = restline + line.strip().split("\t")[4][-querynumber:]
+                    restline = "\t".join(line.strip().split()[:-1]) + "\t"
+                    query = restline + line.strip().split()[4][-querynumber:]
                     outq.write(query)
                     out.write("\n")
                     outq.write("\n")

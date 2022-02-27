@@ -10,12 +10,6 @@ panel_ra::panel_ra(unsigned int h, unsigned int w) : h(h), w(w) {
 }
 
 char panel_ra::getElem(unsigned int i, unsigned int j) const {
-    /*if (this->panel[j + (i * w)]) {
-        return '1';
-    } else {
-        return '0';
-    }
-     */
     if (this->panel[j][i]) {
         return '1';
     } else {
