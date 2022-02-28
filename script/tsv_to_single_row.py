@@ -1,6 +1,5 @@
 import sys
 import getopt
-import subprocess
 
 
 def main(argv):

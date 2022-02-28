@@ -982,8 +982,7 @@ size_t rlpbwt_bv::serialize(std::ostream &out, sdsl::structure_tree_node *v,
                             const std::string &name) {
     sdsl::structure_tree_node *child =
             sdsl::structure_tree::add_child(v, name,
-                                            sdsl::util::class_name(
-                                                    *this));
+                                            sdsl::util::class_name(*this));
     size_t written_bytes = 0;
     out.write((char *) &this->height, sizeof(this->height));
     written_bytes += sizeof(this->height);
@@ -1088,7 +1087,7 @@ rlpbwt_bv::match_tsv_tr(const char *filename, const char *out, bool verbose) {
             queries_panel.push_back(new_column);
         }
         input_matrix.close();
-        std::string query = "";
+        std::string query;
         if (out_match.is_open()) {
             for (unsigned int i = 0; i < queries_panel[0].size(); i++) {
                 for (auto &j: queries_panel) {
@@ -1194,7 +1193,7 @@ double rlpbwt_bv::size_in_mega_bytes(bool verbose) {
 
 unsigned int rlpbwt_bv::get_run_number() {
     unsigned int count_run = 0;
-    for (auto & col : this->cols) {
+    for (auto &col: this->cols) {
         count_run += (col.rank_runs(this->height));
     }
     return count_run;

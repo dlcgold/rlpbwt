@@ -2,10 +2,7 @@
 #include <gtest/gtest.h>
 #include <gperftools/heap-profiler.h>
 #include "benchmark_test.h"
-#include "../include/utils.h"
-#include "../include/exceptions.h"
 #include "../include/rlpbwt_bv.h"
-#include "../include/panel_ra.h"
 #include "../include/rlpbwt_ms.h"
 #include "../include/rlpbwt_naive.h"
 
@@ -119,7 +116,7 @@ TEST(RlpbwtRaTest, TestBuildQuery) {
 TEST(Lce, Test) {
     rlpbwt_ms<slp_panel_ra> rlpbwtSlp("../input/sample_new.txt", true, false,
                                       "../input/sample.slp");
-    rlpbwtSlp.extend();
+    /*rlpbwtSlp.extend();
     for (unsigned int i = 0; i < rlpbwtSlp.panel->h; i++) {
         std::cout << i << ": ";
         for (unsigned int j = 0; j < rlpbwtSlp.panel->w; j++) {
@@ -136,11 +133,12 @@ TEST(Lce, Test) {
                     rlpbwtSlp.panel->h) << " ";
         }
         std::cout << "\n";
-    }
-    auto matches = rlpbwtSlp.match_lce("010010100011101", true, false);
+    }*/
+    auto matches = rlpbwtSlp.match_lce("010010100011101", true, true);
     std::cout << matches;
     matches = rlpbwtSlp.match_lce("000000000000000", true, false);
     std::cout << matches;
+    std::cout << rlpbwtSlp.cols[2];
 }
 
 TEST(RlpbwtNaive, BuildQuery) {
@@ -336,23 +334,33 @@ TEST(BigMatrix, Build) {
 //    std::cout << "extended...\n";
 //    std::cout << "rlpbwt:\n" << rlpbwt.size_in_mega_bytes(true)
 //              << " megabytes\n----\n";
+//    std::cout << "with " << rlpbwt.get_run_number() << " runs\n";
 //    auto filename = "../output_big/pbwt_matrix_10_s.ser";
 //    std::ofstream file_o;
 //    unsigned int size = 0;
 //    file_o.open(filename);
-//    rlpbwt.serialize(file_o);
+//    size = rlpbwt.serialize(file_o);
 //    file_o.close();
 //    rlpbwt.match_tsv_tr_lce("../output_big/pbwt_matrix_10_query3",
-//                             "../output_big/pbwt_matrix_10_matches3",
+//                             "../output_big/pbwt_matrix_le_10_matches3",
 //                             false);
+//    rlpbwt.match_tsv_tr_thr("../output_big/pbwt_matrix_10_query3",
+//                            "../output_big/pbwt_matrix_te_10_matches3",
+//                            false);
+//    std::cout << "estimated dense size: "
+//              << dense_size_megabyte(rlpbwt.height, rlpbwt.width)
+//              << " megabytes\n----\n";
     std::ifstream file_i;
     file_i.open("../output_big/pbwt_matrix_10_s.ser");
     auto rlpbwt = new rlpbwt_ms<slp_panel_ra>();
     rlpbwt->load(file_i, "../output_big/pbwt_matrix_10.slp");
     file_i.close();
-
+    std::cout << rlpbwt->get_run_number() << "\n";
     rlpbwt->match_tsv_tr_lce("../output_big/pbwt_matrix_10_query3",
                              "../output_big/pbwt_matrix_10_le_matches3",
+                             true, false);
+    rlpbwt->match_tsv_tr_thr("../output_big/pbwt_matrix_10_query3",
+                             "../output_big/pbwt_matrix_10_te_matches3",
                              true, false);
 
 //    auto rlpbwtn = new rlpbwt_naive();

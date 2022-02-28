@@ -153,8 +153,14 @@ private:
                 // 1 in bitvectors for runs et every end of a run
                 runvec[i] = true;
                 // 1 in bitvectors for thresholds index
+                // if the first lcp value next the run is less than the actual
+                // in thresholds index we put 1 in the last index of the run
                 if (this->is_thr_enabled) {
-                    thr[thr_tmp] = true;
+                    if (i + 1 != height_tmp && div[i + 1] < div[thr_tmp]) {
+                        thr[i] = true;
+                    } else {
+                        thr[thr_tmp] = true;
+                    }
                 }
                 samples.emplace_back(tmp_beg, pref[i]);
                 // update bitvectors for "u" and "v" and swap the case to study in
@@ -608,9 +614,9 @@ private:
 
         // obtain indices of the symbols required in the SLP (built from the
         // reverse matrix saved as a single line string)
-        unsigned long long int pos_curr = rev_col + (w_l  * curr);
-        unsigned long long int pos_prev = rev_col + (w_l  * prev);
-        unsigned long long int pos_next = rev_col + (w_l  * next);
+        unsigned long long int pos_curr = rev_col + (w_l * curr);
+        unsigned long long int pos_prev = rev_col + (w_l * prev);
+        unsigned long long int pos_next = rev_col + (w_l * next);
         if (verbose) {
             std::cout << "at " << rev_col << ": " << pos_curr << ", "
                       << pos_prev
@@ -659,7 +665,7 @@ public:
     virtual ~rlpbwt_ms() = default;
 
     /**
-     * @brief costructor of a RLPBWT that support matching statistics
+     * @brief constructor of a RLPBWT that support matching statistics
      * @param filename file with the panel
      * @param thr bool to enable thresholds computation
      * @param verbose bool fro extra prints
@@ -1237,17 +1243,8 @@ public:
                     }
                 }
             } else {
-                // check if we are in a threshold
+                // get threshold
                 auto thr = this->cols[i].rank_thr(curr_index);
-                /* TODO if index is in the position of a thresholds
-                 * understand what to do
-                 */
-                bool in_thr = false;
-                if (this->cols[i].sample_beg[curr_run] ==
-                    this->cols[i].sample_end[curr_run]) {
-                    in_thr = true;
-                }
-
                 if (this->cols[i].sample_beg.size() == 1) {
                     if (verbose) {
                         std::cout << "complete mismatch\n";
@@ -1272,7 +1269,7 @@ public:
                                       << symbol << "\n";
                         }
                     }
-                } else if ((curr_run != 0 && !in_thr && curr_run == thr) ||
+                } else if ((curr_run != 0 && curr_run == thr) ||
                            curr_run == this->cols[i].sample_beg.size() - 1) {
                     // if we are above the threshold we go up (if we are not in
                     // the first run). We also go up if we are in the last run
@@ -1650,11 +1647,7 @@ public:
                     for (auto &j: queries_panel) {
                         query.push_back(j[i]);
                     }
-                    if(i==1){
-                        verbose = true;
-                    }else{
-                        verbose = false;
-                    }
+
                     ms_matches matches;
 
                     matches = this->match_thr(query, extend_matches, verbose);
