@@ -1709,9 +1709,11 @@ public:
             size_run += sdsl::size_in_bytes(this->cols[i].runs) +
                         sdsl::size_in_bytes(this->cols[i].rank_runs) +
                         sdsl::size_in_bytes(this->cols[i].select_runs);
-            size_thr += sdsl::size_in_bytes(this->cols[i].thr) +
-                        sdsl::size_in_bytes(this->cols[i].rank_thr) +
-                        sdsl::size_in_bytes(this->cols[i].select_thr);
+            if(this->is_thr_enabled) {
+                size_thr += sdsl::size_in_bytes(this->cols[i].thr) +
+                            sdsl::size_in_bytes(this->cols[i].rank_thr) +
+                            sdsl::size_in_bytes(this->cols[i].select_thr);
+            }
             size_u += sdsl::size_in_bytes(this->cols[i].u) +
                       sdsl::size_in_bytes(this->cols[i].rank_u) +
                       sdsl::size_in_bytes(this->cols[i].select_u);
@@ -1723,7 +1725,9 @@ public:
         }
         if (verbose) {
             std::cout << "run: " << size_run << " bytes\n";
-            std::cout << "thr: " << size_thr << " bytes\n";
+            if(this->is_thr_enabled) {
+                std::cout << "thr: " << size_thr << " bytes\n";
+            }
             std::cout << "u: " << size_u << " bytes\n";
             std::cout << "v: " << size_v << " bytes\n";
             std::cout << "samples: " << size_samples << " bytes\n";
@@ -1764,9 +1768,11 @@ public:
             size_run += sdsl::size_in_mega_bytes(this->cols[i].runs) +
                         sdsl::size_in_mega_bytes(this->cols[i].rank_runs) +
                         sdsl::size_in_mega_bytes(this->cols[i].select_runs);
-            size_thr += sdsl::size_in_mega_bytes(this->cols[i].thr) +
-                        sdsl::size_in_mega_bytes(this->cols[i].rank_thr) +
-                        sdsl::size_in_mega_bytes(this->cols[i].select_thr);
+            if(this->is_thr_enabled) {
+                size_thr += sdsl::size_in_mega_bytes(this->cols[i].thr) +
+                            sdsl::size_in_mega_bytes(this->cols[i].rank_thr) +
+                            sdsl::size_in_mega_bytes(this->cols[i].select_thr);
+            }
             size_u += sdsl::size_in_mega_bytes(this->cols[i].u) +
                       sdsl::size_in_mega_bytes(this->cols[i].rank_u) +
                       sdsl::size_in_mega_bytes(this->cols[i].select_u);
@@ -1778,7 +1784,9 @@ public:
         }
         if (verbose) {
             std::cout << "run: " << size_run << " megabytes\n";
-            std::cout << "thr: " << size_thr << " megabytes\n";
+            if(this->is_thr_enabled) {
+                std::cout << "thr: " << size_thr << " megabytes\n";
+            }
             std::cout << "u: " << size_u << " megabytes\n";
             std::cout << "v: " << size_v << " megabytes\n";
             std::cout << "samples: " << size_samples << " megabytes\n";
