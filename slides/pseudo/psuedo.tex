@@ -158,13 +158,18 @@
     \State $u'\gets u'+1$
     \EndIf
     \If{$k=0\lor col[pref[k]]\neq col[pref[k-1]]$}
-    \State $curr_{lcs}\gets div[i],\,\,tmp_{thr}\gets i$
+    \State $curr_{lcs}\gets div[k],\,\,tmp_{thr}\gets k$
     \EndIf
-    \If{$div[i]<curr_{lcs}$}
-    \State $curr_{lcs}\gets div[i],\,\,tmp_{thr}\gets i$
+    \If{$div[k]<curr_{lcs}$}
+    \State $curr_{lcs}\gets div[k],\,\,tmp_{thr}\gets k$
     \EndIf
     \If{$k=height-1\lor col[pref[k]]\neq col[pref[k+1]]$}
-    \State $runs[k]\gets 1,\,\,thrs[tmp_{thr}]\gets 1$
+    \State $runs[k]\gets 1$
+    \If{$k\neq height-1\land div[k+1]<div[tmp_{thr}]$}
+    \State $thrs[k]\gets 1$
+    \Else
+    \State $thrs[tmp_{thr}]\gets 1$
+    \EndIf
     \State $push(samples_{beg}, tmp_{beg})$
     \State $push(samples_{end}, pref[k])$
     \If{$push_{one}$}
@@ -414,12 +419,7 @@
     z)$ 
     \EndIf
     \Else
-    \State $curr_{thr}\gets rank_t^k(curr_{index}),\,\,single_{run}\gets \bot$
-
-    \If{$samples_{beg}^k[curr_{run}]=samples_{end}^k[curr_{run}]$}
-    \State $single_{run}\gets \top$
-    \EndIf
-    
+    \State $curr_{thr}\gets rank_t^k(curr_{index})$    
     \If{$|samples_{beg}^k|=1$}
     \State $ms_{row}[k]\gets rlpbwt.height$
     \If{$k\neq |z|-1$}
@@ -429,8 +429,8 @@
     \State $curr_{run}\gets rank_h^{k+1}(curr_{index})$
     \State $symb\gets get\_symbol(start^{k+1}, curr_{run})$
     \EndIf
-    \ElsIf{$(curr_{run}\neq 0 \land \neg single_{run} \land
-    curr_{run}=curr_{thr})\lor curr_{run}=|samples_{beg}^k|-1$}
+    \ElsIf{$(curr_{run}\neq 0 \land curr_{run}=curr_{thr})\lor
+    curr_{run}=|samples_{beg}^k|-1$} 
     \State $curr_{index}\gets select_h^{k}(curr_{run})$
     \State $curr_{row}\gets samples_{end}^k[curr_{run}-1]$
     \State $ms_{row}[k]\gets curr_{row}$
