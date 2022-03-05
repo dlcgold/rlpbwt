@@ -1,6 +1,5 @@
 import sys
 import getopt
-import subprocess
 
 
 def main(argv):
@@ -29,7 +28,7 @@ def main(argv):
             queryfile = arg
         elif opt in ("-n", "--qnum"):
             querynumber = int(arg)
-    with open(inputfile) as f:
+    with open(inputfile, "r") as f:
         count = 0
         with open(outputfile, "w") as out, open(queryfile, "w") as outq:
             for line in f:
@@ -41,9 +40,9 @@ def main(argv):
                     out.write(line)
                     outq.write(line)
                 if count > 1:
-                    out.write(line[:-querynumber])
+                    out.write(line[:-(querynumber+1)])
                     restline = "\t".join(line.strip().split()[:-1]) + "\t"
-                    query = restline + line.strip().split()[4][-querynumber:]
+                    query = restline + line.strip().split()[4][-(querynumber + 1):]
                     outq.write(query)
                     out.write("\n")
                     outq.write("\n")

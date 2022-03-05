@@ -39,7 +39,6 @@ def main(argv):
             print(len(col[0]))
             print(len(col))
             print("begin \"stretch\" matrix")
-            ## TODO too slow
             for c in range(0, len(col[0])):
                 print(c, end="\r")
                 for r in range(0, len(col)):
