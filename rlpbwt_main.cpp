@@ -8,28 +8,28 @@ void printHelp() {
     std::cout << "Usage: RLPBWT [options]\n"
               << std::endl;
     std::cout << "Options:" << std::endl;
-    std::cout << "  -i, --input_file <path>: macs file for panel" << std::endl;
-    std::cout << "  -m, --memorize <path>: path to save serialization " << std::endl;
-    std::cout << "  -l, --load <path>: path to load serialization" << std::endl;
-    std::cout << "  -s, --input_slp <path> path to SLP file" << std::endl;
-    std::cout << "  -o, --output <path>: path to query output" << std::endl;
-    std::cout << "  -q, --query <path>: path to macs query file" << std::endl;
-    std::cout << "  -N, --Naive: naive RLPBWT (only one mode allowed)"
+    std::cout << "  -i, --input_file <path>\t macs file for panel" << std::endl;
+    std::cout << "  -m, --memorize <path>\t  path to save serialization " << std::endl;
+    std::cout << "  -l, --load <path>\t path to load serialization" << std::endl;
+    std::cout << "  -s, --input_slp <path>\t path to SLP file" << std::endl;
+    std::cout << "  -o, --output <path>\t path to query output" << std::endl;
+    std::cout << "  -q, --query <path>\t path to macs query file" << std::endl;
+    std::cout << "  -N, --Naive\t naive RLPBWT (only one mode allowed)"
               << std::endl;
-    std::cout << "  -B, --Bv: bitvectors RLPBWT (only one mode allowed)"
+    std::cout << "  -B, --Bv\t bitvectors RLPBWT (only one mode allowed)"
               << std::endl;
-    std::cout << "  -S, --Slp: slp RLPBWT "
+    std::cout << "  -S, --Slp\t slp RLPBWT "
               << "(only one mode allowed | slp file required)"
               << std::endl;
-    std::cout << "  -P, --Panel: panel RLPBWT (only one mode allowed)"
+    std::cout << "  -P, --Panel\t panel RLPBWT (only one mode allowed)"
               << std::endl;
-    std::cout << "  -t, --thresholds: enable thresholds (slp/panel mode only)"
+    std::cout << "  -t, --thresholds\t enable thresholds (slp/panel mode only)"
               << std::endl;
-    std::cout << "  -e, --extend: extend matches (slp/panel mode only)"
+    std::cout << "  -e, --extend\t extend matches (slp/panel mode only)"
               << std::endl;
-    std::cout << "  -v, --verbose: extra prints" << std::endl;
-    std::cout << "  -V, --fverbose: extra prints for functions (cautions)" << std::endl;
-    std::cout << "  -h, --help: show this help message and exit" << std::endl;
+    std::cout << "  -v, --verbose\t extra prints" << std::endl;
+    std::cout << "  -V, --fverbose\t extra prints for functions (cautions)" << std::endl;
+    std::cout << "  -h, --help\t show this help message and exit" << std::endl;
 }
 
 /*

@@ -337,3 +337,4 @@ venv/
 old/
 input_big
 output_big
+snakemake/results

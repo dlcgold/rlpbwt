@@ -33,21 +33,21 @@ usage:
 Usage: RLPBWT [options]
 
 Options:
-  -i, --input_file <path>: macs file for panel
-  -m, --memorize <path>: path to save serialization
-  -l, --load <path>: path to load serialization
-  -s, --input_slp <path>: path to SLP file
-  -o, --output <path>: path to query output
-  -q, --query <path>: path to macs query file
-  -N, --Naive: naive RLPBWT (only one mode allowed)
-  -B, --Bv: bitvectors RLPBWT (only one mode allowed)
-  -S, --Slp: slp RLPBWT (only one mode allowed | slp file required)
-  -P, --Panel: panel RLPBWT (only one mode allowed)
-  -t, --thresholds: enable thresholds (slp/panel mode only)
-  -e, --extend: extend matches (slp/panel mode only)
-  -v, --verbose: extra prints
-  -V, --fverbose: extra prints for functions (cautions)
-  -h, --help: show this help message and exit
+  -i, --input_file <path>	 macs file for panel
+  -m, --memorize <path>	  path to save serialization 
+  -l, --load <path>	 path to load serialization
+  -s, --input_slp <path>	 path to SLP file
+  -o, --output <path>	 path to query output
+  -q, --query <path>	 path to macs query file
+  -N, --Naive	 naive RLPBWT (only one mode allowed)
+  -B, --Bv	 bitvectors RLPBWT (only one mode allowed)
+  -S, --Slp	 slp RLPBWT (only one mode allowed | slp file required)
+  -P, --Panel	 panel RLPBWT (only one mode allowed)
+  -t, --thresholds	 enable thresholds (slp/panel mode only)
+  -e, --extend	 extend matches (slp/panel mode only)
+  -v, --verbose	 extra prints
+  -V, --fverbose	 extra prints for functions (cautions)
+  -h, --help	 show this help message and exit
 
 ```
 
