@@ -8,10 +8,12 @@ void printHelp() {
     std::cout << "Usage: RLPBWT [options]\n"
               << std::endl;
     std::cout << "Options:" << std::endl;
-    std::cout << "  -i, --input_file <path>" << std::endl;
-    std::cout << "  -s, --input_slp <path>" << std::endl;
-    std::cout << "  -o, --output <path>" << std::endl;
-    std::cout << "  -q, --query <path>" << std::endl;
+    std::cout << "  -i, --input_file <path>: macs file for panel" << std::endl;
+    std::cout << "  -m, --memorize <path>: path to save serialization " << std::endl;
+    std::cout << "  -l, --load <path>: path to load serialization" << std::endl;
+    std::cout << "  -s, --input_slp <path> path to SLP file" << std::endl;
+    std::cout << "  -o, --output <path>: path to query output" << std::endl;
+    std::cout << "  -q, --query <path>: path to macs query file" << std::endl;
     std::cout << "  -N, --Naive: naive RLPBWT (only one mode allowed)"
               << std::endl;
     std::cout << "  -B, --Bv: bitvectors RLPBWT (only one mode allowed)"
@@ -26,6 +28,7 @@ void printHelp() {
     std::cout << "  -e, --extend: extend matches (slp/panel mode only)"
               << std::endl;
     std::cout << "  -v, --verbose: extra prints" << std::endl;
+    std::cout << "  -V, --fverbose: extra prints for functions (cautions)" << std::endl;
     std::cout << "  -h, --help: show this help message and exit" << std::endl;
 }
 
@@ -98,22 +101,33 @@ void print_size(const std::string &out_filename) {
 */
 
 int main(int argc, char **argv) {
+    if (argc == 1) {
+        printHelp();
+        exit(EXIT_SUCCESS);
+    }
     bool verbose = false;
+    bool print_verbose = false;
     bool naive = false;
     bool bv = false;
     bool slp = false;
     bool panel = false;
     bool thr = false;
     bool extend = false;
-    std::string matrix_input;
-    std::string slp_input;
-    std::string output;
-    std::string query_input;
+    bool query = false;
+    std::string matrix_input = "";
+    std::string memorize_file = "";
+    std::string load_file = "";
+    std::string slp_input = "";
+    std::string output = "";
+    std::string query_input = "";
     int c;
+
     while (true) {
         static struct option long_options[] =
                 {
                         {"input",      required_argument, nullptr, 'i'},
+                        {"memorize",   required_argument, nullptr, 'm'},
+                        {"load",       required_argument, nullptr, 'l'},
                         {"slp",        required_argument, nullptr, 's'},
                         {"output",     required_argument, nullptr, 'o'},
                         {"query",      required_argument, nullptr, 'q'},
@@ -123,13 +137,14 @@ int main(int argc, char **argv) {
                         {"Panel",      no_argument,       nullptr, 'P'},
                         {"thresholds", no_argument,       nullptr, 't'},
                         {"extend",     no_argument,       nullptr, 'e'},
+                        {"fverbose",   no_argument,       nullptr, 'V'},
                         {"verbose",    no_argument,       nullptr, 'v'},
                         {"help",       no_argument,       nullptr, 'h'},
                         {nullptr, 0,                      nullptr, 0}
                 };
 
         int option_index = 0;
-        c = getopt_long(argc, argv, "i:s:o:q:NBSPtevh", long_options,
+        c = getopt_long(argc, argv, "i:m:l:s:o:q:NBSPtevVh", long_options,
                         &option_index);
 
         if (c == -1) {
@@ -139,6 +154,12 @@ int main(int argc, char **argv) {
         switch (c) {
             case 'i':
                 matrix_input = optarg;
+                break;
+            case 'm':
+                memorize_file = optarg;
+                break;
+            case 'l':
+                load_file = optarg;
                 break;
             case 's':
                 slp_input = optarg;
@@ -168,6 +189,9 @@ int main(int argc, char **argv) {
                 extend = true;
                 break;
             case 'v':
+                print_verbose = true;
+                break;
+            case 'V':
                 verbose = true;
                 break;
             case 'h':
@@ -179,10 +203,25 @@ int main(int argc, char **argv) {
         }
     }
 
+    if (!query_input.empty()) {
+        query = true;
+    }
     if (!(naive || bv || slp || panel)) {
+        std::cerr << "Error: one mode required\n";
         printHelp();
         exit(EXIT_FAILURE);
     }
+    if (memorize_file.empty() && (query_input.empty() || output.empty())) {
+        std::cerr << "Error: nothing to do\n";
+        printHelp();
+        exit(EXIT_FAILURE);
+    }
+    if (query && output.empty()) {
+        std::cerr << "Error: output file required if query requested\n";
+        printHelp();
+        exit(EXIT_FAILURE);
+    }
+
     if ((naive && (bv || slp || panel)) || (bv && (naive || slp || panel)) ||
         (slp && (naive || bv || panel)) || (panel && (naive || bv || slp))) {
         std::cerr << "Error: only one mode allowed\n";
@@ -191,17 +230,19 @@ int main(int argc, char **argv) {
 
 
     if (naive) {
-        if (matrix_input.empty()) {
-            std::cerr << "Error: input file required\n";
+        if (matrix_input.empty() && load_file.empty()) {
+            std::cerr << "Error: input or load file required\n";
             exit(EXIT_FAILURE);
         }
-        if (output.empty()) {
-            std::cerr << "Error: output file required\n";
-            exit(EXIT_FAILURE);
-        }
-        if (query_input.empty()) {
-            std::cerr << "Error: query file required\n";
-            exit(EXIT_FAILURE);
+        if (query) {
+            if (output.empty()) {
+                std::cerr << "Error: output file required\n";
+                exit(EXIT_FAILURE);
+            }
+            if (query_input.empty()) {
+                std::cerr << "Error: query file required\n";
+                exit(EXIT_FAILURE);
+            }
         }
 
         if (extend) {
@@ -211,36 +252,74 @@ int main(int argc, char **argv) {
             std::cout << "thresholds will not be used\n";
         }
         clock_t START = clock();
-        rlpbwt_naive rlpbwt(matrix_input.c_str(), verbose);
-        auto time_build = (float) (clock() - START) / CLOCKS_PER_SEC;
-        std::cout << "rlpbwt: " << rlpbwt.size_in_bytes(verbose)
-                  << " bytes\n";
-        std::cout << "rlpbwt: " << rlpbwt.size_in_mega_bytes(verbose)
-                  << " megabytes\n----\n";
-        std::cout << "estimated dense size: "
-                  << dense_size_megabyte(rlpbwt.height, rlpbwt.width)
-                  << " megabytes\n----\n";
-        std::cout << "built in " << time_build << " s\n";
-        START = clock();
-        rlpbwt.match_tsv_tr(query_input.c_str(), output.c_str());
-        auto time_query = (float) (clock() - START) / CLOCKS_PER_SEC;
-        std::cout << "queried in " << time_query << " s\n";
+        if (load_file.empty()) {
+            rlpbwt_naive rlpbwt(matrix_input.c_str(), verbose);
+            if (!memorize_file.empty()) {
+                std::ofstream outstream;
+                outstream.open(memorize_file.c_str());
+                rlpbwt.serialize(outstream);
+                outstream.close();
+            }
+            auto time_build = (float) (clock() - START) / CLOCKS_PER_SEC;
+            if (print_verbose) {
+                std::cout << "rlpbwt: " << rlpbwt.size_in_bytes(verbose)
+                          << " bytes\n";
+                std::cout << "rlpbwt: " << rlpbwt.size_in_mega_bytes(verbose)
+                          << " megabytes\n----\n";
+                std::cout << "estimated dense size: "
+                          << dense_size_megabyte(rlpbwt.height, rlpbwt.width)
+                          << " megabytes\n----\n";
+            }
+            std::cout << "built/loaded in " << time_build << " s\n";
+
+            if (query) {
+                START = clock();
+                rlpbwt.match_tsv_tr(query_input.c_str(), output.c_str());
+                auto time_query = (float) (clock() - START) / CLOCKS_PER_SEC;
+                std::cout << "queried in " << time_query << " s\n";
+            }
+        } else {
+            rlpbwt_naive rlpbwt;
+            std::ifstream load;
+            load.open(load_file.c_str());
+            rlpbwt.load(load);
+            load.close();
+
+            auto time_build = (float) (clock() - START) / CLOCKS_PER_SEC;
+            if (print_verbose) {
+                std::cout << "rlpbwt: " << rlpbwt.size_in_bytes(verbose)
+                          << " bytes\n";
+                std::cout << "rlpbwt: " << rlpbwt.size_in_mega_bytes(verbose)
+                          << " megabytes\n----\n";
+                std::cout << "estimated dense size: "
+                          << dense_size_megabyte(rlpbwt.height, rlpbwt.width)
+                          << " megabytes\n----\n";
+            }
+            std::cout << "built/loaded in " << time_build << " s\n";
+
+            if (query) {
+                START = clock();
+                rlpbwt.match_tsv_tr(query_input.c_str(), output.c_str());
+                auto time_query = (float) (clock() - START) / CLOCKS_PER_SEC;
+                std::cout << "queried in " << time_query << " s\n";
+            }
+        }
     }
-
     if (bv) {
-        if (matrix_input.empty()) {
-            std::cerr << "Error: input file required\n";
+        if (matrix_input.empty() && load_file.empty()) {
+            std::cerr << "Error: input or load file required\n";
             exit(EXIT_FAILURE);
         }
-        if (output.empty()) {
-            std::cerr << "Error: output file required\n";
-            exit(EXIT_FAILURE);
+        if (query) {
+            if (output.empty()) {
+                std::cerr << "Error: output file required\n";
+                exit(EXIT_FAILURE);
+            }
+            if (query_input.empty()) {
+                std::cerr << "Error: query file required\n";
+                exit(EXIT_FAILURE);
+            }
         }
-        if (query_input.empty()) {
-            std::cerr << "Error: query file required\n";
-            exit(EXIT_FAILURE);
-        }
-
         if (extend) {
             std::cout << "matches will not be extended\n";
         }
@@ -248,39 +327,74 @@ int main(int argc, char **argv) {
             std::cout << "thresholds will not be used\n";
         }
         clock_t START = clock();
-        rlpbwt_bv rlpbwt(matrix_input.c_str(), verbose);
-        auto time_build = (float) (clock() - START) / CLOCKS_PER_SEC;
-        std::cout << "rlpbwt: " << rlpbwt.size_in_bytes(verbose)
-                  << " bytes\n";
-        std::cout << "rlpbwt: " << rlpbwt.size_in_mega_bytes(verbose)
-                  << " megabytes\n----\n";
-        std::cout << "estimated dense size: "
-                  << dense_size_byte(rlpbwt.height, rlpbwt.width)
-                  << " bytes\n";
-        std::cout << "estimated dense size: "
-                  << dense_size_megabyte(rlpbwt.height, rlpbwt.width)
-                  << " megabytes\n----\n";
-        std::cout << "built in " << time_build << " s\n";
-        START = clock();
-        rlpbwt.match_tsv_tr(query_input.c_str(), output.c_str());
-        auto time_query = (float) (clock() - START) / CLOCKS_PER_SEC;
-        std::cout << "queried in " << time_query << " s\n";
+
+        //rlpbwt_bv rlpbwt(matrix_input.c_str(), verbose);
+        if (load_file.empty()) {
+            rlpbwt_bv rlpbwt(matrix_input.c_str(), verbose);
+            if (!memorize_file.empty()) {
+                std::ofstream outstream;
+                outstream.open(memorize_file.c_str());
+                rlpbwt.serialize(outstream);
+                outstream.close();
+            }
+            auto time_build = (float) (clock() - START) / CLOCKS_PER_SEC;
+            if (print_verbose) {
+                std::cout << "rlpbwt: " << rlpbwt.size_in_bytes(verbose)
+                          << " bytes\n";
+                std::cout << "rlpbwt: " << rlpbwt.size_in_mega_bytes(verbose)
+                          << " megabytes\n----\n";
+                std::cout << "estimated dense size: "
+                          << dense_size_megabyte(rlpbwt.height, rlpbwt.width)
+                          << " megabytes\n----\n";
+            }
+            std::cout << "built/loaded in " << time_build << " s\n";
+            if (query) {
+                START = clock();
+                rlpbwt.match_tsv_tr(query_input.c_str(), output.c_str());
+                auto time_query = (float) (clock() - START) / CLOCKS_PER_SEC;
+                std::cout << "queried in " << time_query << " s\n";
+            }
+        } else {
+            rlpbwt_bv rlpbwt;
+            std::ifstream load;
+            load.open(load_file.c_str());
+            rlpbwt.load(load);
+            load.close();
+            auto time_build = (float) (clock() - START) / CLOCKS_PER_SEC;
+            if (print_verbose) {
+                std::cout << "rlpbwt: " << rlpbwt.size_in_bytes(verbose)
+                          << " bytes\n";
+                std::cout << "rlpbwt: " << rlpbwt.size_in_mega_bytes(verbose)
+                          << " megabytes\n----\n";
+                std::cout << "estimated dense size: "
+                          << dense_size_megabyte(rlpbwt.height, rlpbwt.width)
+                          << " megabytes\n----\n";
+            }
+            std::cout << "built/loaded in " << time_build << " s\n";
+            if (query) {
+                START = clock();
+                rlpbwt.match_tsv_tr(query_input.c_str(), output.c_str());
+                auto time_query = (float) (clock() - START) / CLOCKS_PER_SEC;
+                std::cout << "queried in " << time_query << " s\n";
+            }
+        }
     }
 
     if (slp) {
-        if (matrix_input.empty()) {
-            std::cerr << "Error: input file required\n";
+        if (matrix_input.empty() && load_file.empty()) {
+            std::cerr << "Error: input or load file required\n";
             exit(EXIT_FAILURE);
         }
-        if (output.empty()) {
-            std::cerr << "Error: output file required\n";
-            exit(EXIT_FAILURE);
+        if (query) {
+            if (output.empty()) {
+                std::cerr << "Error: output file required\n";
+                exit(EXIT_FAILURE);
+            }
+            if (query_input.empty()) {
+                std::cerr << "Error: query file required\n";
+                exit(EXIT_FAILURE);
+            }
         }
-        if (query_input.empty()) {
-            std::cerr << "Error: query file required\n";
-            exit(EXIT_FAILURE);
-        }
-
         if (slp_input.empty()) {
             std::cerr << "Error: slp required\n";
             exit(EXIT_FAILURE);
@@ -292,49 +406,95 @@ int main(int argc, char **argv) {
             std::cout << "thresholds are not enabled\n";
         }
         clock_t START = clock();
-        rlpbwt_ms<slp_panel_ra> rlpbwt(matrix_input.c_str(), thr, verbose,
-                                       slp_input.c_str());
-        if (extend) {
-            rlpbwt.extend();
-        }
-        auto time_build = (float) (clock() - START) / CLOCKS_PER_SEC;
-        std::cout << "rlpbwt: " << rlpbwt.size_in_bytes(verbose)
-                  << " bytes\n";
-        std::cout << "rlpbwt: " << rlpbwt.size_in_mega_bytes(verbose)
-                  << " megabytes\n----\n";
-        std::cout << "estimated dense size: "
-                  << dense_size_byte(rlpbwt.height, rlpbwt.width)
-                  << " bytes\n";
-        std::cout << "estimated dense size: "
-                  << dense_size_megabyte(rlpbwt.height, rlpbwt.width)
-                  << " megabytes\n----\n";
-        std::cout << "built in " << time_build << " s\n";
-        START = clock();
-        if (thr) {
-            rlpbwt.match_tsv_tr_thr(query_input.c_str(), output.c_str(),
-                                    extend);
+        if (load_file.empty()) {
+            rlpbwt_ms<slp_panel_ra> rlpbwt(matrix_input.c_str(), thr, verbose,
+                                           slp_input.c_str());
+            if (extend) {
+                rlpbwt.extend();
+            }
+            if (!memorize_file.empty()) {
+                std::ofstream outstream;
+                outstream.open(memorize_file.c_str());
+                rlpbwt.serialize(outstream);
+                outstream.close();
+            }
+
+            auto time_build = (float) (clock() - START) / CLOCKS_PER_SEC;
+            if (print_verbose) {
+                std::cout << "rlpbwt: " << rlpbwt.size_in_bytes(verbose)
+                          << " bytes\n";
+                std::cout << "rlpbwt: " << rlpbwt.size_in_mega_bytes(verbose)
+                          << " megabytes\n----\n";
+                std::cout << "estimated dense size: "
+                          << dense_size_megabyte(rlpbwt.height, rlpbwt.width)
+                          << " megabytes\n----\n";
+            }
+            std::cout << "built/loaded in " << time_build << " s\n";
+            if (query) {
+                START = clock();
+                if (thr) {
+                    rlpbwt.match_tsv_tr_thr(query_input.c_str(), output.c_str(),
+                                            extend);
+                } else {
+                    rlpbwt.match_tsv_tr_lce(query_input.c_str(), output.c_str(),
+                                            extend);
+                }
+                auto time_query = (float) (clock() - START) / CLOCKS_PER_SEC;
+                std::cout << "queried in " << time_query << " s\n";
+            }
         } else {
-            rlpbwt.match_tsv_tr_lce(query_input.c_str(), output.c_str(),
-                                    extend);
+            rlpbwt_ms<slp_panel_ra> rlpbwt;
+            std::ifstream load;
+            load.open(load_file.c_str());
+            rlpbwt.load(load, slp_input.c_str());
+            load.close();
+            if (extend) {
+                rlpbwt.extend();
+            }
+            auto time_build = (float) (clock() - START) / CLOCKS_PER_SEC;
+            if (print_verbose) {
+                std::cout << "rlpbwt: " << rlpbwt.size_in_bytes(verbose)
+                          << " bytes\n";
+                std::cout << "rlpbwt: " << rlpbwt.size_in_mega_bytes(verbose)
+                          << " megabytes\n----\n";
+                std::cout << "estimated dense size: "
+                          << dense_size_megabyte(rlpbwt.height, rlpbwt.width)
+                          << " megabytes\n----\n";
+            }
+            std::cout << "built/loaded in " << time_build << " s\n";
+            if (query) {
+                std::cout << "here\n";
+                std::cout << query_input << "\n" << output << "\n";
+                START = clock();
+                if (thr) {
+                    rlpbwt.match_tsv_tr_thr(query_input.c_str(), output.c_str(),
+                                            extend);
+                } else {
+                    std::cout << "l ce\n";
+                    rlpbwt.match_tsv_tr_lce(query_input.c_str(), output.c_str(),
+                                            extend);
+                }
+                auto time_query = (float) (clock() - START) / CLOCKS_PER_SEC;
+                std::cout << "queried in " << time_query << " s\n";
+            }
         }
-        auto time_query = (float) (clock() - START) / CLOCKS_PER_SEC;
-        std::cout << "queried in " << time_query << " s\n";
     }
 
     if (panel) {
-        if (matrix_input.empty()) {
-            std::cerr << "Error: input file required\n";
+        if (matrix_input.empty() && load_file.empty()) {
+            std::cerr << "Error: input or load file required\n";
             exit(EXIT_FAILURE);
         }
-        if (output.empty()) {
-            std::cerr << "Error: output file required\n";
-            exit(EXIT_FAILURE);
+        if (query) {
+            if (output.empty()) {
+                std::cerr << "Error: output file required\n";
+                exit(EXIT_FAILURE);
+            }
+            if (query_input.empty()) {
+                std::cerr << "Error: query file required\n";
+                exit(EXIT_FAILURE);
+            }
         }
-        if (query_input.empty()) {
-            std::cerr << "Error: query file required\n";
-            exit(EXIT_FAILURE);
-        }
-
         if (!thr) {
             std::cerr << "thresholds required\n";
             exit(EXIT_FAILURE);
@@ -343,27 +503,63 @@ int main(int argc, char **argv) {
             std::cout << "slp will not be used\n";
         }
         clock_t START = clock();
-        rlpbwt_ms<panel_ra> rlpbwt(matrix_input.c_str(), thr, verbose,
-                                   slp_input.c_str());
-        auto time_build = (float) (clock() - START) / CLOCKS_PER_SEC;
-        if (extend) {
-            rlpbwt.extend();
+        if (load_file.empty()) {
+            rlpbwt_ms<panel_ra> rlpbwt(matrix_input.c_str(), thr, verbose);
+            if (extend) {
+                rlpbwt.extend();
+            }
+            if (!memorize_file.empty()) {
+                std::ofstream outstream;
+                outstream.open(memorize_file.c_str());
+                rlpbwt.serialize(outstream);
+                outstream.close();
+            }
+            auto time_build = (float) (clock() - START) / CLOCKS_PER_SEC;
+            if (print_verbose) {
+                std::cout << "rlpbwt: " << rlpbwt.size_in_bytes(verbose)
+                          << " bytes\n";
+                std::cout << "rlpbwt: " << rlpbwt.size_in_mega_bytes(verbose)
+                          << " megabytes\n----\n";
+                std::cout << "estimated dense size: "
+                          << dense_size_megabyte(rlpbwt.height, rlpbwt.width)
+                          << " megabytes\n----\n";
+            }
+            std::cout << "built/loaded in " << time_build << " s\n";
+            if (query) {
+                START = clock();
+                rlpbwt.match_tsv_tr_thr(query_input.c_str(), output.c_str(),
+                                        extend);
+                auto time_query = (float) (clock() - START) / CLOCKS_PER_SEC;
+                std::cout << "queried in " << time_query << " s\n";
+            }
+        } else {
+            rlpbwt_ms<panel_ra> rlpbwt;
+            std::ifstream load;
+            load.open(load_file.c_str());
+            rlpbwt.load(load);
+            load.close();
+            auto time_build = (float) (clock() - START) / CLOCKS_PER_SEC;
+            if (extend) {
+                rlpbwt.extend();
+            }
+            if (print_verbose) {
+                std::cout << "rlpbwt: " << rlpbwt.size_in_bytes(verbose)
+                          << " bytes\n";
+                std::cout << "rlpbwt: " << rlpbwt.size_in_mega_bytes(verbose)
+                          << " megabytes\n----\n";
+                std::cout << "estimated dense size: "
+                          << dense_size_megabyte(rlpbwt.height, rlpbwt.width)
+                          << " megabytes\n----\n";
+            }
+            std::cout << "built/loaded in " << time_build << " s\n";
+            if (query) {
+                START = clock();
+                rlpbwt.match_tsv_tr_thr(query_input.c_str(), output.c_str(),
+                                        extend);
+                auto time_query = (float) (clock() - START) / CLOCKS_PER_SEC;
+                std::cout << "queried in " << time_query << " s\n";
+            }
         }
-        std::cout << "rlpbwt: " << rlpbwt.size_in_bytes(verbose)
-                  << " bytes\n";
-        std::cout << "rlpbwt: " << rlpbwt.size_in_mega_bytes(verbose)
-                  << " megabytes\n----\n";
-        std::cout << "estimated dense size: "
-                  << dense_size_byte(rlpbwt.height, rlpbwt.width)
-                  << " bytes\n";
-        std::cout << "estimated dense size: "
-                  << dense_size_megabyte(rlpbwt.height, rlpbwt.width)
-                  << " megabytes\n----\n";
-        std::cout << "built in " << time_build << " s\n";
-        START = clock();
-        rlpbwt.match_tsv_tr_thr(query_input.c_str(), output.c_str(), extend);
-        auto time_query = (float) (clock() - START) / CLOCKS_PER_SEC;
-        std::cout << "queried in " << time_query << " s\n";
     }
 
     /*std::string in_filename("../input/sample_new.txt");

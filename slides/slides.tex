@@ -835,12 +835,14 @@
 \section{Matching Statistics}
 \begin{frame}{Matching Statistics and RLPBWT}
   \begin{block}{Some definitions}
-    \small
+    \scriptsize
     \begin{itemize}
       \item for every run in a column of the PBTW with define the
-      \textbf{threshold} as the index of the minimum \textit{lcp value} (and we
+      \textbf{threshold} as the index of the minimum \textit{lcp value},
+      including the lcp of the first value of the next run and we
       save it as a sparse bitvector of the same length of a column with 1 in
-      these positions)
+      these positions. In case the thresholds is the first value of the next run
+      we set as threshold the last index of the current run
       \item for every run in a column of the PBTW with define the
       \textbf{prefix array samples} as the prefix array value at the begin of the
       run and at the end

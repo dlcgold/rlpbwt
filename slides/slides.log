@@ -1,4 +1,4 @@
-This is XeTeX, Version 3.141592653-2.6-0.999993 (TeX Live 2021) (preloaded format=xelatex 2021.11.3)  1 MAR 2022 13:32
+This is XeTeX, Version 3.141592653-2.6-0.999993 (TeX Live 2021) (preloaded format=xelatex 2021.11.3)  4 MAR 2022 08:58
 entering extended mode
  \write18 enabled.
  %&-line parsing enabled.
@@ -1338,9 +1338,9 @@ File: img/logo_unimib.pdf Graphic file (type pdf)
 
 ]
 LaTeX Font Info:    Font shape `T1/lmss/m/it' in size <9> not available
-(Font)              Font shape `T1/lmss/m/sl' tried instead on input line 893.
+(Font)              Font shape `T1/lmss/m/sl' tried instead on input line 895.
 
-Overfull \hbox (3.25658pt too wide) in paragraph at lines 893--893
+Overfull \hbox (3.25658pt too wide) in paragraph at lines 895--895
  [] 
  []
 
@@ -1353,13 +1353,13 @@ File: img/logo_unimib.pdf Graphic file (type pdf)
 
 ]
 LaTeX Font Info:    Font shape `T1/lmss/bx/it' in size <10> not available
-(Font)              Font shape `T1/lmss/bx/sl' tried instead on input line 918.
+(Font)              Font shape `T1/lmss/bx/sl' tried instead on input line 920.
 
 Missing character: There is no 7 ("37) in font nullfont!
 Missing character: There is no 1 ("31) in font nullfont!
 Missing character: There is no 2 ("32) in font nullfont!
 
-Overfull \vbox (4.26323pt too high) detected at line 918
+Overfull \vbox (4.26323pt too high) detected at line 920
  []
 
 File: img/logo_unimib.pdf Graphic file (type pdf)
@@ -1383,7 +1383,7 @@ File: img/logo_unimib.pdf Graphic file (type pdf)
  [27
 
 ]
-Overfull \hbox (3.25658pt too wide) in paragraph at lines 955--955
+Overfull \hbox (3.25658pt too wide) in paragraph at lines 957--957
  [] 
  []
 
