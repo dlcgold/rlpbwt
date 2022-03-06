@@ -270,7 +270,7 @@ int main(int argc, char **argv) {
                           << dense_size_megabyte(rlpbwt.height, rlpbwt.width)
                           << " megabytes\n----\n";
             }
-            std::cout << "built/loaded in " << time_build << " s\n";
+            std::cout << "built/loaded in: " << time_build << " s\n";
 
             if (query) {
                 START = clock();
@@ -295,7 +295,7 @@ int main(int argc, char **argv) {
                           << dense_size_megabyte(rlpbwt.height, rlpbwt.width)
                           << " megabytes\n----\n";
             }
-            std::cout << "built/loaded in " << time_build << " s\n";
+            std::cout << "built/loaded in: " << time_build << " s\n";
 
             if (query) {
                 START = clock();
@@ -347,7 +347,7 @@ int main(int argc, char **argv) {
                           << dense_size_megabyte(rlpbwt.height, rlpbwt.width)
                           << " megabytes\n----\n";
             }
-            std::cout << "built/loaded in " << time_build << " s\n";
+            std::cout << "built/loaded in: " << time_build << " s\n";
             if (query) {
                 START = clock();
                 rlpbwt.match_tsv_tr(query_input.c_str(), output.c_str());
@@ -370,7 +370,7 @@ int main(int argc, char **argv) {
                           << dense_size_megabyte(rlpbwt.height, rlpbwt.width)
                           << " megabytes\n----\n";
             }
-            std::cout << "built/loaded in " << time_build << " s\n";
+            std::cout << "built/loaded in: " << time_build << " s\n";
             if (query) {
                 START = clock();
                 rlpbwt.match_tsv_tr(query_input.c_str(), output.c_str());
@@ -429,7 +429,7 @@ int main(int argc, char **argv) {
                           << dense_size_megabyte(rlpbwt.height, rlpbwt.width)
                           << " megabytes\n----\n";
             }
-            std::cout << "built/loaded in " << time_build << " s\n";
+            std::cout << "built/loaded in: " << time_build << " s\n";
             if (query) {
                 START = clock();
                 if (thr) {
@@ -461,7 +461,7 @@ int main(int argc, char **argv) {
                           << dense_size_megabyte(rlpbwt.height, rlpbwt.width)
                           << " megabytes\n----\n";
             }
-            std::cout << "built/loaded in " << time_build << " s\n";
+            std::cout << "built/loaded in: " << time_build << " s\n";
             if (query) {
                 std::cout << "here\n";
                 std::cout << query_input << "\n" << output << "\n";
@@ -524,7 +524,7 @@ int main(int argc, char **argv) {
                           << dense_size_megabyte(rlpbwt.height, rlpbwt.width)
                           << " megabytes\n----\n";
             }
-            std::cout << "built/loaded in " << time_build << " s\n";
+            std::cout << "built/loaded in: " << time_build << " s\n";
             if (query) {
                 START = clock();
                 rlpbwt.match_tsv_tr_thr(query_input.c_str(), output.c_str(),
@@ -551,7 +551,7 @@ int main(int argc, char **argv) {
                           << dense_size_megabyte(rlpbwt.height, rlpbwt.width)
                           << " megabytes\n----\n";
             }
-            std::cout << "built/loaded in " << time_build << " s\n";
+            std::cout << "built/loaded in: " << time_build << " s\n";
             if (query) {
                 START = clock();
                 rlpbwt.match_tsv_tr_thr(query_input.c_str(), output.c_str(),
