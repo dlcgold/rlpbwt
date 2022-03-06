@@ -1002,8 +1002,9 @@ size_t rlpbwt_bv::serialize(std::ostream &out, sdsl::structure_tree_node *v,
 void rlpbwt_bv::load(std::istream &in) {
     in.read((char *) &this->height, sizeof(this->height));
     in.read((char *) &this->width, sizeof(this->width));
-    auto c = new column_bv();
+
     for (unsigned int i = 0; i <= this->width; i++) {
+        auto c = new column_bv();
         c->load(in);
         this->cols.emplace_back(*c);
     }
@@ -1092,9 +1093,6 @@ rlpbwt_bv::match_tsv_tr(const char *filename, const char *out, bool verbose) {
             for (unsigned int i = 0; i < queries_panel[0].size(); i++) {
                 for (auto &j: queries_panel) {
                     query.push_back(j[i]);
-                }
-                if (verbose) {
-                    std::cout << query << "\n";
                 }
                 matches_naive matches;
                 matches = this->external_match(query, verbose);

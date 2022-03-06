@@ -754,14 +754,11 @@ void rlpbwt_naive::match_tsv_tr(const char *filename, const char *out,
             queries_panel.push_back(new_column);
         }
         input_matrix.close();
-        std::string query = "";
+        std::string query;
         if (out_match.is_open()) {
             for (unsigned int i = 0; i < queries_panel[0].size(); i++) {
                 for (auto &j: queries_panel) {
                     query.push_back(j[i]);
-                }
-                if (verbose) {
-                    std::cout << query << "\n";
                 }
                 matches_naive matches;
                 matches = this->external_match(query, verbose);
