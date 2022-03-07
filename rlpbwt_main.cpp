@@ -9,8 +9,10 @@ void printHelp() {
               << std::endl;
     std::cout << "Options:" << std::endl;
     std::cout << "  -i, --input_file <path>\t macs file for panel" << std::endl;
-    std::cout << "  -m, --memorize <path>\t  path to save serialization " << std::endl;
-    std::cout << "  -l, --load <path>\t path to load serialization" << std::endl;
+    std::cout << "  -m, --memorize <path>\t  path to save serialization "
+              << std::endl;
+    std::cout << "  -l, --load <path>\t path to load serialization"
+              << std::endl;
     std::cout << "  -s, --input_slp <path>\t path to SLP file" << std::endl;
     std::cout << "  -o, --output <path>\t path to query output" << std::endl;
     std::cout << "  -q, --query <path>\t path to macs query file" << std::endl;
@@ -28,7 +30,8 @@ void printHelp() {
     std::cout << "  -e, --extend\t extend matches (slp/panel mode only)"
               << std::endl;
     std::cout << "  -v, --verbose\t extra prints" << std::endl;
-    std::cout << "  -V, --fverbose\t extra prints for functions (cautions)" << std::endl;
+    std::cout << "  -V, --fverbose\t extra prints for functions (cautions)"
+              << std::endl;
     std::cout << "  -h, --help\t show this help message and exit" << std::endl;
 }
 
@@ -463,8 +466,6 @@ int main(int argc, char **argv) {
             }
             std::cout << "built/loaded in: " << time_build << " s\n";
             if (query) {
-                std::cout << "here\n";
-                std::cout << query_input << "\n" << output << "\n";
                 START = clock();
                 if (thr) {
                     rlpbwt.match_tsv_tr_thr(query_input.c_str(), output.c_str(),
@@ -495,16 +496,12 @@ int main(int argc, char **argv) {
                 exit(EXIT_FAILURE);
             }
         }
-        if (!thr) {
-            std::cerr << "thresholds required\n";
-            exit(EXIT_FAILURE);
-        }
         if (!slp_input.empty()) {
             std::cout << "slp will not be used\n";
         }
         clock_t START = clock();
         if (load_file.empty()) {
-            rlpbwt_ms<panel_ra> rlpbwt(matrix_input.c_str(), thr, verbose);
+            rlpbwt_ms<panel_ra> rlpbwt(matrix_input.c_str(), true, verbose);
             if (extend) {
                 rlpbwt.extend();
             }
