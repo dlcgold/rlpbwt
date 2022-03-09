@@ -1178,6 +1178,7 @@ public:
     ms_matches
     match_thr(const std::string &query, bool extend_matches = false,
               bool verbose = false) {
+        // TODO fix some bugs using panel_ra
         // if RLPBWT is built without thresholds throw relative exception
         if (!this->is_thr_enabled) {
             throw NoThrException{};
@@ -1342,17 +1343,20 @@ public:
                 continue;
             }
             // if row is the same we can simply use the previous computed length
-            if (i != (int) ms.row.size() - 1 && ms.row[i] == ms.row[i + 1]) {
+            if (i != (int) ms.row.size() - 1 && ms.row[i] == ms.row[i + 1] &&
+                ms.len[i + 1] != 0) {
                 ms.len[i] = ms.len[i + 1] - 1;
                 continue;
             }
             tmp_index = i;
+            unsigned int len = 0;
             while (tmp_index >= 0 &&
                    query[tmp_index] == panel->getElem(ms.row[i], tmp_index)) {
                 tmp_index--;
+                len++;
             }
-
-            ms.len[i] = i - tmp_index;
+            ms.len[i] = len;
+            //ms.len[i] = i - tmp_index;
         }
 
         // initialize struct for matches
@@ -1516,8 +1520,10 @@ public:
                     for (auto &j: queries_panel) {
                         query.push_back(j[i]);
                     }
+
                     ms_matches matches;
                     matches = this->match_lce(query, extend_matches, verbose);
+
                     if (verbose) {
                         std::cout << i << ": ";
                     }
@@ -1651,6 +1657,7 @@ public:
                     ms_matches matches;
 
                     matches = this->match_thr(query, extend_matches, verbose);
+                    
                     if (verbose) {
                         std::cout << i << ": ";
                     }
@@ -1709,7 +1716,7 @@ public:
             size_run += sdsl::size_in_bytes(this->cols[i].runs) +
                         sdsl::size_in_bytes(this->cols[i].rank_runs) +
                         sdsl::size_in_bytes(this->cols[i].select_runs);
-            if(this->is_thr_enabled) {
+            if (this->is_thr_enabled) {
                 size_thr += sdsl::size_in_bytes(this->cols[i].thr) +
                             sdsl::size_in_bytes(this->cols[i].rank_thr) +
                             sdsl::size_in_bytes(this->cols[i].select_thr);
@@ -1725,7 +1732,7 @@ public:
         }
         if (verbose) {
             std::cout << "run: " << size_run << " bytes\n";
-            if(this->is_thr_enabled) {
+            if (this->is_thr_enabled) {
                 std::cout << "thr: " << size_thr << " bytes\n";
             }
             std::cout << "u: " << size_u << " bytes\n";
@@ -1768,7 +1775,7 @@ public:
             size_run += sdsl::size_in_mega_bytes(this->cols[i].runs) +
                         sdsl::size_in_mega_bytes(this->cols[i].rank_runs) +
                         sdsl::size_in_mega_bytes(this->cols[i].select_runs);
-            if(this->is_thr_enabled) {
+            if (this->is_thr_enabled) {
                 size_thr += sdsl::size_in_mega_bytes(this->cols[i].thr) +
                             sdsl::size_in_mega_bytes(this->cols[i].rank_thr) +
                             sdsl::size_in_mega_bytes(this->cols[i].select_thr);
@@ -1784,7 +1791,7 @@ public:
         }
         if (verbose) {
             std::cout << "run: " << size_run << " megabytes\n";
-            if(this->is_thr_enabled) {
+            if (this->is_thr_enabled) {
                 std::cout << "thr: " << size_thr << " megabytes\n";
             }
             std::cout << "u: " << size_u << " megabytes\n";
