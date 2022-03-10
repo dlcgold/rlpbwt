@@ -1246,6 +1246,13 @@ public:
             } else {
                 // get threshold
                 auto thr = this->cols[i].rank_thr(curr_index);
+                bool in_thr = false;
+                if (curr_run != this->cols[i].sample_beg.size() - 1 &&
+                    this->cols[i].thr[curr_index] &&
+                    this->cols[i].runs[curr_index] !=
+                    this->cols[i].thr[curr_index]) {
+                    in_thr = true;
+                }
                 if (this->cols[i].sample_beg.size() == 1) {
                     if (verbose) {
                         std::cout << "complete mismatch\n";
@@ -1270,7 +1277,7 @@ public:
                                       << symbol << "\n";
                         }
                     }
-                } else if ((curr_run != 0 && curr_run == thr) ||
+                } else if ((curr_run != 0 && curr_run == thr && !in_thr) ||
                            curr_run == this->cols[i].sample_beg.size() - 1) {
                     // if we are above the threshold we go up (if we are not in
                     // the first run). We also go up if we are in the last run
@@ -1657,7 +1664,7 @@ public:
                     ms_matches matches;
 
                     matches = this->match_thr(query, extend_matches, verbose);
-                    
+
                     if (verbose) {
                         std::cout << i << ": ";
                     }
