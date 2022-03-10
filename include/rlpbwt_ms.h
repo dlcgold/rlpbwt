@@ -1246,6 +1246,9 @@ public:
             } else {
                 // get threshold
                 auto thr = this->cols[i].rank_thr(curr_index);
+
+                // if we are over a threshold we go down if the thresholds is
+                // not at the end of a run
                 bool in_thr = false;
                 if (curr_run != this->cols[i].sample_beg.size() - 1 &&
                     this->cols[i].thr[curr_index] &&
