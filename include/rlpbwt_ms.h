@@ -491,13 +491,52 @@ private:
         }
     }
 
+    bool better_down(unsigned int col, unsigned int pos, unsigned int prev,
+                     unsigned int next) {
+        if (col == 0) {
+            return true;
+        }
+        if constexpr (std::is_same_v<ra_t, slp_panel_ra>) {
+            auto lce = this->lce_pair(col, pos, prev, next, false);
+            if (lce.first == next) {
+                return true;
+            } else {
+                return false;
+            }
+        } else {
+            int i_tmp = (int) col - 1;
+            unsigned int checkp = 0;
+            unsigned int checkn = 0;
+            while (i_tmp != 0) {
+                if (this->panel->getElem(pos, i_tmp) ==
+                    this->panel->getElem(prev, i_tmp)) {
+                    checkp++;
+                }
+                if (this->panel->getElem(pos, i_tmp) ==
+                    this->panel->getElem(next, i_tmp)) {
+                    checkn++;
+                }
+                if (checkp > checkn) {
+                    return false;
+                } else if (checkn > checkp) {
+                    return true;
+                } else {
+                    i_tmp--;
+                }
+            }
+
+            return true;
+
+        }
+    }
+
     /**
      * @brief function to check if longest common extension between two rows is
      * equal or greater than a bound ending at a given column
      * @param col ending column column
      * @param curr current row
      * @param other other row
-     * @param bound boiund to check
+     * @param bound bound to check
      * @param verbose bool for extra prints
      * @return true if ongest common extension between two rows is
      * equal or greater than the bound
@@ -1000,8 +1039,7 @@ public:
                             ms.len[i] = 1;
                         } else {
                             ms.len[i] =
-                                    std::min(ms.len[i - 1],
-                                             lce_value.second) +
+                                    std::min(ms.len[i - 1], lce_value.second) +
                                     1;
                         }
                         // update current position
@@ -1203,9 +1241,10 @@ public:
         auto curr_index = curr_pos;
         unsigned int curr_run = this->cols[0].rank_runs(curr_index);
         char symbol = get_next_char(this->cols[0].zero_first, curr_run);
-
+        // iterate over every query's symbol/column index
         // iterate over every query's symbol/column index
         for (unsigned int i = 0; i < query.size(); i++) {
+
             std::cout << "processed " << i << "\r";
             if (verbose) {
                 std::cout << "at " << i << ": " << curr_run << " "
@@ -1246,15 +1285,34 @@ public:
             } else {
                 // get threshold
                 auto thr = this->cols[i].rank_thr(curr_index);
-
-                // if we are over a threshold we go down if the thresholds is
-                // not at the end of a run
-                bool in_thr = false;
-                if (curr_run != this->cols[i].sample_beg.size() - 1 &&
+                bool force_up = false;
+                bool force_down = false;
+                if (curr_run != 0 &&
                     this->cols[i].thr[curr_index] &&
-                    this->cols[i].runs[curr_index] !=
-                    this->cols[i].thr[curr_index]) {
-                    in_thr = true;
+                    !this->cols[i].runs[curr_index] &&
+                    this->cols[i].sample_beg[curr_run] !=
+                    this->cols[i].sample_end[curr_run]) {
+                    force_down = true;
+                }
+                if (curr_run != 0 &&
+                    curr_run != this->cols[i].sample_beg.size() - 1 &&
+                    ((this->cols[i].sample_beg[curr_run] ==
+                      this->cols[i].sample_end[curr_run] &&
+                      this->cols[i].thr[curr_index]) ||
+                     (this->cols[i].thr[curr_index] &&
+                      this->cols[i].runs[curr_index] &&
+                      this->cols[i].sample_beg[curr_run] !=
+                      this->cols[i].sample_end[curr_run]))) {
+                    auto prev_pos = static_cast<unsigned int>(this->cols[i].sample_end[
+                            curr_run - 1]);
+                    auto next_pos = static_cast<unsigned int>(this->cols[i].sample_beg[
+                            curr_run + 1]);
+                    bool down = better_down(i, curr_pos, prev_pos, next_pos);
+                    if (down) {
+                        force_down = true;
+                    } else {
+                        force_down = false;
+                    }
                 }
                 if (this->cols[i].sample_beg.size() == 1) {
                     if (verbose) {
@@ -1280,8 +1338,10 @@ public:
                                       << symbol << "\n";
                         }
                     }
-                } else if ((curr_run != 0 && curr_run == thr && !in_thr) ||
-                           curr_run == this->cols[i].sample_beg.size() - 1) {
+                } else if (curr_run != 0 && ((curr_run == thr && !force_down) ||
+                                             force_up || curr_run ==
+                                                         this->cols[i].sample_beg.size() -
+                                                         1)) {
                     // if we are above the threshold we go up (if we are not in
                     // the first run). We also go up if we are in the last run
                     if (verbose) {
@@ -1346,7 +1406,9 @@ public:
         // compute the len vector using random access on the panel, proceeding
         // from right to left
         int tmp_index = 0;
-        for (int i = (int) ms.row.size() - 1; i >= 0; i--) {
+        for (
+                int i = (int) ms.row.size() - 1;
+                i >= 0; i--) {
             // if we have the sentinel in row vector than the length is 0
             if (ms.row[i] == this->panel->h) {
                 ms.len[i] = 0;
@@ -1373,7 +1435,10 @@ public:
         ms_matches ms_matches;
         // save every match from matching statistics (when we have a "peak" in
         // ms len vector)
-        for (unsigned int i = 0; i < ms.len.size(); i++) {
+        for (
+                unsigned int i = 0;
+                i < ms.len.size();
+                i++) {
             if ((ms.len[i] > 1 && ms.len[i] > ms.len[i + 1]) ||
                 (i == ms.len.size() - 1 && ms.len[i] != 0)) {
                 ms_matches.basic_matches.emplace_back(ms.row[i], ms.len[i], i);
@@ -1417,17 +1482,18 @@ public:
             std::cout << ms << "\n";
             std::cout << ms_matches << "\n";
         }
-        return ms_matches;
+        return
+                ms_matches;
     }
 
-    /**
-     * @brief function to compute queries with lce from a tsv file and
-     * output them on a file
-     * @param filename queries file
-     * @param out output file
-     * @param extend_matches bool to extende mathc with rows values
-     * @param verbose bool for extra prints
-     */
+/**
+ * @brief function to compute queries with lce from a tsv file and
+ * output them on a file
+ * @param filename queries file
+ * @param out output file
+ * @param extend_matches bool to extende mathc with rows values
+ * @param verbose bool for extra prints
+ */
     template<typename U = ra_t>
     std::enable_if_t<sizeof(U) && (!std::is_same<ra_t, panel_ra>::value),
             void>
@@ -1486,14 +1552,14 @@ public:
         }
     }
 
-    /**
-     * @brief function to compute queries with lce from a transposed tsv
-     * file and output them on a file
-     * @param filename queries file
-     * @param out output file
-     * @param extend_matches bool to extende mathc with rows values
-     * @param verbose bool for extra prints
-     */
+/**
+ * @brief function to compute queries with lce from a transposed tsv
+ * file and output them on a file
+ * @param filename queries file
+ * @param out output file
+ * @param extend_matches bool to extende mathc with rows values
+ * @param verbose bool for extra prints
+ */
     template<typename U = ra_t>
     std::enable_if_t<sizeof(U) && (!std::is_same<ra_t, panel_ra>::value),
             void>
@@ -1560,14 +1626,14 @@ public:
         }
     }
 
-    /**
-     * @brief function to compute queries with thresholds  from a tsv file and
-     * output them on a file
-     * @param filename queries file
-     * @param out output file
-     * @param extend_matches bool to extende mathc with rows values
-     * @param verbose bool for extra prints
-     */
+/**
+ * @brief function to compute queries with thresholds  from a tsv file and
+ * output them on a file
+ * @param filename queries file
+ * @param out output file
+ * @param extend_matches bool to extende mathc with rows values
+ * @param verbose bool for extra prints
+ */
     void
     match_tsv_thr(const char *filename, const char *out,
                   bool extend_matches = false, bool verbose = false) {
@@ -1624,14 +1690,14 @@ public:
         }
     }
 
-    /**
-     * @brief function to compute queries with thresholds from a transposed tsv
-     * file and output them on a file
-     * @param filename queries file
-     * @param out output file
-     * @param extend_matches bool to extende mathc with rows values
-     * @param verbose bool for extra prints
-     */
+/**
+ * @brief function to compute queries with thresholds from a transposed tsv
+ * file and output them on a file
+ * @param filename queries file
+ * @param out output file
+ * @param extend_matches bool to extende mathc with rows values
+ * @param verbose bool for extra prints
+ */
     void
     match_tsv_tr_thr(const char *filename, const char *out,
                      bool extend_matches = false,
@@ -1694,10 +1760,10 @@ public:
         }
     }
 
-    /**
-     * function to get the total number of runs in the RLPBWT
-     * @return total number of run
-     */
+/**
+ * function to get the total number of runs in the RLPBWT
+ * @return total number of run
+ */
     unsigned int get_run_number() {
         unsigned int count_run = 0;
         for (unsigned int i = 0; i < this->cols.size(); ++i) {
@@ -1706,12 +1772,12 @@ public:
         return count_run;
     }
 
-    /**
-     * @brief function to obtain size in bytes of the matching statistics
-     * supported RLPBWT
-     * @param verbose bool for extra prints
-     * @return size in bytes
-    */
+/**
+ * @brief function to obtain size in bytes of the matching statistics
+ * supported RLPBWT
+ * @param verbose bool for extra prints
+ * @return size in bytes
+*/
     unsigned long long size_in_bytes(bool verbose = false) {
         unsigned long long size = 0;
         unsigned long long size_run = 0;
@@ -1764,12 +1830,12 @@ public:
         return size;
     }
 
-    /**
-     * @brief function to obtain size in megabytes of the matching statistics
-     * supported RLPBWT
-     * @param verbose bool for extra prints
-     * @return size in megabytes
-    */
+/**
+ * @brief function to obtain size in megabytes of the matching statistics
+ * supported RLPBWT
+ * @param verbose bool for extra prints
+ * @return size in megabytes
+*/
     double size_in_mega_bytes(bool verbose = true) {
         double size = 0;
         double to_mega = ((double) 1 / (double) 1024) / (double) 1024;
@@ -1822,11 +1888,11 @@ public:
         return size;
     }
 
-    /**
-     * @brief function to serialize the matching statistics supported RLPBWT
-     * @param out std::ostream object to stream the serialization
-     * @return size of the serialization
-     */
+/**
+ * @brief function to serialize the matching statistics supported RLPBWT
+ * @param out std::ostream object to stream the serialization
+ * @return size of the serialization
+ */
     size_t serialize(std::ostream &out, sdsl::structure_tree_node *v = nullptr,
                      const std::string &name = "") {
         sdsl::structure_tree_node *child =
@@ -1856,11 +1922,11 @@ public:
         return written_bytes;
     }
 
-    /**
-     * @brief function to load the matching statistics supported RLPBWT object
-     * @param in std::istream object from which load the matching statistics
-     * supported RLPBWT structure object
-     */
+/**
+ * @brief function to load the matching statistics supported RLPBWT object
+ * @param in std::istream object from which load the matching statistics
+ * supported RLPBWT structure object
+ */
     void load(std::istream &in, const char *slp_filename = "") {
         in.read((char *) &this->width, sizeof(this->width));
         in.read((char *) &this->height, sizeof(this->height));
@@ -1892,6 +1958,7 @@ public:
             this->phi = _phi;
         }
     }
+
 };
 
 
