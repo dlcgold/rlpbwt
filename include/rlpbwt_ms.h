@@ -507,26 +507,45 @@ private:
             int i_tmp = (int) col - 1;
             unsigned int checkp = 0;
             unsigned int checkn = 0;
+
+            while (i_tmp >= 0 && this->panel->getElem(pos, i_tmp) ==
+                                 this->panel->getElem(prev, i_tmp)) {
+                checkp++;
+                i_tmp--;
+            }
+            i_tmp = (int) col - 1;
+            while (i_tmp >= 0 && this->panel->getElem(pos, i_tmp) ==
+                                 this->panel->getElem(next, i_tmp) &&
+                   checkn <= checkp) {
+                checkn++;
+                i_tmp--;
+            }
+            if (checkn >= checkp) {
+                return true;
+            } else {
+                return false;
+            }
+            /*
             while (i_tmp != 0) {
                 if (this->panel->getElem(pos, i_tmp) ==
                     this->panel->getElem(prev, i_tmp)) {
                     checkp++;
+                } else {
+                    break;
                 }
                 if (this->panel->getElem(pos, i_tmp) ==
                     this->panel->getElem(next, i_tmp)) {
                     checkn++;
-                }
-                if (checkp > checkn) {
-                    return false;
-                } else if (checkn > checkp) {
-                    return true;
                 } else {
-                    i_tmp--;
+                    break;
                 }
+                i_tmp--;
             }
-
-            return true;
-
+            if (checkn >= checkp) {
+                return true;
+            } else {
+                return false;
+            }*/
         }
     }
 
