@@ -525,27 +525,6 @@ private:
             } else {
                 return false;
             }
-            /*
-            while (i_tmp != 0) {
-                if (this->panel->getElem(pos, i_tmp) ==
-                    this->panel->getElem(prev, i_tmp)) {
-                    checkp++;
-                } else {
-                    break;
-                }
-                if (this->panel->getElem(pos, i_tmp) ==
-                    this->panel->getElem(next, i_tmp)) {
-                    checkn++;
-                } else {
-                    break;
-                }
-                i_tmp--;
-            }
-            if (checkn >= checkp) {
-                return true;
-            } else {
-                return false;
-            }*/
         }
     }
 
