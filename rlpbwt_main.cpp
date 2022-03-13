@@ -471,7 +471,6 @@ int main(int argc, char **argv) {
                     rlpbwt.match_tsv_tr_thr(query_input.c_str(), output.c_str(),
                                             extend);
                 } else {
-                    std::cout << "l ce\n";
                     rlpbwt.match_tsv_tr_lce(query_input.c_str(), output.c_str(),
                                             extend);
                 }

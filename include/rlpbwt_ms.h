@@ -902,13 +902,11 @@ public:
         auto curr_index = curr_pos;
         unsigned int curr_run = this->cols[0].rank_runs(curr_index);
         char symbol = get_next_char(this->cols[0].zero_first, curr_run);
-
         // iterate over every query's symbol/column index
         for (unsigned int i = 0; i < query.size(); i++) {
             std::cout << "processed " << i << "\r";
             if (verbose) {
-                std::cout << "at " << i << ": " << curr_run << " "
-                          << this->cols[i].rank_thr(curr_index) << "\n";
+                std::cout << "at " << i << ": " << curr_run << "\n";
                 std::cout << curr_index << " " << curr_run << " " << curr_pos
                           << " "
                           << symbol << "\n";
@@ -917,9 +915,8 @@ public:
             // - if the pointer in the RLPBWT match the symbol in the query
             //   we proceed simply using lf-mapping (if we are not at the end)
             // - if the pointer in the RLPBWT mismatch the symbol in the query
-            //   and we have only that symbol in the column we restart from that
-            //   column as we are in column 0 (from the last row of the original
-            //   panle)
+            //   and we have only that symbol in the column we restart from the
+            //   next column at last index whit the relative prefix array value
             // - otherwise we proceeed using lce queries to select the best
             //   symbol, between the previous and next good symbol (if the
             //   exists), to jump
@@ -929,7 +926,7 @@ public:
                 }
                 // report in matching statistics row/len vector
                 ms.row[i] = curr_pos;
-                if (i != 0) {
+                if (i != 0 && ms.row[i - 1] == ms.row[i]) {
                     ms.len[i] = ms.len[i - 1] + 1;
                 } else {
                     ms.len[i] = 1;
@@ -960,12 +957,15 @@ public:
                     // update index, run, symbol (as explained before) if we are
                     // not at the end
                     if (i != query.size() - 1) {
-                        curr_pos = static_cast<unsigned int>(this->cols[0].sample_end[
-                                this->cols[0].sample_end.size() - 1]);
-                        curr_index = curr_pos;
+                        curr_pos = static_cast<unsigned int>(this->cols[i +
+                                                                        1].sample_end[
+                                this->cols[i + 1].sample_end.size() - 1]);
+                        curr_index = this->panel->h - 1;
+
                         curr_run = this->cols[i + 1].rank_runs(curr_index);
                         symbol = get_next_char(this->cols[i + 1].zero_first,
                                                curr_run);
+
                         if (verbose) {
                             std::cout << "update: " << curr_index << " "
                                       << curr_pos
@@ -993,9 +993,12 @@ public:
                         if (i == 0) {
                             ms.len[i] = 1;
                         } else {
-                            ms.len[i] =
-                                    std::min(ms.len[i - 1], lce_value.second) +
-                                    1;
+                            if (ms.len[i - 1] == 0) {
+                                ms.len[i] = 1;
+                            } else {
+                                ms.len[i] = std::min(ms.len[i - 1],
+                                                     lce_value.second) + 1;
+                            }
                         }
                         // update current position
                         curr_pos = prev_pos;
@@ -1038,9 +1041,12 @@ public:
                         if (i == 0) {
                             ms.len[i] = 1;
                         } else {
-                            ms.len[i] =
-                                    std::min(ms.len[i - 1], lce_value.second) +
-                                    1;
+                            if (ms.len[i - 1] == 0) {
+                                ms.len[i] = 1;
+                            } else {
+                                ms.len[i] = std::min(ms.len[i - 1],
+                                                     lce_value.second) + 1;
+                            }
                         }
                         // update current position
                         curr_pos = next_pos;
@@ -1096,9 +1102,12 @@ public:
                             if (i == 0) {
                                 ms.len[i] = 1;
                             } else {
-                                ms.len[i] =
-                                        std::min(ms.len[i - 1], lce.second) +
-                                        1;
+                                if (ms.len[i - 1] == 0) {
+                                    ms.len[i] = 1;
+                                } else {
+                                    ms.len[i] = std::min(ms.len[i - 1],
+                                                         lce.second) + 1;
+                                }
                             }
                             curr_index = (
                                     this->cols[i].select_runs(curr_run + 1) +
@@ -1124,9 +1133,12 @@ public:
                             if (i == 0) {
                                 ms.len[i] = 1;
                             } else {
-                                ms.len[i] =
-                                        std::min(ms.len[i - 1], lce.second) +
-                                        1;
+                                if (ms.len[i - 1] == 0) {
+                                    ms.len[i] = 1;
+                                } else {
+                                    ms.len[i] = std::min(ms.len[i - 1],
+                                                         lce.second) + 1;
+                                }
                             }
                             curr_index =
                                     (this->cols[i].select_runs(curr_run) + 1) -
@@ -1257,9 +1269,8 @@ public:
             // - if the pointer in the RLPBWT match the symbol in the query
             //   we proceed simply using lf-mapping (if we are not at the end)
             // - if the pointer in the RLPBWT mismatch the symbol in the query
-            //   and we have only that symbol in the column we restart from that
-            //   column as we are in column 0 (from the last row of the original
-            //   panle)
+            //   and we have only that symbol in the column we restart from  the
+            //   next column at last index whit the relative prefix array value
             // - otherwise we proceeed using thresholds to select the best
             //   symbol, between the previous and next good symbol (if the
             //   exists), to jump
@@ -1325,9 +1336,10 @@ public:
                     // update index, run, symbol (as explained before) if we are
                     // not at the end
                     if (i != query.size() - 1) {
-                        curr_pos = static_cast<unsigned int>(this->cols[0].sample_end[
-                                this->cols[0].sample_end.size() - 1]);
-                        curr_index = curr_pos;
+                        curr_pos = static_cast<unsigned int>(this->cols[i +
+                                                                        1].sample_end[
+                                this->cols[i + 1].sample_end.size() - 1]);
+                        curr_index = this->panel->h - 1;
                         curr_run = this->cols[i + 1].rank_runs(curr_index);
                         symbol = get_next_char(this->cols[i + 1].zero_first,
                                                curr_run);
@@ -1405,40 +1417,36 @@ public:
 
         // compute the len vector using random access on the panel, proceeding
         // from right to left
-        int tmp_index = 0;
-        for (
-                int i = (int) ms.row.size() - 1;
-                i >= 0; i--) {
-            // if we have the sentinel in row vector than the length is 0
+
+        for (int i = (int) ms.row.size() - 1; i >= 0; i--) {
             if (ms.row[i] == this->panel->h) {
+                // if we have the sentinel in row vector than the length is 0
                 ms.len[i] = 0;
-                continue;
-            }
-            // if row is the same we can simply use the previous computed length
-            if (i != (int) ms.row.size() - 1 && ms.row[i] == ms.row[i + 1] &&
-                ms.len[i + 1] != 0) {
+            } else if (i != (int) ms.row.size() - 1 &&
+                       ms.row[i] == ms.row[i + 1] &&
+                       ms.len[i + 1] != 0) {
+                // if row is the same we can simply use the previous computed length
                 ms.len[i] = ms.len[i + 1] - 1;
-                continue;
+            } else {
+                int tmp_index = i;
+                unsigned int len = 0;
+                while (tmp_index >= 0 &&
+                       query[tmp_index] == this->panel->getElem(ms.row[i],
+                                                                tmp_index)) {
+                    tmp_index--;
+                    len++;
+                }
+                ms.len[i] = len;
+                //ms.len[i] = i - tmp_index;
             }
-            tmp_index = i;
-            unsigned int len = 0;
-            while (tmp_index >= 0 &&
-                   query[tmp_index] == panel->getElem(ms.row[i], tmp_index)) {
-                tmp_index--;
-                len++;
-            }
-            ms.len[i] = len;
-            //ms.len[i] = i - tmp_index;
+
         }
 
         // initialize struct for matches
         ms_matches ms_matches;
         // save every match from matching statistics (when we have a "peak" in
         // ms len vector)
-        for (
-                unsigned int i = 0;
-                i < ms.len.size();
-                i++) {
+        for (unsigned int i = 0; i < ms.len.size(); i++) {
             if ((ms.len[i] > 1 && ms.len[i] > ms.len[i + 1]) ||
                 (i == ms.len.size() - 1 && ms.len[i] != 0)) {
                 ms_matches.basic_matches.emplace_back(ms.row[i], ms.len[i], i);
@@ -1482,8 +1490,8 @@ public:
             std::cout << ms << "\n";
             std::cout << ms_matches << "\n";
         }
-        return
-                ms_matches;
+
+        return ms_matches;
     }
 
 /**
@@ -1596,10 +1604,17 @@ public:
                     for (auto &j: queries_panel) {
                         query.push_back(j[i]);
                     }
-
+                    //std::cout << i << "\n";
+                    /*if (i == 167) {
+                        verbose = true;
+                    }*/
                     ms_matches matches;
                     matches = this->match_lce(query, extend_matches, verbose);
-
+                    /*
+                    if (i == 167) {
+                        exit(-1);
+                    }
+                     */
                     if (verbose) {
                         std::cout << i << ": ";
                     }
@@ -1729,11 +1744,18 @@ public:
                     for (auto &j: queries_panel) {
                         query.push_back(j[i]);
                     }
+                    /*if (i == 167) {
+                        verbose = true;
+                    }*/
 
                     ms_matches matches;
 
                     matches = this->match_thr(query, extend_matches, verbose);
-
+                    /*
+                    if (i == 167) {
+                        exit(-1);
+                    }
+                     */
                     if (verbose) {
                         std::cout << i << ": ";
                     }
