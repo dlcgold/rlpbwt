@@ -419,17 +419,21 @@
     z)$ 
     \EndIf
     \Else
-    \State $curr_{thr}\gets rank_t^k(curr_{index})$    
+    \State $curr_{thr}\gets rank_t^k(curr_{index})$
+    \State $force_{down} \gets \top$\textit{ iff we are over a threshold not at
+    the end of a run}
+     \State $force_{down} \gets \top$\textit{ iff we are over a threshold at
+    the end of a run and DOWN function is $\top$}
     \If{$|samples_{beg}^k|=1$}
-    \State $ms_{row}[k]\gets rlpbwt.height$
+    \State $ms_{row}[k]\gets height$
     \If{$k\neq |z|-1$}
     \State $curr_{row}\gets
-    rlpbwt[0].samples_{end}[|rlpbwt[0].samples_{end}|-1]$
-    \State $curr_{index}\gets curr_{row}$
+    rlpbwt[k+1].samples_{end}[|rlpbwt[k+1].samples_{end}|-1]$
+    \State $curr_{index}\gets height-1$
     \State $curr_{run}\gets rank_h^{k+1}(curr_{index})$
     \State $symb\gets get\_symbol(start^{k+1}, curr_{run})$
     \EndIf
-    \ElsIf{$(curr_{run}\neq 0 \land curr_{run}=curr_{thr})\lor
+    \ElsIf{$(curr_{run}\neq 0 \land curr_{run}=curr_{thr}\land \neg down)\lor
     curr_{run}=|samples_{beg}^k|-1$} 
     \State $curr_{index}\gets select_h^{k}(curr_{run})$
     \State $curr_{row}\gets samples_{end}^k[curr_{run}-1]$
@@ -450,19 +454,19 @@
     
     \EndIf
     \EndFor
-    \State $tmp_{index}\gets 0$
     \Comment \textbf{build matching statistics len}
     \For {\textit{every} $k\in[0,|ms_{row}|)$}
-    \If{$ms_{row}[k] = rlpbwt.height$}
+    \If{$ms_{row}[k] = height$}
     \State $ms_{len}[k]\gets 0$
     \Else
-    \State $tmp_{index}\gets i$
     \Comment $ra$ is a data structure for random access over the orginale panel
+    \State $tmp_{index}\gets i,\,\,tmp_{len}\gets 0$
     \While {$tmp_{index}\geq 0 \land z[tmp_{index}]=ra(ms_{row}[k],
     tmp_{index})$}
-    \State $tmp_{index}\gets tmp_{index}-1$
+   
+    \State $tmp_{index}\gets tmp_{index}-1,\,\,tmp_{len}\gets tmp_{len}+1$
     \EndWhile
-    \State $ms_{len}[k]\gets k-tmp_{index}$
+    \State $ms_{len}[k]\gets tmp_{len}$
     \EndIf
     \EndFor
     \For {\textit{every} $k\in[0,|ms_{row}|)$}
@@ -476,7 +480,15 @@
   \end{algorithmic}
   \caption{Algoritmo per match con matching-statistics (MS) e thresholds}
 \end{algorithm}
-
+\begin{algorithm}
+  \begin{algorithmic}
+    \Function {down}{$pos, prev, next$}
+    \State \textit{using LCE queries or random access check the longest common
+    prefix between $pos$ and $prev$ and between $pos$ and $next$}
+    \State \textit{if the latter is greater or equal return $\top$, else $\bot$}
+    \EndFunction
+  \end{algorithmic}
+\end{algorithm}
 \begin{algorithm}
   \scriptsize
   \begin{algorithmic}[1]
@@ -504,12 +516,12 @@
     \Else
     
     \If{$|samples_{beg}^k|=1$}
-    \State $ms_{row}[k]\gets rlpbwt.height$
+    \State $ms_{row}[k]\gets height$
     \State $ms_{len}[k]\gets 0$
     \If{$k\neq |z|-1$}
     \State $curr_{row}\gets
-    rlpbwt[0].samples_{end}[|rlpbwt[0].samples_{end}|-1]$
-    \State $curr_{index}\gets curr_{row}$
+    rlpbwt[k+1].samples_{end}[|rlpbwt[k+1].samples_{end}|-1]$
+    \State $curr_{index}\gets height-1$
     \State $curr_{run}\gets rank_h^{k+1}(curr_{index})$
     \State $symb\gets get\_symbol(start^{k+1}, curr_{run})$
     \EndIf
