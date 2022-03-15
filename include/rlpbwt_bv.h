@@ -107,6 +107,8 @@ public:
     void
     match_tsv_tr(const char *filename, const char *out, bool verbose = false);
 
+    void
+    match_tsv_conc(const char *filename, const char *out, bool verbose = false);
     /**
      * @brief function to serialize the bitvector RLPBWT
      * @param out std::ostream object to stream the serialization

@@ -788,6 +788,76 @@ void rlpbwt_naive::match_tsv_tr(const char *filename, const char *out,
     }
 }
 
+void
+rlpbwt_naive::match_tsv_conc(const char *filename, const char *out, bool verbose) {
+    std::ifstream input_matrix(filename);
+    std::ofstream out_match(out);
+    if (input_matrix.is_open()) {
+        std::string header1;
+        std::string header2;
+        std::string line;
+        std::string garbage;
+        std::string new_column;
+        getline(input_matrix, line);
+        getline(input_matrix, line);
+        std::vector<std::string> queries_panel;
+        while (getline(input_matrix, line) && !line.empty()) {
+            std::istringstream is_col(line);
+            is_col >> garbage;
+            if (garbage == "TOTAL_SAMPLES:") {
+                break;
+            }
+            is_col >> garbage >> garbage >> garbage >> new_column;
+            queries_panel.push_back(new_column);
+        }
+        input_matrix.close();
+        std::string query;
+        std::vector<std::string> queries;
+        if (out_match.is_open()) {
+            for (unsigned int i = 0; i < queries_panel[0].size(); i++) {
+                if (verbose) {
+                    std::cout << i << ": \n";
+                }
+                for (auto &j: queries_panel) {
+                    query.push_back(j[i]);
+                }
+                queries.push_back(query);
+                query.clear();
+            }
+
+            auto n_queries = queries.size();
+            std::vector<matches_naive> matches_vec(n_queries);
+#pragma omp parallel for default(none) shared(queries, matches_vec, n_queries, verbose)
+            for (unsigned int i = 0; i < n_queries; i++) {
+                //std::cout << i << "\n";
+                matches_vec[i] = this->external_match(queries[i], verbose);
+            }
+            for (unsigned int i = 0; i < queries.size(); i++) {
+                if (verbose) {
+                    std::cout << i << ": ";
+                }
+                out_match << i << ": ";
+
+                if (verbose) {
+                    std::cout << matches_vec[i];
+                }
+                out_match << matches_vec[i];
+
+                if (verbose) {
+                    std::cout << "\n";
+                }
+                out_match << "\n";
+            }
+            out_match.close();
+        } else {
+            throw FileNotFoundException{};
+        }
+
+    } else {
+        throw FileNotFoundException{};
+    }
+}
+
 unsigned long long rlpbwt_naive::size_in_bytes(bool verbose) {
     unsigned long long size = 0;
     unsigned long long size_p = 0;
@@ -871,7 +941,7 @@ void rlpbwt_naive::load(std::istream &in) {
 
 unsigned int rlpbwt_naive::get_run_number() {
     unsigned int count_run = 0;
-    for (auto & col : this->cols) {
+    for (auto &col: this->cols) {
         count_run += col.p.size();
     }
     return count_run;

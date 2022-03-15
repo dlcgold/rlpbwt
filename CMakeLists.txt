@@ -2,9 +2,9 @@ cmake_minimum_required(VERSION 3.16)
 project(RLPBWT)
 
 set(CMAKE_CXX_STANDARD 17)
-add_compile_options(-Wall -Wextra -pedantic -O3)
-
 find_package(OpenMP)
+add_compile_options(-Wall -Wextra -pedantic -O3 ${OpenMP_CXX_FLAGS})
+
 
 # Configure thirdparty
 # ------------------------------------------------------------------------------
@@ -45,7 +45,7 @@ if (${BUILD_TESTS})
             "${SUX_SOURCE_DIR}/support")
 
     target_link_libraries(rlpbwt_test sdsl divsufsort divsufsort64 -lgtest
-            benchmark::benchmark)
+            ${OpenMP_CXX_LIBRARIES})
 
     add_test(NAME rlpbwt_test COMMAND rlpbwt_test)
 else ()
@@ -71,5 +71,5 @@ else ()
             "${SUX_SOURCE_DIR}/function"
             "${SUX_SOURCE_DIR}/support"
             )
-    target_link_libraries(rlpbwt sdsl divsufsort divsufsort64)
+    target_link_libraries(rlpbwt sdsl divsufsort divsufsort64 ${OpenMP_CXX_LIBRARIES})
 endif ()

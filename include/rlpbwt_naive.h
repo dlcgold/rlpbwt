@@ -95,6 +95,9 @@ public:
     void
     match_tsv_tr(const char *filename, const char *out, bool verbose = false);
 
+    void
+    match_tsv_conc(const char *filename, const char *out, bool verbose = false);
+
     friend std::ostream &
     operator<<(std::ostream &os, const rlpbwt_naive &naive);
 

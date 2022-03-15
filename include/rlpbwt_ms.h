@@ -902,7 +902,7 @@ public:
         char symbol = get_next_char(this->cols[0].zero_first, curr_run);
         // iterate over every query's symbol/column index
         for (unsigned int i = 0; i < query.size(); i++) {
-            std::cout << "processed " << i << "\r";
+            //std::cout << "processed " << i << "\r";
             if (verbose) {
                 std::cout << "at " << i << ": " << curr_run << "\n";
                 std::cout << curr_index << " " << curr_run << " " << curr_pos
@@ -1254,8 +1254,7 @@ public:
         // iterate over every query's symbol/column index
         // iterate over every query's symbol/column index
         for (unsigned int i = 0; i < query.size(); i++) {
-
-            std::cout << "processed " << i << "\r";
+            //std::cout << "processed " << i << "\r";
             if (verbose) {
                 std::cout << "at " << i << ": " << curr_run << " "
                           << this->cols[i].rank_thr(curr_index) << "\n";
@@ -1294,8 +1293,8 @@ public:
             } else {
                 // get threshold
                 auto thr = this->cols[i].rank_thr(curr_index);
-                bool force_up = false;
                 bool force_down = false;
+                // we are over a threshold but at the end of a run
                 if (curr_run != 0 &&
                     this->cols[i].thr[curr_index] &&
                     !this->cols[i].runs[curr_index] &&
@@ -1303,6 +1302,9 @@ public:
                     this->cols[i].sample_end[curr_run]) {
                     force_down = true;
                 }
+                // we are over a threshold at the end of a run (also if this
+                // run has length equal to one) so we choose
+                // what to do using a check over the panel
                 if (curr_run != 0 &&
                     curr_run != this->cols[i].sample_beg.size() - 1 &&
                     ((this->cols[i].sample_beg[curr_run] ==
@@ -1349,9 +1351,9 @@ public:
                         }
                     }
                 } else if (curr_run != 0 && ((curr_run == thr && !force_down) ||
-                                             force_up || curr_run ==
-                                                         this->cols[i].sample_beg.size() -
-                                                         1)) {
+                                             curr_run ==
+                                             this->cols[i].sample_beg.size() -
+                                             1)) {
                     // if we are above the threshold we go up (if we are not in
                     // the first run). We also go up if we are in the last run
                     if (verbose) {
@@ -1639,6 +1641,81 @@ public:
         }
     }
 
+    template<typename U = ra_t>
+    std::enable_if_t<sizeof(U) && (!std::is_same<ra_t, panel_ra>::value),
+            void>
+    match_tsv_conc_lce(const char *filename, const char *out,
+                       bool extend_matches = false,
+                       bool verbose = false) {
+        std::ifstream input_matrix(filename);
+        std::ofstream out_match(out);
+        if (input_matrix.is_open()) {
+            std::string header1;
+            std::string header2;
+            std::string line;
+            std::string garbage;
+            std::string new_column;
+            getline(input_matrix, line);
+            getline(input_matrix, line);
+            std::vector<std::string> queries_panel;
+            while (getline(input_matrix, line) && !line.empty()) {
+                std::istringstream is_col(line);
+                is_col >> garbage;
+                if (garbage == "TOTAL_SAMPLES:") {
+                    break;
+                }
+                is_col >> garbage >> garbage >> garbage >> new_column;
+                queries_panel.push_back(new_column);
+            }
+            input_matrix.close();
+            std::string query;
+            std::vector<std::string> queries;
+            if (out_match.is_open()) {
+                for (unsigned int i = 0; i < queries_panel[0].size(); i++) {
+                    if (verbose) {
+                        std::cout << i << ": \n";
+                    }
+                    for (auto &j: queries_panel) {
+                        query.push_back(j[i]);
+                    }
+                    queries.push_back(query);
+                    query.clear();
+                }
+
+                auto n_queries = queries.size();
+                std::vector<ms_matches> matches_vec(n_queries);
+#pragma omp parallel for default(none) shared(queries, matches_vec, n_queries, extend_matches, verbose)
+                for (unsigned int i = 0; i < n_queries; i++) {
+                    //std::cout << i << "\n";
+                    matches_vec[i] = this->match_lce(queries[i], extend_matches,
+                                                     verbose);
+                }
+                for (unsigned int i = 0; i < queries.size(); i++) {
+                    if (verbose) {
+                        std::cout << i << ": ";
+                    }
+                    out_match << i << ": ";
+
+                    if (verbose) {
+                        std::cout << matches_vec[i];
+                    }
+                    out_match << matches_vec[i];
+
+                    if (verbose) {
+                        std::cout << "\n";
+                    }
+                    out_match << "\n";
+                }
+                out_match.close();
+            } else {
+                throw FileNotFoundException{};
+            }
+
+        } else {
+            throw FileNotFoundException{};
+        }
+    }
+
 /**
  * @brief function to compute queries with thresholds  from a tsv file and
  * output them on a file
@@ -1779,8 +1856,80 @@ public:
             throw FileNotFoundException{};
         }
     }
+    void
+    match_tsv_conc_thr(const char *filename, const char *out,
+                       bool extend_matches = false,
+                       bool verbose = false) {
+        std::ifstream input_matrix(filename);
+        std::ofstream out_match(out);
+        if (input_matrix.is_open()) {
+            std::string header1;
+            std::string header2;
+            std::string line;
+            std::string garbage;
+            std::string new_column;
+            getline(input_matrix, line);
+            getline(input_matrix, line);
+            std::vector<std::string> queries_panel;
+            while (getline(input_matrix, line) && !line.empty()) {
+                std::istringstream is_col(line);
+                is_col >> garbage;
+                if (garbage == "TOTAL_SAMPLES:") {
+                    break;
+                }
+                is_col >> garbage >> garbage >> garbage >> new_column;
+                queries_panel.push_back(new_column);
+            }
+            input_matrix.close();
+            std::string query;
+            std::vector<std::string> queries;
+            if (out_match.is_open()) {
+                for (unsigned int i = 0; i < queries_panel[0].size(); i++) {
+                    if (verbose) {
+                        std::cout << i << ": \n";
+                    }
+                    for (auto &j: queries_panel) {
+                        query.push_back(j[i]);
+                    }
+                    queries.push_back(query);
+                    query.clear();
+                }
 
-/**
+                auto n_queries = queries.size();
+                std::vector<ms_matches> matches_vec(n_queries);
+#pragma omp parallel for default(none) shared(queries, matches_vec, n_queries, extend_matches, verbose)
+                for (unsigned int i = 0; i < n_queries; i++) {
+                    //std::cout << i << "\n";
+                    matches_vec[i] = this->match_thr(queries[i], extend_matches,
+                                                     verbose);
+                }
+                for (unsigned int i = 0; i < queries.size(); i++) {
+                    if (verbose) {
+                        std::cout << i << ": ";
+                    }
+                    out_match << i << ": ";
+
+                    if (verbose) {
+                        std::cout << matches_vec[i];
+                    }
+                    out_match << matches_vec[i];
+
+                    if (verbose) {
+                        std::cout << "\n";
+                    }
+                    out_match << "\n";
+                }
+                out_match.close();
+            } else {
+                throw FileNotFoundException{};
+            }
+
+        } else {
+            throw FileNotFoundException{};
+        }
+    }
+
+    /**
  * function to get the total number of runs in the RLPBWT
  * @return total number of run
  */
