@@ -421,7 +421,7 @@ rlpbwt_naive::external_match(const std::string &query, bool verbose) {
 
     // iterate over every column
     for (unsigned i = 0; i < query.size(); i++) {
-        std::cout << "processed " << i << "\r";
+        //std::cout << "processed " << i << "\r";
         if (verbose) {
             std::cout << "before at " << i << " from " << curr_index << " to "
                       << end_index
