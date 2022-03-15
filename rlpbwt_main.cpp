@@ -276,6 +276,7 @@ int main(int argc, char **argv) {
             std::cout << "built/loaded in: " << time_build << " s\n";
 
             if (query) {
+                std::cout << "start querying with naive.\\";
                 START = clock();
                 rlpbwt.match_tsv_conc(query_input.c_str(), output.c_str());
                 auto time_query = (float) (clock() - START) / CLOCKS_PER_SEC;
@@ -301,6 +302,7 @@ int main(int argc, char **argv) {
             std::cout << "built/loaded in: " << time_build << " s\n";
 
             if (query) {
+                std::cout << "start querying with naive.\\";
                 START = clock();
                 rlpbwt.match_tsv_conc(query_input.c_str(), output.c_str());
                 auto time_query = (float) (clock() - START) / CLOCKS_PER_SEC;
@@ -352,6 +354,7 @@ int main(int argc, char **argv) {
             }
             std::cout << "built/loaded in: " << time_build << " s\n";
             if (query) {
+                std::cout << "start querying with bitvectors.\\";
                 START = clock();
                 rlpbwt.match_tsv_conc(query_input.c_str(), output.c_str());
                 auto time_query = (float) (clock() - START) / CLOCKS_PER_SEC;
@@ -375,6 +378,7 @@ int main(int argc, char **argv) {
             }
             std::cout << "built/loaded in: " << time_build << " s\n";
             if (query) {
+                std::cout << "start querying with bitvectors.\\";
                 START = clock();
                 rlpbwt.match_tsv_conc(query_input.c_str(), output.c_str());
                 auto time_query = (float) (clock() - START) / CLOCKS_PER_SEC;
@@ -436,9 +440,17 @@ int main(int argc, char **argv) {
             if (query) {
                 START = clock();
                 if (thr) {
+                    std::cout << "start querying with slp/thresholds.\\";
+                    if(extend){
+                        std::cout << "extended\n";
+                    }
                     rlpbwt.match_tsv_conc_thr(query_input.c_str(), output.c_str(),
                                             extend);
                 } else {
+                    std::cout << "start querying with slp/lce.\\";
+                    if(extend){
+                        std::cout << "extended\n";
+                    }
                     rlpbwt.match_tsv_conc_lce(query_input.c_str(), output.c_str(),
                                             extend);
                 }
@@ -468,9 +480,17 @@ int main(int argc, char **argv) {
             if (query) {
                 START = clock();
                 if (thr) {
+                    std::cout << "start querying with slp/thresholds.\\";
+                    if(extend){
+                        std::cout << "extended\n";
+                    }
                     rlpbwt.match_tsv_conc_thr(query_input.c_str(), output.c_str(),
                                             extend);
                 } else {
+                    std::cout << "start querying with slp/lce.\\";
+                    if(extend){
+                        std::cout << "extended\n";
+                    }
                     rlpbwt.match_tsv_conc_lce(query_input.c_str(), output.c_str(),
                                             extend);
                 }
@@ -522,6 +542,10 @@ int main(int argc, char **argv) {
             }
             std::cout << "built/loaded in: " << time_build << " s\n";
             if (query) {
+                std::cout << "start querying with panel/thresholds.\\";
+                if(extend){
+                    std::cout << "extended\n";
+                }
                 START = clock();
                 rlpbwt.match_tsv_conc_thr(query_input.c_str(), output.c_str(),
                                         extend);
@@ -549,6 +573,10 @@ int main(int argc, char **argv) {
             }
             std::cout << "built/loaded in: " << time_build << " s\n";
             if (query) {
+                std::cout << "start querying with panel/thresholds.\\";
+                if(extend){
+                    std::cout << "extended\n";
+                }
                 START = clock();
                 rlpbwt.match_tsv_conc_thr(query_input.c_str(), output.c_str(),
                                         extend);
