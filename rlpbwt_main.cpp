@@ -276,11 +276,11 @@ int main(int argc, char **argv) {
             std::cout << "built/loaded in: " << time_build << " s\n";
 
             if (query) {
-                std::cout << "start querying with naive.\\";
+                std::cout << "start querying with naive.\n";
                 START = clock();
                 rlpbwt.match_tsv_conc(query_input.c_str(), output.c_str());
                 auto time_query = (float) (clock() - START) / CLOCKS_PER_SEC;
-                std::cout << "queried in " << time_query << " s\n";
+                std::cout << "queried (naive) in " << time_query << " s\n";
             }
         } else {
             rlpbwt_naive rlpbwt;
@@ -302,11 +302,11 @@ int main(int argc, char **argv) {
             std::cout << "built/loaded in: " << time_build << " s\n";
 
             if (query) {
-                std::cout << "start querying with naive.\\";
+                std::cout << "start querying with naive.\n";
                 START = clock();
                 rlpbwt.match_tsv_conc(query_input.c_str(), output.c_str());
                 auto time_query = (float) (clock() - START) / CLOCKS_PER_SEC;
-                std::cout << "queried in " << time_query << " s\n";
+                std::cout << "queried (naive) in " << time_query << " s\n";
             }
         }
     }
@@ -333,7 +333,6 @@ int main(int argc, char **argv) {
         }
         clock_t START = clock();
 
-        //rlpbwt_bv rlpbwt(matrix_input.c_str(), verbose);
         if (load_file.empty()) {
             rlpbwt_bv rlpbwt(matrix_input.c_str(), verbose);
             if (!memorize_file.empty()) {
@@ -354,11 +353,11 @@ int main(int argc, char **argv) {
             }
             std::cout << "built/loaded in: " << time_build << " s\n";
             if (query) {
-                std::cout << "start querying with bitvectors.\\";
+                std::cout << "start querying with bitvectors.\n";
                 START = clock();
                 rlpbwt.match_tsv_conc(query_input.c_str(), output.c_str());
                 auto time_query = (float) (clock() - START) / CLOCKS_PER_SEC;
-                std::cout << "queried in " << time_query << " s\n";
+                std::cout << "queried (bitvectors) in " << time_query << " s\n";
             }
         } else {
             rlpbwt_bv rlpbwt;
@@ -378,11 +377,11 @@ int main(int argc, char **argv) {
             }
             std::cout << "built/loaded in: " << time_build << " s\n";
             if (query) {
-                std::cout << "start querying with bitvectors.\\";
+                std::cout << "start querying with bitvectors.\n";
                 START = clock();
                 rlpbwt.match_tsv_conc(query_input.c_str(), output.c_str());
                 auto time_query = (float) (clock() - START) / CLOCKS_PER_SEC;
-                std::cout << "queried in " << time_query << " s\n";
+                std::cout << "queried (bitvectors) in " << time_query << " s\n";
             }
         }
     }
@@ -440,22 +439,32 @@ int main(int argc, char **argv) {
             if (query) {
                 START = clock();
                 if (thr) {
-                    std::cout << "start querying with slp/thresholds.\\";
+                    std::cout << "start querying with slp/thresholds.\n";
                     if(extend){
                         std::cout << "extended\n";
                     }
                     rlpbwt.match_tsv_conc_thr(query_input.c_str(), output.c_str(),
                                             extend);
+                    auto time_query = (float) (clock() - START) / CLOCKS_PER_SEC;
+                    if(extend){
+                        std::cout << "queried (slp/thresholds/extended) in " << time_query << " s\n";
+                    }else{
+                        std::cout << "queried (slp/thresholds) in " << time_query << " s\n";
+                    }
                 } else {
-                    std::cout << "start querying with slp/lce.\\";
+                    std::cout << "start querying with slp/lce.\n";
                     if(extend){
                         std::cout << "extended\n";
                     }
                     rlpbwt.match_tsv_conc_lce(query_input.c_str(), output.c_str(),
                                             extend);
+                    auto time_query = (float) (clock() - START) / CLOCKS_PER_SEC;
+                    if(extend){
+                        std::cout << "queried (slp/lce/extended) in " << time_query << " s\n";
+                    }else{
+                        std::cout << "queried (slp/lce) in " << time_query << " s\n";
+                    }
                 }
-                auto time_query = (float) (clock() - START) / CLOCKS_PER_SEC;
-                std::cout << "queried in " << time_query << " s\n";
             }
         } else {
             rlpbwt_ms<slp_panel_ra> rlpbwt;
@@ -480,22 +489,33 @@ int main(int argc, char **argv) {
             if (query) {
                 START = clock();
                 if (thr) {
-                    std::cout << "start querying with slp/thresholds.\\";
+                    std::cout << "start querying with slp/thresholds.\n";
                     if(extend){
                         std::cout << "extended\n";
                     }
                     rlpbwt.match_tsv_conc_thr(query_input.c_str(), output.c_str(),
                                             extend);
+                    auto time_query = (float) (clock() - START) / CLOCKS_PER_SEC;
+                    if(extend){
+                        std::cout << "queried (slp/thresholds/extended) in " << time_query << " s\n";
+                    }else{
+                        std::cout << "queried (slp/thresholds) in " << time_query << " s\n";
+                    }
                 } else {
-                    std::cout << "start querying with slp/lce.\\";
+                    std::cout << "start querying with slp/lce.\n";
                     if(extend){
                         std::cout << "extended\n";
                     }
                     rlpbwt.match_tsv_conc_lce(query_input.c_str(), output.c_str(),
                                             extend);
+                    auto time_query = (float) (clock() - START) / CLOCKS_PER_SEC;
+                    if(extend){
+                        std::cout << "queried (slp/lce/extended) in " << time_query << " s\n";
+                    }else{
+                        std::cout << "queried (slp/lce) in " << time_query << " s\n";
+                    }
                 }
-                auto time_query = (float) (clock() - START) / CLOCKS_PER_SEC;
-                std::cout << "queried in " << time_query << " s\n";
+
             }
         }
     }
@@ -542,7 +562,7 @@ int main(int argc, char **argv) {
             }
             std::cout << "built/loaded in: " << time_build << " s\n";
             if (query) {
-                std::cout << "start querying with panel/thresholds.\\";
+                std::cout << "start querying with panel/thresholds.\n";
                 if(extend){
                     std::cout << "extended\n";
                 }
@@ -550,7 +570,11 @@ int main(int argc, char **argv) {
                 rlpbwt.match_tsv_conc_thr(query_input.c_str(), output.c_str(),
                                         extend);
                 auto time_query = (float) (clock() - START) / CLOCKS_PER_SEC;
-                std::cout << "queried in " << time_query << " s\n";
+                if(extend){
+                    std::cout << "queried (panel) in " << time_query << " s\n";
+                }else{
+                    std::cout << "queried (panel) in " << time_query << " s\n";
+                }
             }
         } else {
             rlpbwt_ms<panel_ra> rlpbwt;
@@ -573,7 +597,7 @@ int main(int argc, char **argv) {
             }
             std::cout << "built/loaded in: " << time_build << " s\n";
             if (query) {
-                std::cout << "start querying with panel/thresholds.\\";
+                std::cout << "start querying with panel/thresholds.\n";
                 if(extend){
                     std::cout << "extended\n";
                 }
@@ -581,7 +605,11 @@ int main(int argc, char **argv) {
                 rlpbwt.match_tsv_conc_thr(query_input.c_str(), output.c_str(),
                                         extend);
                 auto time_query = (float) (clock() - START) / CLOCKS_PER_SEC;
-                std::cout << "queried in " << time_query << " s\n";
+                if(extend){
+                    std::cout << "queried (panel) in " << time_query << " s\n";
+                }else{
+                    std::cout << "queried (panel) in " << time_query << " s\n";
+                }
             }
         }
     }
