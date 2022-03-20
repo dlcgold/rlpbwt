@@ -1690,21 +1690,60 @@ public:
                     matches_vec[i] = this->match_lce(queries[i], extend_matches,
                                                      verbose);
                 }
-                for (unsigned int i = 0; i < queries.size(); i++) {
-                    if (verbose) {
-                        std::cout << i << ": ";
-                    }
-                    out_match << i << ": ";
 
-                    if (verbose) {
-                        std::cout << matches_vec[i];
+                if (extend_matches) {
+                    for (unsigned int i = 0; i < queries.size(); i++) {
+                        if (!matches_vec[i].haplos.empty()) {
+                            for (unsigned int j = 0;
+                                 j < matches_vec[i].basic_matches.size(); j++) {
+                                auto len = std::get<1>(
+                                        matches_vec[i].basic_matches[j]);
+                                auto end = std::get<2>(
+                                        matches_vec[i].basic_matches[j]);
+                                for (unsigned int k = 0;
+                                     k < matches_vec[i].haplos[j].size(); k++) {
+                                    out_match << "MATCH\t" << i << "\t" <<
+                                              matches_vec[i].haplos[j][k]
+                                              << "\t"
+                                              << end - (len - 1) << "\t" << end
+                                              << "\t" << len << "\n";
+                                }
+                            }
+                        }
                     }
-                    out_match << matches_vec[i];
+                } else {
+                    for (unsigned int i = 0; i < queries.size(); i++) {
+                        for (unsigned int j = 0;
+                             j < matches_vec[i].basic_matches.size(); j++) {
+                            auto len = std::get<1>(
+                                    matches_vec[i].basic_matches[j]);
+                            auto pos = std::get<0>(
+                                    matches_vec[i].basic_matches[j]);
+                            auto end = std::get<2>(
+                                    matches_vec[i].basic_matches[j]);
+                            out_match << "MATCH\t" << i << "\t" << pos << "\t"
+                                      << end - (len - 1) << "\t" << end
+                                      << "\t" << len << "\n";
 
-                    if (verbose) {
-                        std::cout << "\n";
+
+                        }
                     }
-                    out_match << "\n";
+                    /*for (unsigned int i = 0; i < queries.size(); i++) {
+                        if (verbose) {
+                            std::cout << i << ": ";
+                        }
+                        out_match << i << ": ";
+
+                        if (verbose) {
+                            std::cout << matches_vec[i];
+                        }
+                        out_match << matches_vec[i];
+
+                        if (verbose) {
+                            std::cout << "\n";
+                        }
+                        out_match << "\n";
+                    }*/
                 }
                 out_match.close();
             } else {
@@ -1856,6 +1895,7 @@ public:
             throw FileNotFoundException{};
         }
     }
+
     void
     match_tsv_conc_thr(const char *filename, const char *out,
                        bool extend_matches = false,
@@ -1903,21 +1943,59 @@ public:
                     matches_vec[i] = this->match_thr(queries[i], extend_matches,
                                                      verbose);
                 }
-                for (unsigned int i = 0; i < queries.size(); i++) {
-                    if (verbose) {
-                        std::cout << i << ": ";
+                if (extend_matches) {
+                    for (unsigned int i = 0; i < queries.size(); i++) {
+                        if (!matches_vec[i].haplos.empty()) {
+                            for (unsigned int j = 0;
+                                 j < matches_vec[i].basic_matches.size(); j++) {
+                                auto len = std::get<1>(
+                                        matches_vec[i].basic_matches[j]);
+                                auto end = std::get<2>(
+                                        matches_vec[i].basic_matches[j]);
+                                for (unsigned int k = 0;
+                                     k < matches_vec[i].haplos[j].size(); k++) {
+                                    out_match << "MATCH\t" << i << "\t" <<
+                                              matches_vec[i].haplos[j][k]
+                                              << "\t"
+                                              << end - (len - 1) << "\t" << end
+                                              << "\t" << len << "\n";
+                                }
+                            }
+                        }
                     }
-                    out_match << i << ": ";
+                } else {
+                    for (unsigned int i = 0; i < queries.size(); i++) {
+                        for (unsigned int j = 0;
+                             j < matches_vec[i].basic_matches.size(); j++) {
+                            auto len = std::get<1>(
+                                    matches_vec[i].basic_matches[j]);
+                            auto pos = std::get<0>(
+                                    matches_vec[i].basic_matches[j]);
+                            auto end = std::get<2>(
+                                    matches_vec[i].basic_matches[j]);
+                            out_match << "MATCH\t" << i << "\t" << pos << "\t"
+                                      << end - (len - 1) << "\t" << end
+                                      << "\t" << len << "\n";
 
-                    if (verbose) {
-                        std::cout << matches_vec[i];
-                    }
-                    out_match << matches_vec[i];
 
-                    if (verbose) {
-                        std::cout << "\n";
+                        }
                     }
-                    out_match << "\n";
+//                    for (unsigned int i = 0; i < queries.size(); i++) {
+//                        if (verbose) {
+//                            std::cout << i << ": ";
+//                        }
+//                        out_match << i << ": ";
+//
+//                        if (verbose) {
+//                            std::cout << matches_vec[i];
+//                        }
+//                        out_match << matches_vec[i];
+//
+//                        if (verbose) {
+//                            std::cout << "\n";
+//                        }
+//                        out_match << "\n";
+//                    }
                 }
                 out_match.close();
             } else {

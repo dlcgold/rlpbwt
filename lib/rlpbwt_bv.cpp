@@ -1166,6 +1166,7 @@ rlpbwt_bv::match_tsv_conc(const char *filename, const char *out, bool verbose) {
                 //std::cout << i << "\n";
                 matches_vec[i] = this->external_match(queries[i], verbose);
             }
+            /*
             for (unsigned int i = 0; i < queries.size(); i++) {
                 if (verbose) {
                     std::cout << i << ": ";
@@ -1182,13 +1183,32 @@ rlpbwt_bv::match_tsv_conc(const char *filename, const char *out, bool verbose) {
                 }
                 out_match << "\n";
             }
+             */
+            for (unsigned int i = 0; i < queries.size(); i++) {
+                for (unsigned int j = 0;
+                     j < matches_vec[i].basic_matches.size(); j++) {
+                    auto len = std::get<1>(
+                            matches_vec[i].basic_matches[j]);
+                    auto end = std::get<2>(
+                            matches_vec[i].basic_matches[j]);
+                    for (unsigned int k = 0;
+                         k < std::get<0>(
+                                 matches_vec[i].basic_matches[j]); k++) {
+                        out_match << "MATCH\t" << i << "\t?\t"
+                                  << end - (len - 1) << "\t" << end
+                                  << "\t" << len << "\n";
+                    }
+
+                }
+            }
             out_match.close();
         } else {
             throw FileNotFoundException{};
         }
 
     } else {
-        throw FileNotFoundException{};
+        throw FileNotFoundException{
+        };
     }
 }
 
