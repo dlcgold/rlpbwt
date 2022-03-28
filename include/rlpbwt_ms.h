@@ -1165,39 +1165,53 @@ public:
         ms_matches ms_matches;
         // save every match from matching statistics (when we have a "peak" in
         // ms len vector)
+//        for (unsigned int i = 0; i < ms.len.size(); i++) {
+//            if ((ms.len[i] > 1 && ms.len[i] > ms.len[i + 1]) ||
+//                (i == ms.len.size() - 1 && ms.len[i] != 0)) {
+//                ms_matches.basic_matches.emplace_back(ms.row[i], ms.len[i], i);
+//            } else if (ms.len[i] > 1 && i < ms.len.size() - 2 &&
+//                       ms.len[i] == ms.len[i + 1] &&
+//                       ms.row[i + 1] != ms.row[i + 2]) {
+//                ms_matches.basic_matches.emplace_back(ms.row[i], ms.len[i], i);
+//            } else if (ms.len[i] > 1 && i < ms.len.size() - 1 &&
+//                       ms.len[i] == ms.len[i + 1]) {
+//                unsigned int pos = 0;
+//                for (unsigned int j = i + 1; j < ms.len.size(); j++) {
+//                    if (ms.len[j] > ms.len[j + 1]) {
+//                        pos = j + 1;
+//                        break;
+//                    } else {
+//                        pos = i + 1;
+//                        break;
+//                    }
+//                }
+//                if (i + 1 != pos) {
+//                    for (unsigned int j = i; j < pos; j++) {
+//                        ms_matches.basic_matches.emplace_back(ms.row[j],
+//                                                              ms.len[j], j);
+//                    }
+//                    i = pos;
+//                }
+//                if (pos == ms.len.size() - 1) {
+//                    break;
+//                }
+//            }
+//        }
+//        for (unsigned int i = 0; i < ms.len.size(); i++) {
+//            if ((ms.len[i] > 1 && ms.len[i] > ms.len[i + 1]) ||
+//                (i == ms.len.size() - 1 && ms.len[i] != 0)) {
+//                ms_matches.basic_matches.emplace_back(ms.row[i], ms.len[i], i);
+//            } else if (ms.len[i] > 1 && i < ms.len.size() - 1 &&
+//                       ms.len[i] == ms.len[i + 1]) {
+//                ms_matches.basic_matches.emplace_back(ms.row[i], ms.len[i], i);
+//            }
+//        }
         for (unsigned int i = 0; i < ms.len.size(); i++) {
-            if ((ms.len[i] > 1 && ms.len[i] > ms.len[i + 1]) ||
+            if ((ms.len[i] > 1 && ms.len[i] >= ms.len[i + 1]) ||
                 (i == ms.len.size() - 1 && ms.len[i] != 0)) {
                 ms_matches.basic_matches.emplace_back(ms.row[i], ms.len[i], i);
-            } else if (ms.len[i] > 1 && i < ms.len.size() - 2 &&
-                       ms.len[i] == ms.len[i + 1] &&
-                       ms.row[i + 1] != ms.row[i + 2]) {
-                ms_matches.basic_matches.emplace_back(ms.row[i], ms.len[i], i);
-            } else if (ms.len[i] > 1 && i < ms.len.size() - 1 &&
-                       ms.len[i] == ms.len[i + 1]) {
-                unsigned int pos = 0;
-                for (unsigned int j = i + 1; j < ms.len.size(); j++) {
-                    if (ms.len[j] > ms.len[j + 1]) {
-                        pos = j + 1;
-                        break;
-                    } else {
-                        pos = i + 1;
-                        break;
-                    }
-                }
-                if (i + 1 != pos) {
-                    for (unsigned int j = i; j < pos; j++) {
-                        ms_matches.basic_matches.emplace_back(ms.row[j],
-                                                              ms.len[j], j);
-                    }
-                    i = pos;
-                }
-                if (pos == ms.len.size() - 1) {
-                    break;
-                }
             }
         }
-
         // compute every row that are matching if required
         if (extend_matches) {
             if (verbose) {
@@ -1446,39 +1460,44 @@ public:
         ms_matches ms_matches;
         // save every match from matching statistics (when we have a "peak" in
         // ms len vector)
+//        for (unsigned int i = 0; i < ms.len.size(); i++) {
+//            if ((ms.len[i] > 1 && ms.len[i] > ms.len[i + 1]) ||
+//                (i == ms.len.size() - 1 && ms.len[i] != 0)) {
+//                ms_matches.basic_matches.emplace_back(ms.row[i], ms.len[i], i);
+//            } else if (ms.len[i] > 1 && i < ms.len.size() - 2 &&
+//                       ms.len[i] == ms.len[i + 1] &&
+//                       ms.row[i + 1] != ms.row[i + 2]) {
+//                ms_matches.basic_matches.emplace_back(ms.row[i], ms.len[i], i);
+//            } else if (ms.len[i] > 1 && i < ms.len.size() - 1 &&
+//                       ms.len[i] == ms.len[i + 1]) {
+//                unsigned int pos = 0;
+//                for (unsigned int j = i + 1; j < ms.len.size(); j++) {
+//                    if (ms.len[j] > ms.len[j + 1]) {
+//                        pos = j + 1;
+//                        break;
+//                    } else {
+//                        pos = i + 1;
+//                        break;
+//                    }
+//                }
+//                if (i + 1 != pos) {
+//                    for (unsigned int j = i; j < pos; j++) {
+//                        ms_matches.basic_matches.emplace_back(ms.row[j],
+//                                                              ms.len[j], j);
+//                    }
+//                    i = pos;
+//                }
+//                if (pos == ms.len.size() - 1) {
+//                    break;
+//                }
+//            }
+//        }
         for (unsigned int i = 0; i < ms.len.size(); i++) {
-            if ((ms.len[i] > 1 && ms.len[i] > ms.len[i + 1]) ||
+            if ((ms.len[i] > 1 && ms.len[i] >= ms.len[i + 1]) ||
                 (i == ms.len.size() - 1 && ms.len[i] != 0)) {
                 ms_matches.basic_matches.emplace_back(ms.row[i], ms.len[i], i);
-            } else if (ms.len[i] > 1 && i < ms.len.size() - 2 &&
-                       ms.len[i] == ms.len[i + 1] &&
-                       ms.row[i + 1] != ms.row[i + 2]) {
-                ms_matches.basic_matches.emplace_back(ms.row[i], ms.len[i], i);
-            } else if (ms.len[i] > 1 && i < ms.len.size() - 1 &&
-                       ms.len[i] == ms.len[i + 1]) {
-                unsigned int pos = 0;
-                for (unsigned int j = i + 1; j < ms.len.size(); j++) {
-                    if (ms.len[j] > ms.len[j + 1]) {
-                        pos = j + 1;
-                        break;
-                    } else {
-                        pos = i + 1;
-                        break;
-                    }
-                }
-                if (i + 1 != pos) {
-                    for (unsigned int j = i; j < pos; j++) {
-                        ms_matches.basic_matches.emplace_back(ms.row[j],
-                                                              ms.len[j], j);
-                    }
-                    i = pos;
-                }
-                if (pos == ms.len.size() - 1) {
-                    break;
-                }
             }
         }
-
         // compute every row that are matching if required
         if (extend_matches) {
             if (verbose) {
@@ -1687,6 +1706,11 @@ public:
 #pragma omp parallel for default(none) shared(queries, matches_vec, n_queries, extend_matches, verbose)
                 for (unsigned int i = 0; i < n_queries; i++) {
                     //std::cout << i << "\n";
+                    if (i==1368){
+                        verbose = true;
+                    }else{
+                        verbose = false;
+                    }
                     matches_vec[i] = this->match_lce(queries[i], extend_matches,
                                                      verbose);
                 }
