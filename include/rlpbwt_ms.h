@@ -1706,11 +1706,6 @@ public:
 #pragma omp parallel for default(none) shared(queries, matches_vec, n_queries, extend_matches, verbose)
                 for (unsigned int i = 0; i < n_queries; i++) {
                     //std::cout << i << "\n";
-                    if (i==1368){
-                        verbose = true;
-                    }else{
-                        verbose = false;
-                    }
                     matches_vec[i] = this->match_lce(queries[i], extend_matches,
                                                      verbose);
                 }
