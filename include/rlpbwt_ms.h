@@ -1207,7 +1207,7 @@ public:
 //            }
 //        }
         for (unsigned int i = 0; i < ms.len.size(); i++) {
-            if ((ms.len[i] > 1 && ms.len[i] >= ms.len[i + 1]) ||
+            if ((ms.len[i] > 0 && ms.len[i] >= ms.len[i + 1]) ||
                 (i == ms.len.size() - 1 && ms.len[i] != 0)) {
                 ms_matches.basic_matches.emplace_back(ms.row[i], ms.len[i], i);
             }
@@ -1511,7 +1511,7 @@ public:
 //            }
 //        }
         for (unsigned int i = 0; i < ms.len.size(); i++) {
-            if ((ms.len[i] > 1 && ms.len[i] >= ms.len[i + 1]) ||
+            if ((ms.len[i] > 0 && ms.len[i] >= ms.len[i + 1]) ||
                 (i == ms.len.size() - 1 && ms.len[i] != 0)) {
                 ms_matches.basic_matches.emplace_back(ms.row[i], ms.len[i], i);
             }
