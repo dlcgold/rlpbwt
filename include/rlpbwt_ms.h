@@ -1432,7 +1432,7 @@ public:
         // compute the len vector using random access on the panel, proceeding
         // from right to left
 
-        for (int i = (int) ms.row.size() - 1; i >= 0; i--) {
+        /*for (int i = (int) ms.row.size() - 1; i >= 0; i--) {
             if (ms.row[i] == this->panel->h) {
                 // if we have the sentinel in row vector than the length is 0
                 ms.len[i] = 0;
@@ -1451,9 +1451,27 @@ public:
                     len++;
                 }
                 ms.len[i] = len;
-                //ms.len[i] = i - tmp_index;
             }
+        }*/
 
+        for (unsigned int i = 0; i < ms.len.size(); i++) {
+            if (ms.row[i] == this->panel->h) {
+                // if we have the sentinel in row vector than the length is 0
+                ms.len[i] = 0;
+            } else if (i != 0 && ms.row[i] == ms.row[i - 1] &&
+                       ms.len[i - 1] != 0) {
+                ms.len[i] = ms.len[i - 1] + 1;
+            }else{
+                int tmp_index = (int)i;
+                unsigned int len = 0;
+                while (tmp_index >= 0 &&
+                       query[tmp_index] == this->panel->getElem(ms.row[i],
+                                                                tmp_index)) {
+                    tmp_index--;
+                    len++;
+                }
+                ms.len[i] = len;
+            }
         }
 
         // initialize struct for matches
