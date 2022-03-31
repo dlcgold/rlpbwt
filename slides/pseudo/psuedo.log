@@ -1,4 +1,4 @@
-This is XeTeX, Version 3.141592653-2.6-0.999993 (TeX Live 2021) (preloaded format=xelatex 2021.11.3)  14 MAR 2022 11:11
+This is XeTeX, Version 3.141592653-2.6-0.999993 (TeX Live 2021) (preloaded format=xelatex 2021.11.3)  31 MAR 2022 16:20
 entering extended mode
  \write18 enabled.
  %&-line parsing enabled.
@@ -1832,7 +1832,7 @@ Package fancyhdr Warning: \headheight is too small (12.0pt):
 
 [2]
 
-LaTeX Warning: Float too large for page by 11.30626pt on input line 591.
+LaTeX Warning: Float too large for page by 16.94624pt on input line 597.
 
 
 Package fancyhdr Warning: \headheight is too small (12.0pt): 
@@ -1896,8 +1896,8 @@ Package logreq Info: Writing requests to 'psuedo.run.xml'.
  ) 
 Here is how much of TeX's memory you used:
  51764 strings out of 476788
- 1127242 string characters out of 5822420
- 2112244 words of memory out of 6000000
+ 1127241 string characters out of 5822420
+ 2113244 words of memory out of 6000000
  70986 multiletter control sequences out of 15000+600000
  410286 words of font info for 73 fonts, out of 8000000 for 9000
  1348 hyphenation exceptions out of 8191

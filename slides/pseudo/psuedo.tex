@@ -458,12 +458,14 @@
     \For {\textit{every} $k\in[0,|ms_{row}|)$}
     \If{$ms_{row}[k] = height$}
     \State $ms_{len}[k]\gets 0$
+    \ElsIf{$k\neq 0\land ms_{row}[i]=ms_{row}[i-1]\land
+    ms_{len}[i-1]\neq 0$}
+    \State $ms_{len}[i]\gets ms_{len}[i-1]+1$
     \Else
     \Comment $ra$ is a data structure for random access over the orginale panel
     \State $tmp_{index}\gets i,\,\,tmp_{len}\gets 0$
     \While {$tmp_{index}\geq 0 \land z[tmp_{index}]=ra(ms_{row}[k],
     tmp_{index})$}
-   
     \State $tmp_{index}\gets tmp_{index}-1,\,\,tmp_{len}\gets tmp_{len}+1$
     \EndWhile
     \State $ms_{len}[k]\gets tmp_{len}$
@@ -471,11 +473,13 @@
     \EndFor
     \For {\textit{every} $k\in[0,|ms_{row}|)$}
     \Comment \textbf{build matching statistics matches}
-    \State \textit{report match at} $ms_{row}[k]$ \textit{with} $ms_{len}[k]$
-    \textit{iff} $ms_{len}[k]> ms_{len}[k+1]$
-    \State \textit{or} $ms_{len}[k]= ms_{len}[k+j]$, $j\geq 1$ and $\nexists j$
-    \textit{such that}  $ms_{len}[k]< ms_{len}[k+j]$
+    \If{$(ms_{len}[k]>1 \land ms_{len}[k]\geq ms_{len}[k+1])\lor(k = |z|-1 \land
+    ms_{len}[k]\neq 0$}
+    \State \textit{report match ending in $k$, with length $ms_{len}[k]$, with
+    at least row $ms_{row}[k]$}
+    \EndIf
     \EndFor
+    \textit{in case extend the matches}
     \EndFunction
   \end{algorithmic}
   \caption{Algoritmo per match con matching-statistics (MS) e thresholds}
@@ -577,13 +581,15 @@
     \EndIf
     \EndFor
     
-    \For{\textit{every} $k\in[0,|ms_{row}|)$}
+    \For {\textit{every} $k\in[0,|ms_{row}|)$}
     \Comment \textbf{build matching statistics matches}
-    \State \textit{report match at} $ms_{row}[k]$ \textit{with} $ms_{len}[k]$
-    \textit{iff} $ms_{len}[k]> ms_{len}[k+1]$
-    \State \textit{or} $ms_{len}[k]= ms_{len}[k+j]$, $j\geq 1$ and $\nexists j$
-    \textit{such that}  $ms_{len}[k]< ms_{len}[k+j]$
+    \If{$(ms_{len}[k]>1 \land ms_{len}[k]\geq ms_{len}[k+1])\lor(k = |z|-1 \land
+    ms_{len}[k]\neq 0$}
+    \State \textit{report match ending in $k$, with length $ms_{len}[k]$, with
+    at least row $ms_{row}[k]$}
+    \EndIf
     \EndFor
+    \textit{in case extend the matches}
     \EndFunction
     
   \end{algorithmic}
