@@ -3,7 +3,7 @@ project(RLPBWT)
 
 set(CMAKE_CXX_STANDARD 17)
 find_package(OpenMP)
-add_compile_options(-Wall -Wextra -pedantic -O3 ${OpenMP_CXX_FLAGS})
+add_compile_options(-Wall -Wextra -pedantic -Ofast ${OpenMP_CXX_FLAGS})
 
 
 # Configure thirdparty
@@ -35,8 +35,7 @@ if (${BUILD_TESTS})
             lib/ms_matches.cpp include/ms_matches.h
             lib/column_naive.cpp include/column_naive.h
             lib/rlpbwt_naive.cpp include/rlpbwt_naive.h
-            lib/matches_naive.cpp include/matches_naive.h
-            test/benchmark_test.h)
+            lib/matches_naive.cpp include/matches_naive.h)
 
     target_include_directories(rlpbwt_test PUBLIC
             "${shaped_slp_SOURCE_DIR}"

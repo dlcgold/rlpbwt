@@ -1,4 +1,0 @@
-sh ext.sh > out.txt 
-cut -c 1-5 out.txt > cut.txt
-tail -n +3 cut.txt > cutc.txt
-

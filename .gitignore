@@ -336,5 +336,6 @@ build_test/
 venv/
 old/
 input_big
+input_all
 output_big
 snakemake/results
