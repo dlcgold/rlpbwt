@@ -422,7 +422,7 @@ int main(int argc, char **argv) {
   //::testing::GTEST_FLAG(filter) = "Lce*";
   //::testing::GTEST_FLAG(filter) = "RlpbwtNaive*";
   //::testing::GTEST_FLAG(filter) = "MixRlpbwt*";
-  ::testing::GTEST_FLAG(filter) = "Benchmark*";
+  //::testing::GTEST_FLAG(filter) = "Benchmark*";
   //::testing::GTEST_FLAG(filter) = "BigMatrix*";
   return RUN_ALL_TESTS();
 }
