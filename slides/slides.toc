@@ -1,6 +1,0 @@
-\babel@toc {italian}{}
-\babel@toc {italian}{}
-\beamer@sectionintoc {1}{The Old Idea}{3}{0}{1}
-\beamer@sectionintoc {2}{The New Idea}{10}{0}{2}
-\beamer@sectionintoc {3}{BitVector Version}{17}{0}{3}
-\beamer@sectionintoc {4}{Matching Statistics}{21}{0}{4}
