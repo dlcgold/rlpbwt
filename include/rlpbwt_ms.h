@@ -890,7 +890,11 @@ public:
         }
 
         // initialize matching statistics
-        ms ms(query.size());
+        //ms ms(query.size());
+        unsigned int p = 0;
+        unsigned int l = 0;
+        unsigned int prep = 0;
+        unsigned int prel = 0;
 
         // algorithm begin from the last row of the first column
         // so we obtain the prefix array value (from the samples), the run index
@@ -900,6 +904,11 @@ public:
         auto curr_index = curr_pos;
         unsigned int curr_run = this->cols[0].rank_runs(curr_index);
         char symbol = get_next_char(this->cols[0].zero_first, curr_run);
+
+
+        // initialize struct for matches
+        ms_matches ms_matches;
+
         // iterate over every query's symbol/column index
         for (unsigned int i = 0; i < query.size(); i++) {
             //std::cout << "processed " << i << "\r";
@@ -923,11 +932,18 @@ public:
                     std::cout << "match:\n";
                 }
                 // report in matching statistics row/len vector
-                ms.row[i] = curr_pos;
-                if (i != 0 && ms.row[i - 1] == ms.row[i]) {
+                //ms.row[i] = curr_pos;
+                p = curr_pos;
+                /*if (i != 0 && ms.row[i - 1] == ms.row[i]) {
                     ms.len[i] = ms.len[i - 1] + 1;
+
                 } else {
                     ms.len[i] = 1;
+                }*/
+                if (i != 0 && prep == p) {
+                    l = prel + 1;
+                } else {
+                   l = 1;
                 }
                 // update index, run, symbol if we are not at the end
                 if (i != query.size() - 1) {
@@ -949,9 +965,11 @@ public:
                     }
                     // report in matching statistics row vector using panel
                     // height as sentinel
-                    ms.row[i] = this->panel->h;
+                    //ms.row[i] = this->panel->h;
+                    p = this->panel->h;
                     // report in matching statistics len vector
-                    ms.len[i] = 0;
+                    l = 0;
+                    // ms.len[i] = 0;
                     // update index, run, symbol (as explained before) if we are
                     // not at the end
                     if (i != query.size() - 1) {
@@ -987,15 +1005,22 @@ public:
                         // compute lce
                         auto lce_value = lce(i, curr_pos, prev_pos, false);
                         // report in matching statistics row/len vector
-                        ms.row[i] = prev_pos;
+                        // ms.row[i] = prev_pos;
+                        p = prev_pos;
                         if (i == 0) {
-                            ms.len[i] = 1;
+                            l = 1;
+                            //ms.len[i] = 1;
                         } else {
-                            if (ms.len[i - 1] == 0) {
+                            /*if (ms.len[i - 1] == 0) {
                                 ms.len[i] = 1;
                             } else {
                                 ms.len[i] = std::min(ms.len[i - 1],
                                                      lce_value.second) + 1;
+                            }*/
+                            if (prel == 0) {
+                                l = 1;
+                            } else {
+                                l = std::min(prel, lce_value.second) + 1;
                             }
                         }
                         // update current position
@@ -1035,15 +1060,22 @@ public:
                         // compute lce
                         auto lce_value = lce(i, curr_pos, next_pos, false);
                         // report in matching statistics row/len vector
-                        ms.row[i] = next_pos;
+                        //ms.row[i] = next_pos;
+                        p = next_pos;
                         if (i == 0) {
-                            ms.len[i] = 1;
+                            l = 1;
+                            //ms.len[i] = 1;
                         } else {
-                            if (ms.len[i - 1] == 0) {
+                            /*if (ms.len[i - 1] == 0) {
                                 ms.len[i] = 1;
                             } else {
                                 ms.len[i] = std::min(ms.len[i - 1],
                                                      lce_value.second) + 1;
+                            }*/
+                            if (prel == 0) {
+                                l = 1;
+                            } else {
+                                l = std::min(prel, lce_value.second) + 1;
                             }
                         }
                         // update current position
@@ -1096,15 +1128,22 @@ public:
                         // are not at the end
                         if (lce.first == next_pos) {
                             curr_pos = next_pos;
-                            ms.row[i] = curr_pos;
+                            p = curr_pos;
+                            //ms.row[i] = curr_pos;
                             if (i == 0) {
-                                ms.len[i] = 1;
+                                l = 1;
+                                //ms.len[i] = 1;
                             } else {
-                                if (ms.len[i - 1] == 0) {
+                                /*if (ms.len[i - 1] == 0) {
                                     ms.len[i] = 1;
                                 } else {
                                     ms.len[i] = std::min(ms.len[i - 1],
                                                          lce.second) + 1;
+                                }*/
+                                if (prel == 0) {
+                                    l = 1;
+                                } else {
+                                    l = std::min(prel, lce.second) + 1;
                                 }
                             }
                             curr_index = (
@@ -1127,15 +1166,22 @@ public:
                             }
                         } else {
                             curr_pos = prev_pos;
-                            ms.row[i] = curr_pos;
+                            p = curr_pos;
+                            //ms.row[i] = curr_pos;
                             if (i == 0) {
-                                ms.len[i] = 1;
+                                //ms.len[i] = 1;
+                                l = 1;
                             } else {
-                                if (ms.len[i - 1] == 0) {
+                                /*if (ms.len[i - 1] == 0) {
                                     ms.len[i] = 1;
                                 } else {
                                     ms.len[i] = std::min(ms.len[i - 1],
                                                          lce.second) + 1;
+                                }*/
+                                if (prel == 0) {
+                                    l = 1;
+                                } else {
+                                    l = std::min(prel, lce.second) + 1;
                                 }
                             }
                             curr_index =
@@ -1160,58 +1206,22 @@ public:
                     }
                 }
             }
+            if (i != 0 && i != query.size() - 1 && (prel > 0 && prel >= l)) {
+                ms_matches.basic_matches.emplace_back(prep, prel, i - 1);
+            } else if (i == query.size() - 1 && l != 0) {
+                ms_matches.basic_matches.emplace_back(p, l, i);
+            }
+            prep = p;
+            prel = l;
         }
-        // initialize struct for matches
-        ms_matches ms_matches;
-        // save every match from matching statistics (when we have a "peak" in
-        // ms len vector)
-//        for (unsigned int i = 0; i < ms.len.size(); i++) {
-//            if ((ms.len[i] > 1 && ms.len[i] > ms.len[i + 1]) ||
-//                (i == ms.len.size() - 1 && ms.len[i] != 0)) {
-//                ms_matches.basic_matches.emplace_back(ms.row[i], ms.len[i], i);
-//            } else if (ms.len[i] > 1 && i < ms.len.size() - 2 &&
-//                       ms.len[i] == ms.len[i + 1] &&
-//                       ms.row[i + 1] != ms.row[i + 2]) {
-//                ms_matches.basic_matches.emplace_back(ms.row[i], ms.len[i], i);
-//            } else if (ms.len[i] > 1 && i < ms.len.size() - 1 &&
-//                       ms.len[i] == ms.len[i + 1]) {
-//                unsigned int pos = 0;
-//                for (unsigned int j = i + 1; j < ms.len.size(); j++) {
-//                    if (ms.len[j] > ms.len[j + 1]) {
-//                        pos = j + 1;
-//                        break;
-//                    } else {
-//                        pos = i + 1;
-//                        break;
-//                    }
-//                }
-//                if (i + 1 != pos) {
-//                    for (unsigned int j = i; j < pos; j++) {
-//                        ms_matches.basic_matches.emplace_back(ms.row[j],
-//                                                              ms.len[j], j);
-//                    }
-//                    i = pos;
-//                }
-//                if (pos == ms.len.size() - 1) {
-//                    break;
-//                }
-//            }
-//        }
-//        for (unsigned int i = 0; i < ms.len.size(); i++) {
-//            if ((ms.len[i] > 1 && ms.len[i] > ms.len[i + 1]) ||
-//                (i == ms.len.size() - 1 && ms.len[i] != 0)) {
-//                ms_matches.basic_matches.emplace_back(ms.row[i], ms.len[i], i);
-//            } else if (ms.len[i] > 1 && i < ms.len.size() - 1 &&
-//                       ms.len[i] == ms.len[i + 1]) {
-//                ms_matches.basic_matches.emplace_back(ms.row[i], ms.len[i], i);
-//            }
-//        }
-        for (unsigned int i = 0; i < ms.len.size(); i++) {
+
+        // compute SMEMs
+        /*for (unsigned int i = 0; i < ms.len.size(); i++) {
             if ((ms.len[i] > 0 && ms.len[i] >= ms.len[i + 1]) ||
                 (i == ms.len.size() - 1 && ms.len[i] != 0)) {
                 ms_matches.basic_matches.emplace_back(ms.row[i], ms.len[i], i);
             }
-        }
+        }*/
         // compute every row that are matching if required
         if (extend_matches) {
             if (verbose) {
@@ -1220,7 +1230,7 @@ public:
             extend_haplos(ms_matches);
         }
         if (verbose) {
-            std::cout << ms << "\n";
+            //std::cout << ms << "\n";
             std::cout << ms_matches << "\n";
         }
 
@@ -1461,8 +1471,8 @@ public:
             } else if (i != 0 && ms.row[i] == ms.row[i - 1] &&
                        ms.len[i - 1] != 0) {
                 ms.len[i] = ms.len[i - 1] + 1;
-            }else{
-                int tmp_index = (int)i;
+            } else {
+                int tmp_index = (int) i;
                 unsigned int len = 0;
                 while (tmp_index >= 0 &&
                        query[tmp_index] == this->panel->getElem(ms.row[i],
