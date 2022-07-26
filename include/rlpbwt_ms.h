@@ -2065,6 +2065,45 @@ public:
         }
         return count_run;
     }
+  /**
+   * fucntion to print in runs.txt the number of run in every 
+   * column
+  */
+  void get_run_col(){
+    unsigned int count_run = 0;
+    std::ofstream myfile;
+    myfile.open ("runs.txt");
+    unsigned int min = 1;
+    unsigned int max = 1;
+    for (unsigned int i = 0; i < this->cols.size(); ++i) {
+      auto x = cols[i].sample_beg.size();
+      myfile << x << " ";
+      if (x < min){
+	min = x;
+      }
+      if(x > max){
+	max = x;
+      }
+    }
+    myfile << "\n" << min << " " << max;
+  }
+        /**
+ * function to get the total number of phi/phi_inv element() in the RLPBWT
+ * @return total number of run
+ */
+    std::pair<unsigned int, unsigned int> get_phi_number() {
+        if (this->phi){
+            unsigned int count_phi = 0;
+            for (unsigned int i = 0; i < this->phi->phi_supp.size(); ++i) {
+                count_phi += this->phi->phi_supp[i].size();
+            }
+            unsigned int count_phi_inv = 0;
+            for (unsigned int i = 0; i < this->phi->phi_inv_supp.size(); ++i) {
+                count_phi_inv += this->phi->phi_inv_supp[i].size();
+            }
+            return std::make_pair(count_phi, count_phi_inv);
+        }
+    }
 
 /**
  * @brief function to obtain size in bytes of the matching statistics
