@@ -59,7 +59,7 @@ public:
     /**
      * @brief default destructor
      */
-    virtual ~slp_panel_ra();
+    ~slp_panel_ra();
 
     friend std::ostream &operator<<(std::ostream &os, const slp_panel_ra &ra);
 
