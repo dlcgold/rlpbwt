@@ -273,8 +273,9 @@ int main(int argc, char **argv) {
                           << dense_size_megabyte(rlpbwt.height, rlpbwt.width)
                           << " megabytes\n----\n";
             }
-            std::cout << "built/loaded in: " << time_build << " s\n";
+	 
 
+            std::cout << "built/loaded in: " << time_build << " s\n";
             if (query) {
                 std::cout << "start querying with naive.\n";
                 START = clock();
@@ -300,7 +301,7 @@ int main(int argc, char **argv) {
                           << " megabytes\n----\n";
             }
             std::cout << "built/loaded in: " << time_build << " s\n";
-
+	  
             if (query) {
                 std::cout << "start querying with naive.\n";
                 START = clock();

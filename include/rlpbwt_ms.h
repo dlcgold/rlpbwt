@@ -2271,30 +2271,40 @@ public:
         in.read((char *) &this->height, sizeof(this->height));
         in.read((char *) &this->is_thr_enabled, sizeof(this->is_thr_enabled));
         in.read((char *) &this->is_extended, sizeof(this->is_extended));
+        this->cols = std::vector<column_ms>(this->width + 1);
         if constexpr (!std::is_same_v<ra_t, panel_ra>) {
             if (std::string(slp_filename).empty()) {
                 throw SlpNotFoundException{};
             }
         }
         if constexpr (!std::is_same_v<ra_t, panel_ra>) {
-            auto _panel = new ra_t();
-            _panel->load(in, slp_filename);
-            this->panel = _panel;
+            /*auto _panel = new ra_t();
+                  _panel->load(in, slp_filename);
+                  this->panel = _panel;*/
+            this->panel = new ra_t();
+            this->panel->load(in, slp_filename);
         } else {
-            auto _panel = new ra_t();
-            _panel->load(in);
-            this->panel = _panel;
+            /*auto _panel = new ra_t();
+                  _panel->load(in);
+                  this->panel = _panel;*/
+            this->panel = new ra_t();
+            this->panel->load(in);
         }
+
         for (unsigned int i = 0; i <= this->panel->w; i++) {
-            auto c = new column_ms();
-            c->load(in);
-            this->cols.emplace_back(*c);
+            // auto c = new column_ms();
+            // c->load(in);
+            // this->cols.emplace_back(*c);
+            this->cols[i].load(in);
+            //delete c;
         }
         this->last_pref.load(in);
         if (this->is_extended) {
-            auto _phi = new phi_support<ra_t>;
-            _phi->load(in);
-            this->phi = _phi;
+            /*auto _phi = new phi_support<ra_t>;
+                  _phi->load(in);
+                  this->phi = _phi;*/
+            this->phi = new phi_support<ra_t>();
+            this->phi->load(in);
         }
     }
 

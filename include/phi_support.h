@@ -384,21 +384,25 @@ public:
             auto s = new sdsl::sd_vector<>();
             s->load(in);
             this->phi_vec.emplace_back(*s);
+            delete s;
         }
         for (unsigned int i = 0; i < this->def; i++) {
             auto s = new sdsl::sd_vector<>();
             s->load(in);
             this->phi_inv_vec.emplace_back(*s);
+            delete s;
         }
         for (unsigned int i = 0; i < this->def; i++) {
             auto s = new sdsl::int_vector<>();
             s->load(in);
             this->phi_supp.emplace_back(*s);
+            delete s;
         }
         for (unsigned int i = 0; i < this->def; i++) {
             auto s = new sdsl::int_vector<>();
             s->load(in);
             this->phi_inv_supp.emplace_back(*s);
+            delete s;
         }
 
         for (unsigned int i = 0; i < this->phi_vec.size(); i++) {
