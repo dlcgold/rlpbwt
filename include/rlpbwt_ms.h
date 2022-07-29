@@ -701,8 +701,8 @@ public:
     */
     //virtual ~rlpbwt_ms() = default;
     ~rlpbwt_ms() {
-        delete panel;
-        delete phi;
+      delete panel;
+      delete phi;
     }
 
     /**
@@ -1210,9 +1210,10 @@ public:
                     }
                 }
             }
-            if (i != 0 && i != query.size() - 1 && (prel > 0 && prel >= l)) {
+            if (i != 0 && (prel > 0 && prel >= l)) {
                 ms_matches.basic_matches.emplace_back(prep, prel, i - 1);
-            } else if (i == query.size() - 1 && l != 0) {
+            }
+	    if (i == query.size() - 1 && l != 0) {
                 ms_matches.basic_matches.emplace_back(p, l, i);
             }
             prep = p;
