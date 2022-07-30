@@ -951,10 +951,14 @@ size_t rlpbwt_naive::serialize(std::ostream &out, sdsl::structure_tree_node *v,
 void rlpbwt_naive::load(std::istream &in) {
     in.read((char *) &this->height, sizeof(this->height));
     in.read((char *) &this->width, sizeof(this->width));
-    auto c = new column_naive();
+    //auto c = new column_naive();
+    this->cols = std::vector<column_naive>(this->width + 1);
     for (unsigned int i = 0; i <= this->width; i++) {
+      /*
         c->load(in);
         this->cols.emplace_back(*c);
+	*/
+	this->cols[i].load(in);
     }
 }
 

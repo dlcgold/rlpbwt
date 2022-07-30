@@ -1002,11 +1002,14 @@ size_t rlpbwt_bv::serialize(std::ostream &out, sdsl::structure_tree_node *v,
 void rlpbwt_bv::load(std::istream &in) {
     in.read((char *) &this->height, sizeof(this->height));
     in.read((char *) &this->width, sizeof(this->width));
-
+    this->cols = std::vector<column_bv>(this->width + 1);
     for (unsigned int i = 0; i <= this->width; i++) {
+      /*
         auto c = new column_bv();
         c->load(in);
         this->cols.emplace_back(*c);
+	*/
+	this->cols[i].load(in);
     }
 }
 
