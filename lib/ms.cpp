@@ -5,7 +5,7 @@
 #include "../include/ms.h"
 
 ms::ms() = default;
-
+ms::~ms() = default;
 
 ms::ms(std::vector<unsigned int> pos,
        std::vector<unsigned int> len)

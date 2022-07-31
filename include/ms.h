@@ -33,6 +33,10 @@ public:
      */
     ms();
 
+  /**
+   * @brief default destructor
+   */
+  virtual ~ms();
     /**
      * @brief constructor from a couple of vectors
      * @param pos row vector of the matching statistics

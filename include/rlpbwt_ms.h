@@ -1445,30 +1445,7 @@ public:
         }
 
         // compute the len vector using random access on the panel, proceeding
-        // from right to left
-
-        /*for (int i = (int) ms.row.size() - 1; i >= 0; i--) {
-            if (ms.row[i] == this->panel->h) {
-                // if we have the sentinel in row vector than the length is 0
-                ms.len[i] = 0;
-            } else if (i != (int) ms.row.size() - 1 &&
-                       ms.row[i] == ms.row[i + 1] &&
-                       ms.len[i + 1] != 0) {
-                // if row is the same we can simply use the previous computed length
-                ms.len[i] = ms.len[i + 1] - 1;
-            } else {
-                int tmp_index = i;
-                unsigned int len = 0;
-                while (tmp_index >= 0 &&
-                       query[tmp_index] == this->panel->getElem(ms.row[i],
-                                                                tmp_index)) {
-                    tmp_index--;
-                    len++;
-                }
-                ms.len[i] = len;
-            }
-        }*/
-
+        // from left to right
         for (unsigned int i = 0; i < ms.len.size(); i++) {
             if (ms.row[i] == this->panel->h) {
                 // if we have the sentinel in row vector than the length is 0
@@ -1493,40 +1470,8 @@ public:
         ms_matches ms_matches;
         // save every match from matching statistics (when we have a "peak" in
         // ms len vector)
-//        for (unsigned int i = 0; i < ms.len.size(); i++) {
-//            if ((ms.len[i] > 1 && ms.len[i] > ms.len[i + 1]) ||
-//                (i == ms.len.size() - 1 && ms.len[i] != 0)) {
-//                ms_matches.basic_matches.emplace_back(ms.row[i], ms.len[i], i);
-//            } else if (ms.len[i] > 1 && i < ms.len.size() - 2 &&
-//                       ms.len[i] == ms.len[i + 1] &&
-//                       ms.row[i + 1] != ms.row[i + 2]) {
-//                ms_matches.basic_matches.emplace_back(ms.row[i], ms.len[i], i);
-//            } else if (ms.len[i] > 1 && i < ms.len.size() - 1 &&
-//                       ms.len[i] == ms.len[i + 1]) {
-//                unsigned int pos = 0;
-//                for (unsigned int j = i + 1; j < ms.len.size(); j++) {
-//                    if (ms.len[j] > ms.len[j + 1]) {
-//                        pos = j + 1;
-//                        break;
-//                    } else {
-//                        pos = i + 1;
-//                        break;
-//                    }
-//                }
-//                if (i + 1 != pos) {
-//                    for (unsigned int j = i; j < pos; j++) {
-//                        ms_matches.basic_matches.emplace_back(ms.row[j],
-//                                                              ms.len[j], j);
-//                    }
-//                    i = pos;
-//                }
-//                if (pos == ms.len.size() - 1) {
-//                    break;
-//                }
-//            }
-//        }
         for (unsigned int i = 0; i < ms.len.size(); i++) {
-            if ((ms.len[i] > 0 && ms.len[i] >= ms.len[i + 1]) ||
+            if ((i != ms.len.size() - 1 && ms.len[i] > 0 && ms.len[i] >= ms.len[i + 1]) ||
                 (i == ms.len.size() - 1 && ms.len[i] != 0)) {
                 ms_matches.basic_matches.emplace_back(ms.row[i], ms.len[i], i);
             }
@@ -1545,6 +1490,7 @@ public:
 
         return ms_matches;
     }
+
 
 /**
  * @brief function to compute queries with lce from a tsv file and
