@@ -7,6 +7,7 @@
 
 #include <fstream>
 #include <filesystem>
+#include <string>
 #include <sdsl/int_vector.hpp>
 #include <sdsl/bit_vectors.hpp>
 #include "exceptions.h"
@@ -22,7 +23,8 @@ private:
     /**
      * @brief slp filename
      */
-    const char *slp_file{};
+  //const char *slp_file{};
+  std::string slp_file;
 public:
     /**
      * @brief height of the panel
@@ -59,7 +61,8 @@ public:
     /**
      * @brief default destructor
      */
-    ~slp_panel_ra();
+     virtual ~slp_panel_ra() = default;
+  //~slp_panel_ra();
 
     friend std::ostream &operator<<(std::ostream &os, const slp_panel_ra &ra);
 

@@ -516,7 +516,6 @@ int main(int argc, char **argv) {
                         std::cout << "queried (slp/lce) in " << time_query << " s\n";
                     }
                 }
-
             }
         }
     }

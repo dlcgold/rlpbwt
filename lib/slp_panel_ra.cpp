@@ -89,6 +89,6 @@ double slp_panel_ra::size_in_mega_bytes(bool verbose) {
 }
 
 
-slp_panel_ra::~slp_panel_ra() {
-    delete slp_file;
-};
+// slp_panel_ra::~slp_panel_ra() {
+//   delete slp_file;
+// };
