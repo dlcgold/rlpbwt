@@ -756,9 +756,9 @@ public:
                 div[i] = 0;
             }
             if constexpr (std::is_same_v<ra_t, panel_ra>) {
-	      this->panel = new ra_t(tmp_height, tmp_width);
+	        this->panel = new ra_t(tmp_height, tmp_width);
             } else if constexpr (std::is_same_v<ra_t, slp_panel_ra>) {
-	      this->panel = new ra_t(slp_filename, tmp_height, tmp_width);
+	        this->panel = new ra_t(slp_filename, tmp_height, tmp_width);
             } else {
                 throw WrongRaTypeException{};
             }
