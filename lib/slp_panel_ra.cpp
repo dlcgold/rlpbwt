@@ -62,6 +62,8 @@ void slp_panel_ra::load(std::istream &in, const char *slp_filename) {
     std::ifstream slp_in;
     slp_in.open(slp_filename);
     this->panel.load(slp_in);
+    slp_in.close();
+    this->slp_file = slp_filename;
 }
 
 unsigned long long slp_panel_ra::size_in_bytes(bool verbose) {
