@@ -17,7 +17,10 @@ column_ms::column_ms(bool zeroFirst, unsigned int count0,
     this->runs = sdsl::sd_vector<>(runs);
     this->u = sdsl::sd_vector<>(u);
     this->v = sdsl::sd_vector<>(v);
-    this->thr = sdsl::sd_vector<>(thr);
+    if(thr.size()>0){
+    	this->thr = sdsl::sd_vector<>(thr);
+    }
+   
 }
 
 std::ostream &operator<<(std::ostream &os, const column_ms &thr) {
