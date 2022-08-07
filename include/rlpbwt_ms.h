@@ -739,9 +739,18 @@ public:
             is >> garbage >> garbage >> garbage >> garbage >> new_column;
             unsigned int tmp_height = new_column.size();
             std::cout << "h: " << tmp_height << "\n";
-            unsigned int tmp_width = std::count(
+            /*unsigned int tmp_width = std::count(
                     std::istreambuf_iterator<char>(input_matrix),
-                    std::istreambuf_iterator<char>(), '\n');
+                    std::istreambuf_iterator<char>(), '\n');*/
+	    auto tmp_width = 1;
+	    while (getline(input_matrix, line) && !line.empty()) {
+	      std::istringstream is_col(line);
+	      is_col >> garbage;
+	      if (garbage == "TOTAL_SAMPLES:") {
+		break;
+	      }
+	      tmp_width++;
+	    }
             std::cout << "w: " << tmp_width << "\n";
             this->width = tmp_width;
             this->height = tmp_height;
