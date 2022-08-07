@@ -702,7 +702,9 @@ public:
     //virtual ~rlpbwt_ms() = default;
     ~rlpbwt_ms() {
         delete panel;
-        delete phi;
+        if(this->is_extended){
+        	delete phi;
+        }
     }
 
     /**
@@ -741,7 +743,8 @@ public:
             std::cout << "h: " << tmp_height << "\n";
             /*unsigned int tmp_width = std::count(
                     std::istreambuf_iterator<char>(input_matrix),
-                    std::istreambuf_iterator<char>(), '\n');*/
+                    std::istreambuf_iterator<char>(), '\n');
+                    */
 	    auto tmp_width = 1;
 	    while (getline(input_matrix, line) && !line.empty()) {
 	      std::istringstream is_col(line);
