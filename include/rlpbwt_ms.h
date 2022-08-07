@@ -2254,6 +2254,9 @@ public:
             this->phi = new phi_support<ra_t>();
             this->phi->load(in);
         }
+	if(this->cols[0].thr.size()>0){
+	  this->is_thr_enabled = true;
+	}
     }
 
 };
