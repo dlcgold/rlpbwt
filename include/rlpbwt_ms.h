@@ -1682,15 +1682,11 @@ public:
 
                 auto n_queries = queries.size();
                 std::vector<ms_matches> matches_vec(n_queries);
-		std::vector<float> times(n_queries);
-#pragma omp parallel for default(none) shared(queries, matches_vec, n_queries, extend_matches, verbose, times)
+#pragma omp parallel for default(none) shared(queries, matches_vec, n_queries, extend_matches, verbose)
                 for (unsigned int i = 0; i < n_queries; i++) {
                     //std::cout << i << "\n";
-		    clock_t START = clock();
-		    
                     matches_vec[i] = this->match_lce(queries[i], extend_matches,
                                                      verbose);
-		    times[i] = (float) (clock() - START) / CLOCKS_PER_SEC;
                 }
 
                 if (extend_matches) {
@@ -1747,21 +1743,6 @@ public:
                         out_match << "\n";
                     }*/
                 }
-
-		auto stat_file = std::string(out) + ".stat";
-		std::ofstream out_stat(stat_file);
-		if(out_stat.is_open()){
-		  auto sum = std::accumulate(times.begin(), times.end(), 0.0);
-		  auto mean = sum / times.size();	
-		  double accum = 0.0;
-		  std::for_each (std::begin(times), std::end(times), [&](const double d) {
-		    accum += (d - mean) * (d - mean);
-		  });
-		  auto stdev = sqrt(accum / (times.size()-1));
-		  out_stat << "mean: " << mean << "\n";
-		  out_stat << "stdev: " << stdev << "\n";
-		}
-		out_stat.close();
                 out_match.close();
             } else {
                 throw FileNotFoundException{};
@@ -1954,14 +1935,11 @@ public:
 
                 auto n_queries = queries.size();
                 std::vector<ms_matches> matches_vec(n_queries);
-		std::vector<float> times(n_queries);
-#pragma omp parallel for default(none) shared(queries, matches_vec, n_queries, extend_matches, verbose, times)
+#pragma omp parallel for default(none) shared(queries, matches_vec, n_queries, extend_matches, verbose)
                 for (unsigned int i = 0; i < n_queries; i++) {
                     //std::cout << i << "\n";
-		    clock_t START = clock();; 
                     matches_vec[i] = this->match_thr(queries[i], extend_matches,
                                                      verbose);
-		    times[i] = (float) (clock() - START) / CLOCKS_PER_SEC;;
                 }
                 if (extend_matches) {
                     for (unsigned int i = 0; i < queries.size(); i++) {
@@ -2017,22 +1995,6 @@ public:
 //                        out_match << "\n";
 //                    }
                 }
-
-		auto stat_file = std::string(out) + ".stat";
-		std::ofstream out_stat(stat_file);
-		if(out_stat.is_open()){
-		  auto sum = std::accumulate(times.begin(), times.end(), 0.0);
-		  auto mean = sum / times.size();	
-		  double accum = 0.0;
-		  std::for_each (std::begin(times), std::end(times), [&](const double d) {
-		    accum += (d - mean) * (d - mean);
-		  });
-		  auto stdev = sqrt(accum / (times.size()-1));
-		  out_stat << "mean: " << mean << "\n";
-		  out_stat << "stdev: " << stdev << "\n";
-		}
-		out_stat.close();
-
                 out_match.close();
             } else {
                 throw FileNotFoundException{};
@@ -2042,6 +2004,7 @@ public:
             throw FileNotFoundException{};
         }
     }
+
 
     /**
  * function to get the total number of runs in the RLPBWT
