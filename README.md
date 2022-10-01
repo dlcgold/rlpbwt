@@ -2,13 +2,13 @@
 
 ## Type of RLPBWT
 
-In this repository we have 4 possible versions of RLPBWT:
+In this repository we have various  possible versions of RLPBWT:
 
 - `rlpbwt_naive`
 - `rlpbwt_bv` (practically the previous one with bitvectors for runs and u/v
   values)
 - `rlpbwt_ms` with the panel as bitvectors
-- `rlpbwt_ms` with the panel as an SLP
+- `rlpbwt_ms` with the panel as an SLP (for random access or LCE query)
 
 The first two can be queried to obtain the number of rows that are matching at
 column k while the last two (if extended with the phi data structure) could also
@@ -45,6 +45,7 @@ Options:
   -P, --Panel	 panel RLPBWT (only one mode allowed)
   -t, --thresholds	 enable thresholds (slp/panel mode only)
   -e, --extend	 extend matches (slp/panel mode only)
+  -r, --raw	use compressed intvectors instead of sparse bitvectors
   -v, --verbose	 extra prints
   -V, --fverbose	 extra prints for functions (cautions)
   -h, --help	 show this help message and exit

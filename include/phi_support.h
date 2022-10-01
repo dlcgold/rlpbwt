@@ -13,6 +13,8 @@
 #include "panel_ra.h"
 #include "slp_panel_ra.h"
 #include "column_ms.h"
+#include "column_naive_ms.h"
+
 
 /**
  * @brief class to rapresent the additional data structure for phi and phi_inv
@@ -85,6 +87,178 @@ public:
      * @param verbose bool for extra prints
      */
     explicit phi_support(std::vector<column_ms> &cols, ra_t *panelbv,
+                         sdsl::int_vector<> &last_pref, bool verbose = false) {
+        // TODO select are useless at the moment
+        // default value is the panel height
+        this->def = panelbv->h;
+        // initialize temporary panel of no-sparse bitvectors
+        auto phi_tmp = std::vector<sdsl::bit_vector>(panelbv->h,
+                                                     sdsl::bit_vector(
+                                                             panelbv->w + 1,
+                                                             0));
+        auto phi_inv_tmp = std::vector<sdsl::bit_vector>(panelbv->h,
+                                                         sdsl::bit_vector(
+                                                                 panelbv->w + 1,
+                                                                 0));
+        // initialize panels and vectors of the data structure
+        this->phi_vec = std::vector<sdsl::sd_vector<>>(panelbv->h);
+        this->phi_inv_vec = std::vector<sdsl::sd_vector<>>(panelbv->h);
+        this->phi_rank = std::vector<sdsl::sd_vector<>::rank_1_type>(
+                panelbv->h);
+        this->phi_inv_rank = std::vector<sdsl::sd_vector<>::rank_1_type>(
+                panelbv->h);
+        this->phi_select = std::vector<sdsl::sd_vector<>::select_1_type>(
+                panelbv->h);
+        this->phi_inv_select = std::vector<sdsl::sd_vector<>::select_1_type>(
+                panelbv->h);
+        this->phi_supp = std::vector<sdsl::int_vector<>>(panelbv->h);
+        this->phi_inv_supp = std::vector<sdsl::int_vector<>>(panelbv->h);
+
+        // remporary vector for supports
+        std::vector<std::vector<unsigned int>> phi_supp_tmp(panelbv->h);
+        std::vector<std::vector<unsigned int>> phi_inv_supp_tmp(panelbv->h);
+
+        // iterate over every column
+        for (unsigned int i = 0; i < cols.size(); i++) {
+            // iterate over every run index
+            for (unsigned int j = 0; j < cols[i].sample_beg.size(); j++) {
+                // use sample beg to compute phi panel
+                phi_tmp[cols[i].sample_beg[j]][i] = true;
+                // use sample_end to compute
+                // support phi panel (if we are in the first run we use default
+                // value)
+                if (j == 0) {
+                    phi_supp_tmp[cols[i].sample_beg[j]].push_back(panelbv->h);
+                } else {
+                    phi_supp_tmp[cols[i].sample_beg[j]].push_back(
+                            cols[i].sample_end[j - 1]);
+                }
+
+                // use sample end to compute phi_inv panel
+                phi_inv_tmp[cols[i].sample_end[j]][i] = true;
+
+                // use sample_beg to compute
+                // support phi panel (if we are in the last run we use default
+                // value)
+                if (j == cols[i].sample_beg.size() - 1) {
+                    phi_inv_supp_tmp[cols[i].sample_end[j]].push_back(
+                            panelbv->h);
+                } else {
+                    phi_inv_supp_tmp[cols[i].sample_end[j]].push_back(
+                            cols[i].sample_beg[j + 1]);
+                }
+            }
+        }
+
+        // use the last prefix array to compute the remain values for the
+        // phi support data structure (with the same "rules" of the previous
+        // case)
+        for (unsigned int j = 0; j < phi_supp_tmp.size(); j++) {
+            if (!phi_tmp[j][phi_tmp[j].size() - 1]) {
+                phi_tmp[j][phi_tmp[j].size() - 1] = true;
+            }
+            if (j == 0) {
+                if (phi_supp_tmp[last_pref[j]].empty() ||
+                    phi_supp_tmp[last_pref[j]].back() != panelbv->h) {
+                    phi_supp_tmp[last_pref[j]].push_back(panelbv->h);
+                }
+            } else {
+                if (phi_supp_tmp[last_pref[j]].empty() ||
+                    phi_supp_tmp[last_pref[j]].back() != last_pref[j - 1]) {
+                    phi_supp_tmp[last_pref[j]].push_back(last_pref[j - 1]);
+                }
+            }
+            if (!phi_inv_tmp[j][phi_inv_tmp[j].size() - 1]) {
+                phi_inv_tmp[j][phi_inv_tmp[j].size() - 1] = true;
+            }
+            if (j == phi_supp_tmp.size() - 1) {
+                if (phi_inv_supp_tmp[last_pref[j]].empty() ||
+                    phi_inv_supp_tmp[last_pref[j]].back() != panelbv->h) {
+                    phi_inv_supp_tmp[last_pref[j]].push_back(panelbv->h);
+                }
+            } else {
+                if (phi_inv_supp_tmp[last_pref[j]].empty() ||
+                    phi_inv_supp_tmp[last_pref[j]].back() != last_pref[j + 1]) {
+                    phi_inv_supp_tmp[last_pref[j]].push_back(last_pref[j + 1]);
+                }
+            }
+        }
+        // compress and push the support sdsl int_vectors
+        for (unsigned int i = 0; i < phi_supp_tmp.size(); i++) {
+            sdsl::int_vector<> tmp(phi_supp_tmp[i].size());
+            for (unsigned int j = 0; j < phi_supp_tmp[i].size(); j++) {
+                tmp[j] = phi_supp_tmp[i][j];
+            }
+            sdsl::util::bit_compress(tmp);
+            this->phi_supp[i] = tmp;
+
+            sdsl::int_vector<> tmp_inv(phi_inv_supp_tmp[i].size());
+            for (unsigned int j = 0; j < phi_inv_supp_tmp[i].size(); j++) {
+                tmp_inv[j] = phi_inv_supp_tmp[i][j];
+            }
+            sdsl::util::bit_compress(tmp_inv);
+            this->phi_inv_supp[i] = tmp_inv;
+        }
+        // create sparse bit vector and relative rank/select for phi panel
+        unsigned int count = 0;
+        for (auto &i: phi_tmp) {
+            this->phi_vec[count] = sdsl::sd_vector<>(i);
+            this->phi_rank[count] = sdsl::sd_vector<>::rank_1_type(
+                    &this->phi_vec[count]);
+            this->phi_select[count] = sdsl::sd_vector<>::select_1_type(
+                    &this->phi_vec[count]);
+            count++;
+        }
+        // create sparse bit vector and relative rank/select for phi_inv panel
+        count = 0;
+        for (auto &i: phi_inv_tmp) {
+            this->phi_inv_vec[count] = sdsl::sd_vector<>(i);
+            this->phi_inv_rank[count] = sdsl::sd_vector<>::rank_1_type(
+                    &this->phi_inv_vec[count]);
+            this->phi_inv_select[count] = sdsl::sd_vector<>::select_1_type(
+                    &this->phi_inv_vec[count]);
+            count++;
+        }
+
+
+        if (verbose) {
+            unsigned int index = 0;
+            for (auto &col: cols) {
+                std::cout << index << ":\t" << col.sample_beg
+                          << "\n";
+                std::cout << index << ":\t" << col.sample_end
+                          << "\n";
+                std::cout << "\n";
+                index++;
+            }
+            std::cout << "\n\n";
+            index = 0;
+            for (auto &i: this->phi_vec) {
+                std::cout << index << ":\t" << i << "\n";
+                index++;
+            }
+            std::cout << "----------\n";
+            index = 0;
+            for (auto &i: this->phi_inv_vec) {
+                std::cout << index << ":\t" << i << "\n";
+                index++;
+            }
+            std::cout << "\n\n";
+            index = 0;
+            for (auto &i: this->phi_supp) {
+                std::cout << index << ":\t" << i << "\n";
+                index++;
+            }
+            std::cout << "----------\n";
+            index = 0;
+            for (auto &i: this->phi_inv_supp) {
+                std::cout << index << ":\t" << i << "\n";
+                index++;
+            }
+        }
+    }
+
+    explicit phi_support(std::vector<column_naive_ms> &cols, ra_t *panelbv,
                          sdsl::int_vector<> &last_pref, bool verbose = false) {
         // TODO select are useless at the moment
         // default value is the panel height

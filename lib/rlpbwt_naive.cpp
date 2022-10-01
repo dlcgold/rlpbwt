@@ -346,30 +346,58 @@ rlpbwt_naive::reverse_lf(unsigned int col_index, unsigned int index,
 }
 
 // TODO optimize this function
+// unsigned int
+// rlpbwt_naive::index_to_run(unsigned int index, unsigned int col_index) const {
+//     unsigned int pos = 0;
+//     bool found_first = false;
+//     // if requested index is equal or greater than the p value of the last run
+//     // return the index of the last run
+//     if (index >= this->cols[col_index].p[this->cols[col_index].p.size() - 1]) {
+//         return this->cols[col_index].p.size() - 1;
+//     }
+
+//     // iterate over the runs in order to find the correct run that contain the
+//     // index using a run and the next one
+//     for (unsigned int i = 0; i < this->cols[col_index].p.size() - 1; i++) {
+//         if (this->cols[col_index].p[i] <= index &&
+//             index < this->cols[col_index].p[i + 1]) {
+//             pos = i;
+//             found_first = true;
+//             break;
+//         }
+//     }
+
+//     // if not found in previous iteration the index is in the last run
+//     if (!found_first) {
+//         pos = this->cols[col_index].p.size() - 1;
+//     }
+//     return pos;
+// }
+
+
 unsigned int
 rlpbwt_naive::index_to_run(unsigned int index, unsigned int col_index) const {
-    unsigned int pos = 0;
-    bool found_first = false;
+   
     // if requested index is equal or greater than the p value of the last run
     // return the index of the last run
     if (index >= this->cols[col_index].p[this->cols[col_index].p.size() - 1]) {
         return this->cols[col_index].p.size() - 1;
     }
 
-    // iterate over the runs in order to find the correct run that contain the
-    // index using a run and the next one
-    for (unsigned int i = 0; i < this->cols[col_index].p.size() - 1; i++) {
-        if (this->cols[col_index].p[i] <= index &&
-            index < this->cols[col_index].p[i + 1]) {
-            pos = i;
-            found_first = true;
-            break;
-        }
-    }
-
-    // if not found in previous iteration the index is in the last run
-    if (!found_first) {
-        pos = this->cols[col_index].p.size() - 1;
+    // binary search to compute run index
+    unsigned int bi = 0;
+    unsigned int e = this->cols[col_index].p.size();
+    unsigned int pos = (e - bi) / 2;
+    while(pos != e && this->cols[col_index].p[pos] != index){
+      if(index < (unsigned int)this->cols[col_index].p[pos]){
+	e = pos;
+      }else{
+	if(pos + 1 == e || (unsigned int)this->cols[col_index].p[pos+1] > index){
+	  break;
+	}
+	bi = pos + 1;
+      }
+      pos = bi + (e - bi)/2;
     }
     return pos;
 }

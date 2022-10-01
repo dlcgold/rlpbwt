@@ -35,7 +35,9 @@ if (${BUILD_TESTS})
             lib/ms_matches.cpp include/ms_matches.h
             lib/column_naive.cpp include/column_naive.h
             lib/rlpbwt_naive.cpp include/rlpbwt_naive.h
-            lib/matches_naive.cpp include/matches_naive.h)
+            lib/matches_naive.cpp include/matches_naive.h
+            lib/column_naive_ms.cpp include/column_naive_ms.h
+            include/rlpbwt_naive_ms.h)
 
     target_include_directories(rlpbwt_test PUBLIC
             "${shaped_slp_SOURCE_DIR}"
@@ -62,7 +64,9 @@ else ()
             lib/ms_matches.cpp include/ms_matches.h
             lib/column_naive.cpp include/column_naive.h
             lib/rlpbwt_naive.cpp include/rlpbwt_naive.h
-            lib/matches_naive.cpp include/matches_naive.h)
+            lib/matches_naive.cpp include/matches_naive.h
+            lib/column_naive_ms.cpp include/column_naive_ms.h
+            include/rlpbwt_naive_ms.h)
 
     target_include_directories(rlpbwt PUBLIC
             "${shaped_slp_SOURCE_DIR}"
