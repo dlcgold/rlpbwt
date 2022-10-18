@@ -67,6 +67,7 @@ cmake --build build_test
 
 to execute:
 ```
+mkdir output
 cd build_test
 ./rlpbwt_test
 ```
