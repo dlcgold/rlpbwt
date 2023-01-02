@@ -1,13 +1,14 @@
-#include <iostream>
 #include <getopt.h>
-#include "include/rlpbwt_ms.h"
-#include "include/rlpbwt_naive_ms.h"
+
+#include <iostream>
+
 #include "include/rlpbwt_bv.h"
+#include "include/rlpbwt_ms.h"
 #include "include/rlpbwt_naive.h"
+#include "include/rlpbwt_naive_ms.h"
 
 void printHelp() {
-    std::cout << "Usage: RLPBWT [options]\n"
-              << std::endl;
+    std::cout << "Usage: RLPBWT [options]\n" << std::endl;
     std::cout << "Options:" << std::endl;
     std::cout << "  -i, --input_file <path>\t macs file for panel" << std::endl;
     std::cout << "  -m, --memorize <path>\t  path to save serialization "
@@ -22,17 +23,19 @@ void printHelp() {
     std::cout << "  -B, --Bv\t bitvectors RLPBWT (only one mode allowed)"
               << std::endl;
     std::cout << "  -S, --Slp\t slp RLPBWT "
-              << "(only one mode allowed | slp file required)"
-              << std::endl;
+              << "(only one mode allowed | slp file required)" << std::endl;
     std::cout << "  -P, --Panel\t panel RLPBWT (only one mode allowed)"
               << std::endl;
     std::cout << "  -t, --thresholds\t enable thresholds (slp/panel mode only)"
               << std::endl;
     std::cout << "  -e, --extend\t extend matches (slp/panel mode only)"
               << std::endl;
-    std::cout
-            << "  -r, --raw\t use raw int_vector instead of sparse bitvector (slp/panel mode only)"
-            << std::endl;
+    std::cout << "  -r, --raw\t use raw int_vector instead of sparse bitvector "
+                 "(slp/panel mode only)"
+              << std::endl;
+    std::cout << "  -b, --bcf\t use vcf/bcf format file for panel/query "
+                 "slp/panel mode only)"
+              << std::endl;
     std::cout << "  -v, --verbose\t extra prints" << std::endl;
     std::cout << "  -V, --fverbose\t extra prints for functions (cautions)"
               << std::endl;
@@ -46,7 +49,8 @@ void build(std::string in_filename, const std::string &out_filename) {
     clock_t START = clock();
     auto matches = rlpbwt.match_thr("010010100011101", false);
     //auto matches = rlpbwt.match_thr("111111111111111", true);
-    //rlpbwt.match_tsv_tr("../input/query_tr.txt", "../output/query_tr_out.txt");
+    //rlpbwt.match_tsv_tr("../input/query_tr.txt",
+"../output/query_tr_out.txt");
     //rlpbwt.match_tsv("../input/query.txt", "../output/query_out.txt");
     //std::cout << clock() - START << " time\n";
 
@@ -122,6 +126,7 @@ int main(int argc, char **argv) {
     bool extend = false;
     bool query = false;
     bool raw = false;
+    bool bcf = false;
     std::string matrix_input = "";
     std::string memorize_file = "";
     std::string load_file = "";
@@ -131,29 +136,28 @@ int main(int argc, char **argv) {
     int c;
 
     while (true) {
-        static struct option long_options[] =
-                {
-                        {"input",      required_argument, nullptr, 'i'},
-                        {"memorize",   required_argument, nullptr, 'm'},
-                        {"load",       required_argument, nullptr, 'l'},
-                        {"slp",        required_argument, nullptr, 's'},
-                        {"output",     required_argument, nullptr, 'o'},
-                        {"query",      required_argument, nullptr, 'q'},
-                        {"Naive",      no_argument,       nullptr, 'N'},
-                        {"Bv",         no_argument,       nullptr, 'B'},
-                        {"Slp",        no_argument,       nullptr, 'S'},
-                        {"Panel",      no_argument,       nullptr, 'P'},
-                        {"thresholds", no_argument,       nullptr, 't'},
-                        {"extend",     no_argument,       nullptr, 'e'},
-                        {"raw",        no_argument,       nullptr, 'r'},
-                        {"fverbose",   no_argument,       nullptr, 'V'},
-                        {"verbose",    no_argument,       nullptr, 'v'},
-                        {"help",       no_argument,       nullptr, 'h'},
-                        {nullptr, 0,                      nullptr, 0}
-                };
+        static struct option long_options[] = {
+            {"input", required_argument, nullptr, 'i'},
+            {"memorize", required_argument, nullptr, 'm'},
+            {"load", required_argument, nullptr, 'l'},
+            {"slp", required_argument, nullptr, 's'},
+            {"output", required_argument, nullptr, 'o'},
+            {"query", required_argument, nullptr, 'q'},
+            {"Naive", no_argument, nullptr, 'N'},
+            {"Bv", no_argument, nullptr, 'B'},
+            {"Slp", no_argument, nullptr, 'S'},
+            {"Panel", no_argument, nullptr, 'P'},
+            {"thresholds", no_argument, nullptr, 't'},
+            {"extend", no_argument, nullptr, 'e'},
+            {"raw", no_argument, nullptr, 'r'},
+            {"bcf", no_argument, nullptr, 'b'},
+            {"fverbose", no_argument, nullptr, 'V'},
+            {"verbose", no_argument, nullptr, 'v'},
+            {"help", no_argument, nullptr, 'h'},
+            {nullptr, 0, nullptr, 0}};
 
         int option_index = 0;
-        c = getopt_long(argc, argv, "i:m:l:s:o:q:NBSPtervVh", long_options,
+        c = getopt_long(argc, argv, "i:m:l:s:o:q:NBSPternvbVh", long_options,
                         &option_index);
 
         if (c == -1) {
@@ -200,6 +204,9 @@ int main(int argc, char **argv) {
             case 'r':
                 raw = true;
                 break;
+            case 'b':
+                bcf = true;
+                break;
             case 'v':
                 print_verbose = true;
                 break;
@@ -240,7 +247,6 @@ int main(int argc, char **argv) {
         exit(EXIT_FAILURE);
     }
 
-
     if (naive) {
         if (matrix_input.empty() && load_file.empty()) {
             std::cerr << "Error: input or load file required\n";
@@ -272,7 +278,7 @@ int main(int argc, char **argv) {
                 rlpbwt.serialize(outstream);
                 outstream.close();
             }
-            auto time_build = (float) (clock() - START) / CLOCKS_PER_SEC;
+            auto time_build = (float)(clock() - START) / CLOCKS_PER_SEC;
             if (print_verbose) {
                 std::cout << "rlpbwt: " << rlpbwt.size_in_bytes(verbose)
                           << " bytes\n";
@@ -283,13 +289,12 @@ int main(int argc, char **argv) {
                           << " megabytes\n----\n";
             }
 
-
             std::cout << "built/loaded in: " << time_build << " s\n";
             if (query) {
                 std::cout << "start querying with naive.\n";
                 START = clock();
                 rlpbwt.match_tsv_conc(query_input.c_str(), output.c_str());
-                auto time_query = (float) (clock() - START) / CLOCKS_PER_SEC;
+                auto time_query = (float)(clock() - START) / CLOCKS_PER_SEC;
                 std::cout << "queried (naive) in " << time_query << " s\n";
             }
         } else {
@@ -299,7 +304,7 @@ int main(int argc, char **argv) {
             rlpbwt.load(load);
             load.close();
 
-            auto time_build = (float) (clock() - START) / CLOCKS_PER_SEC;
+            auto time_build = (float)(clock() - START) / CLOCKS_PER_SEC;
             if (print_verbose) {
                 std::cout << "rlpbwt: " << rlpbwt.size_in_bytes(verbose)
                           << " bytes\n";
@@ -315,7 +320,7 @@ int main(int argc, char **argv) {
                 std::cout << "start querying with naive.\n";
                 START = clock();
                 rlpbwt.match_tsv_conc(query_input.c_str(), output.c_str());
-                auto time_query = (float) (clock() - START) / CLOCKS_PER_SEC;
+                auto time_query = (float)(clock() - START) / CLOCKS_PER_SEC;
                 std::cout << "queried (naive) in " << time_query << " s\n";
             }
         }
@@ -351,7 +356,7 @@ int main(int argc, char **argv) {
                 rlpbwt.serialize(outstream);
                 outstream.close();
             }
-            auto time_build = (float) (clock() - START) / CLOCKS_PER_SEC;
+            auto time_build = (float)(clock() - START) / CLOCKS_PER_SEC;
             if (print_verbose) {
                 std::cout << "rlpbwt: " << rlpbwt.size_in_bytes(verbose)
                           << " bytes\n";
@@ -366,7 +371,7 @@ int main(int argc, char **argv) {
                 std::cout << "start querying with bitvectors.\n";
                 START = clock();
                 rlpbwt.match_tsv_conc(query_input.c_str(), output.c_str());
-                auto time_query = (float) (clock() - START) / CLOCKS_PER_SEC;
+                auto time_query = (float)(clock() - START) / CLOCKS_PER_SEC;
                 std::cout << "queried (bitvectors) in " << time_query << " s\n";
             }
         } else {
@@ -375,7 +380,7 @@ int main(int argc, char **argv) {
             load.open(load_file.c_str());
             rlpbwt.load(load);
             load.close();
-            auto time_build = (float) (clock() - START) / CLOCKS_PER_SEC;
+            auto time_build = (float)(clock() - START) / CLOCKS_PER_SEC;
             if (print_verbose) {
                 std::cout << "rlpbwt: " << rlpbwt.size_in_bytes(verbose)
                           << " bytes\n";
@@ -390,14 +395,14 @@ int main(int argc, char **argv) {
                 std::cout << "start querying with bitvectors.\n";
                 START = clock();
                 rlpbwt.match_tsv_conc(query_input.c_str(), output.c_str());
-                auto time_query = (float) (clock() - START) / CLOCKS_PER_SEC;
+                auto time_query = (float)(clock() - START) / CLOCKS_PER_SEC;
                 std::cout << "queried (bitvectors) in " << time_query << " s\n";
             }
         }
     }
 
     if (slp) {
-        if (!raw){
+        if (!raw) {
             if (matrix_input.empty() && load_file.empty()) {
                 std::cerr << "Error: input or load file required\n";
                 exit(EXIT_FAILURE);
@@ -424,8 +429,8 @@ int main(int argc, char **argv) {
             }
             clock_t START = clock();
             if (load_file.empty()) {
-                rlpbwt_ms<slp_panel_ra> rlpbwt(matrix_input.c_str(), thr, verbose,
-                                               slp_input.c_str());
+                rlpbwt_ms<slp_panel_ra> rlpbwt(matrix_input.c_str(), thr,
+                                               verbose, slp_input.c_str(), bcf);
                 if (extend) {
                     rlpbwt.extend();
                 }
@@ -436,15 +441,17 @@ int main(int argc, char **argv) {
                     outstream.close();
                 }
 
-                auto time_build = (float) (clock() - START) / CLOCKS_PER_SEC;
+                auto time_build = (float)(clock() - START) / CLOCKS_PER_SEC;
                 if (print_verbose) {
                     std::cout << "rlpbwt: " << rlpbwt.size_in_bytes(verbose)
                               << " bytes\n";
-                    std::cout << "rlpbwt: " << rlpbwt.size_in_mega_bytes(verbose)
-                              << " megabytes\n----\n";
-                    std::cout << "estimated dense size: "
-                              << dense_size_megabyte(rlpbwt.height, rlpbwt.width)
-                              << " megabytes\n----\n";
+                    std::cout
+                        << "rlpbwt: " << rlpbwt.size_in_mega_bytes(verbose)
+                        << " megabytes\n----\n";
+                    std::cout
+                        << "estimated dense size: "
+                        << dense_size_megabyte(rlpbwt.height, rlpbwt.width)
+                        << " megabytes\n----\n";
                 }
                 std::cout << "built/loaded in: " << time_build << " s\n";
                 if (query) {
@@ -455,10 +462,10 @@ int main(int argc, char **argv) {
                             std::cout << "extended\n";
                         }
                         rlpbwt.match_tsv_conc_thr(query_input.c_str(),
-                                                  output.c_str(),
-                                                  extend);
+                                                  output.c_str(), extend,
+                                                  verbose, bcf);
                         auto time_query =
-                                (float) (clock() - START) / CLOCKS_PER_SEC;
+                            (float)(clock() - START) / CLOCKS_PER_SEC;
                         if (extend) {
                             std::cout << "queried (slp/thresholds/extended) in "
                                       << time_query << " s\n";
@@ -472,10 +479,10 @@ int main(int argc, char **argv) {
                             std::cout << "extended\n";
                         }
                         rlpbwt.match_tsv_conc_lce(query_input.c_str(),
-                                                  output.c_str(),
-                                                  extend);
+                                                  output.c_str(), extend,
+                                                  verbose, bcf);
                         auto time_query =
-                                (float) (clock() - START) / CLOCKS_PER_SEC;
+                            (float)(clock() - START) / CLOCKS_PER_SEC;
                         if (extend) {
                             std::cout << "queried (slp/lce/extended) in "
                                       << time_query << " s\n";
@@ -494,15 +501,17 @@ int main(int argc, char **argv) {
                 if (extend) {
                     rlpbwt.extend();
                 }
-                auto time_build = (float) (clock() - START) / CLOCKS_PER_SEC;
+                auto time_build = (float)(clock() - START) / CLOCKS_PER_SEC;
                 if (print_verbose) {
                     std::cout << "rlpbwt: " << rlpbwt.size_in_bytes(verbose)
                               << " bytes\n";
-                    std::cout << "rlpbwt: " << rlpbwt.size_in_mega_bytes(verbose)
-                              << " megabytes\n----\n";
-                    std::cout << "estimated dense size: "
-                              << dense_size_megabyte(rlpbwt.height, rlpbwt.width)
-                              << " megabytes\n----\n";
+                    std::cout
+                        << "rlpbwt: " << rlpbwt.size_in_mega_bytes(verbose)
+                        << " megabytes\n----\n";
+                    std::cout
+                        << "estimated dense size: "
+                        << dense_size_megabyte(rlpbwt.height, rlpbwt.width)
+                        << " megabytes\n----\n";
                 }
                 std::cout << "built/loaded in: " << time_build << " s\n";
                 if (query) {
@@ -513,10 +522,10 @@ int main(int argc, char **argv) {
                             std::cout << "extended\n";
                         }
                         rlpbwt.match_tsv_conc_thr(query_input.c_str(),
-                                                  output.c_str(),
-                                                  extend);
+                                                  output.c_str(), extend,
+                                                  verbose, bcf);
                         auto time_query =
-                                (float) (clock() - START) / CLOCKS_PER_SEC;
+                            (float)(clock() - START) / CLOCKS_PER_SEC;
                         if (extend) {
                             std::cout << "queried (slp/thresholds/extended) in "
                                       << time_query << " s\n";
@@ -530,10 +539,10 @@ int main(int argc, char **argv) {
                             std::cout << "extended\n";
                         }
                         rlpbwt.match_tsv_conc_lce(query_input.c_str(),
-                                                  output.c_str(),
-                                                  extend);
+                                                  output.c_str(), extend,
+                                                  verbose, bcf);
                         auto time_query =
-                                (float) (clock() - START) / CLOCKS_PER_SEC;
+                            (float)(clock() - START) / CLOCKS_PER_SEC;
                         if (extend) {
                             std::cout << "queried (slp/lce/extended) in "
                                       << time_query << " s\n";
@@ -544,7 +553,7 @@ int main(int argc, char **argv) {
                     }
                 }
             }
-        }else{
+        } else {
             std::cout << "Using raw\n";
             if (matrix_input.empty() && load_file.empty()) {
                 std::cerr << "Error: input or load file required\n";
@@ -572,8 +581,8 @@ int main(int argc, char **argv) {
             }
             clock_t START = clock();
             if (load_file.empty()) {
-                rlpbwt_naive_ms<slp_panel_ra> rlpbwt(matrix_input.c_str(), thr, verbose,
-                                               slp_input.c_str());
+                rlpbwt_naive_ms<slp_panel_ra> rlpbwt(
+                    matrix_input.c_str(), thr, verbose, slp_input.c_str(), bcf);
                 if (extend) {
                     rlpbwt.extend();
                 }
@@ -584,15 +593,17 @@ int main(int argc, char **argv) {
                     outstream.close();
                 }
 
-                auto time_build = (float) (clock() - START) / CLOCKS_PER_SEC;
+                auto time_build = (float)(clock() - START) / CLOCKS_PER_SEC;
                 if (print_verbose) {
                     std::cout << "rlpbwt: " << rlpbwt.size_in_bytes(verbose)
                               << " bytes\n";
-                    std::cout << "rlpbwt: " << rlpbwt.size_in_mega_bytes(verbose)
-                              << " megabytes\n----\n";
-                    std::cout << "estimated dense size: "
-                              << dense_size_megabyte(rlpbwt.height, rlpbwt.width)
-                              << " megabytes\n----\n";
+                    std::cout
+                        << "rlpbwt: " << rlpbwt.size_in_mega_bytes(verbose)
+                        << " megabytes\n----\n";
+                    std::cout
+                        << "estimated dense size: "
+                        << dense_size_megabyte(rlpbwt.height, rlpbwt.width)
+                        << " megabytes\n----\n";
                 }
                 std::cout << "built/loaded in: " << time_build << " s\n";
                 if (query) {
@@ -603,10 +614,10 @@ int main(int argc, char **argv) {
                             std::cout << "extended\n";
                         }
                         rlpbwt.match_tsv_conc_thr(query_input.c_str(),
-                                                  output.c_str(),
-                                                  extend);
+                                                  output.c_str(), extend,
+                                                  verbose, bcf);
                         auto time_query =
-                                (float) (clock() - START) / CLOCKS_PER_SEC;
+                            (float)(clock() - START) / CLOCKS_PER_SEC;
                         if (extend) {
                             std::cout << "queried (slp/thresholds/extended) in "
                                       << time_query << " s\n";
@@ -620,10 +631,10 @@ int main(int argc, char **argv) {
                             std::cout << "extended\n";
                         }
                         rlpbwt.match_tsv_conc_lce(query_input.c_str(),
-                                                  output.c_str(),
-                                                  extend);
+                                                  output.c_str(), extend,
+                                                  verbose, bcf);
                         auto time_query =
-                                (float) (clock() - START) / CLOCKS_PER_SEC;
+                            (float)(clock() - START) / CLOCKS_PER_SEC;
                         if (extend) {
                             std::cout << "queried (slp/lce/extended) in "
                                       << time_query << " s\n";
@@ -642,15 +653,17 @@ int main(int argc, char **argv) {
                 if (extend) {
                     rlpbwt.extend();
                 }
-                auto time_build = (float) (clock() - START) / CLOCKS_PER_SEC;
+                auto time_build = (float)(clock() - START) / CLOCKS_PER_SEC;
                 if (print_verbose) {
                     std::cout << "rlpbwt: " << rlpbwt.size_in_bytes(verbose)
                               << " bytes\n";
-                    std::cout << "rlpbwt: " << rlpbwt.size_in_mega_bytes(verbose)
-                              << " megabytes\n----\n";
-                    std::cout << "estimated dense size: "
-                              << dense_size_megabyte(rlpbwt.height, rlpbwt.width)
-                              << " megabytes\n----\n";
+                    std::cout
+                        << "rlpbwt: " << rlpbwt.size_in_mega_bytes(verbose)
+                        << " megabytes\n----\n";
+                    std::cout
+                        << "estimated dense size: "
+                        << dense_size_megabyte(rlpbwt.height, rlpbwt.width)
+                        << " megabytes\n----\n";
                 }
                 std::cout << "built/loaded in: " << time_build << " s\n";
                 if (query) {
@@ -661,10 +674,10 @@ int main(int argc, char **argv) {
                             std::cout << "extended\n";
                         }
                         rlpbwt.match_tsv_conc_thr(query_input.c_str(),
-                                                  output.c_str(),
-                                                  extend);
+                                                  output.c_str(), extend,
+                                                  verbose, bcf);
                         auto time_query =
-                                (float) (clock() - START) / CLOCKS_PER_SEC;
+                            (float)(clock() - START) / CLOCKS_PER_SEC;
                         if (extend) {
                             std::cout << "queried (slp/thresholds/extended) in "
                                       << time_query << " s\n";
@@ -678,10 +691,10 @@ int main(int argc, char **argv) {
                             std::cout << "extended\n";
                         }
                         rlpbwt.match_tsv_conc_lce(query_input.c_str(),
-                                                  output.c_str(),
-                                                  extend);
+                                                  output.c_str(), extend,
+                                                  verbose, bcf);
                         auto time_query =
-                                (float) (clock() - START) / CLOCKS_PER_SEC;
+                            (float)(clock() - START) / CLOCKS_PER_SEC;
                         if (extend) {
                             std::cout << "queried (slp/lce/extended) in "
                                       << time_query << " s\n";
@@ -696,7 +709,7 @@ int main(int argc, char **argv) {
     }
 
     if (panel) {
-        if(!raw){
+        if (!raw) {
             if (matrix_input.empty() && load_file.empty()) {
                 std::cerr << "Error: input or load file required\n";
                 exit(EXIT_FAILURE);
@@ -716,7 +729,8 @@ int main(int argc, char **argv) {
             }
             clock_t START = clock();
             if (load_file.empty()) {
-                rlpbwt_ms<panel_ra> rlpbwt(matrix_input.c_str(), true, verbose);
+                rlpbwt_ms<panel_ra> rlpbwt(matrix_input.c_str(), true, verbose,
+                                           "", bcf);
                 if (extend) {
                     rlpbwt.extend();
                 }
@@ -726,15 +740,17 @@ int main(int argc, char **argv) {
                     rlpbwt.serialize(outstream);
                     outstream.close();
                 }
-                auto time_build = (float) (clock() - START) / CLOCKS_PER_SEC;
+                auto time_build = (float)(clock() - START) / CLOCKS_PER_SEC;
                 if (print_verbose) {
                     std::cout << "rlpbwt: " << rlpbwt.size_in_bytes(verbose)
                               << " bytes\n";
-                    std::cout << "rlpbwt: " << rlpbwt.size_in_mega_bytes(verbose)
-                              << " megabytes\n----\n";
-                    std::cout << "estimated dense size: "
-                              << dense_size_megabyte(rlpbwt.height, rlpbwt.width)
-                              << " megabytes\n----\n";
+                    std::cout
+                        << "rlpbwt: " << rlpbwt.size_in_mega_bytes(verbose)
+                        << " megabytes\n----\n";
+                    std::cout
+                        << "estimated dense size: "
+                        << dense_size_megabyte(rlpbwt.height, rlpbwt.width)
+                        << " megabytes\n----\n";
                 }
                 std::cout << "built/loaded in: " << time_build << " s\n";
                 if (query) {
@@ -743,13 +759,16 @@ int main(int argc, char **argv) {
                         std::cout << "extended\n";
                     }
                     START = clock();
-                    rlpbwt.match_tsv_conc_thr(query_input.c_str(), output.c_str(),
-                                              extend);
-                    auto time_query = (float) (clock() - START) / CLOCKS_PER_SEC;
+                    rlpbwt.match_tsv_conc_thr(query_input.c_str(),
+                                              output.c_str(), extend, verbose,
+                                              bcf);
+                    auto time_query = (float)(clock() - START) / CLOCKS_PER_SEC;
                     if (extend) {
-                        std::cout << "queried (panel) in " << time_query << " s\n";
+                        std::cout << "queried (panel) in " << time_query
+                                  << " s\n";
                     } else {
-                        std::cout << "queried (panel) in " << time_query << " s\n";
+                        std::cout << "queried (panel) in " << time_query
+                                  << " s\n";
                     }
                 }
             } else {
@@ -758,18 +777,20 @@ int main(int argc, char **argv) {
                 load.open(load_file.c_str());
                 rlpbwt.load(load);
                 load.close();
-                auto time_build = (float) (clock() - START) / CLOCKS_PER_SEC;
+                auto time_build = (float)(clock() - START) / CLOCKS_PER_SEC;
                 if (extend) {
                     rlpbwt.extend();
                 }
                 if (print_verbose) {
                     std::cout << "rlpbwt: " << rlpbwt.size_in_bytes(verbose)
                               << " bytes\n";
-                    std::cout << "rlpbwt: " << rlpbwt.size_in_mega_bytes(verbose)
-                              << " megabytes\n----\n";
-                    std::cout << "estimated dense size: "
-                              << dense_size_megabyte(rlpbwt.height, rlpbwt.width)
-                              << " megabytes\n----\n";
+                    std::cout
+                        << "rlpbwt: " << rlpbwt.size_in_mega_bytes(verbose)
+                        << " megabytes\n----\n";
+                    std::cout
+                        << "estimated dense size: "
+                        << dense_size_megabyte(rlpbwt.height, rlpbwt.width)
+                        << " megabytes\n----\n";
                 }
                 std::cout << "built/loaded in: " << time_build << " s\n";
                 if (query) {
@@ -778,17 +799,20 @@ int main(int argc, char **argv) {
                         std::cout << "extended\n";
                     }
                     START = clock();
-                    rlpbwt.match_tsv_conc_thr(query_input.c_str(), output.c_str(),
-                                              extend);
-                    auto time_query = (float) (clock() - START) / CLOCKS_PER_SEC;
+                    rlpbwt.match_tsv_conc_thr(query_input.c_str(),
+                                              output.c_str(), extend, verbose,
+                                              bcf);
+                    auto time_query = (float)(clock() - START) / CLOCKS_PER_SEC;
                     if (extend) {
-                        std::cout << "queried (panel) in " << time_query << " s\n";
+                        std::cout << "queried (panel) in " << time_query
+                                  << " s\n";
                     } else {
-                        std::cout << "queried (panel) in " << time_query << " s\n";
+                        std::cout << "queried (panel) in " << time_query
+                                  << " s\n";
                     }
                 }
             }
-        }else{
+        } else {
             std::cout << "Using raw\n";
             if (matrix_input.empty() && load_file.empty()) {
                 std::cerr << "Error: input or load file required\n";
@@ -809,7 +833,8 @@ int main(int argc, char **argv) {
             }
             clock_t START = clock();
             if (load_file.empty()) {
-                rlpbwt_naive_ms<panel_ra> rlpbwt(matrix_input.c_str(), true, verbose);
+                rlpbwt_naive_ms<panel_ra> rlpbwt(matrix_input.c_str(), true,
+                                                 verbose, "", bcf);
                 if (extend) {
                     rlpbwt.extend();
                 }
@@ -819,15 +844,17 @@ int main(int argc, char **argv) {
                     rlpbwt.serialize(outstream);
                     outstream.close();
                 }
-                auto time_build = (float) (clock() - START) / CLOCKS_PER_SEC;
+                auto time_build = (float)(clock() - START) / CLOCKS_PER_SEC;
                 if (print_verbose) {
                     std::cout << "rlpbwt: " << rlpbwt.size_in_bytes(verbose)
                               << " bytes\n";
-                    std::cout << "rlpbwt: " << rlpbwt.size_in_mega_bytes(verbose)
-                              << " megabytes\n----\n";
-                    std::cout << "estimated dense size: "
-                              << dense_size_megabyte(rlpbwt.height, rlpbwt.width)
-                              << " megabytes\n----\n";
+                    std::cout
+                        << "rlpbwt: " << rlpbwt.size_in_mega_bytes(verbose)
+                        << " megabytes\n----\n";
+                    std::cout
+                        << "estimated dense size: "
+                        << dense_size_megabyte(rlpbwt.height, rlpbwt.width)
+                        << " megabytes\n----\n";
                 }
                 std::cout << "built/loaded in: " << time_build << " s\n";
                 if (query) {
@@ -836,13 +863,17 @@ int main(int argc, char **argv) {
                         std::cout << "extended\n";
                     }
                     START = clock();
-                    rlpbwt.match_tsv_conc_thr(query_input.c_str(), output.c_str(),
-                                              extend);
-                    auto time_query = (float) (clock() - START) / CLOCKS_PER_SEC;
+
+                    rlpbwt.match_tsv_conc_thr(query_input.c_str(),
+                                              output.c_str(), extend, verbose,
+                                              bcf);
+                    auto time_query = (float)(clock() - START) / CLOCKS_PER_SEC;
                     if (extend) {
-                        std::cout << "queried (panel) in " << time_query << " s\n";
+                        std::cout << "queried (panel) in " << time_query
+                                  << " s\n";
                     } else {
-                        std::cout << "queried (panel) in " << time_query << " s\n";
+                        std::cout << "queried (panel) in " << time_query
+                                  << " s\n";
                     }
                 }
             } else {
@@ -851,18 +882,20 @@ int main(int argc, char **argv) {
                 load.open(load_file.c_str());
                 rlpbwt.load(load);
                 load.close();
-                auto time_build = (float) (clock() - START) / CLOCKS_PER_SEC;
+                auto time_build = (float)(clock() - START) / CLOCKS_PER_SEC;
                 if (extend) {
                     rlpbwt.extend();
                 }
                 if (print_verbose) {
                     std::cout << "rlpbwt: " << rlpbwt.size_in_bytes(verbose)
                               << " bytes\n";
-                    std::cout << "rlpbwt: " << rlpbwt.size_in_mega_bytes(verbose)
-                              << " megabytes\n----\n";
-                    std::cout << "estimated dense size: "
-                              << dense_size_megabyte(rlpbwt.height, rlpbwt.width)
-                              << " megabytes\n----\n";
+                    std::cout
+                        << "rlpbwt: " << rlpbwt.size_in_mega_bytes(verbose)
+                        << " megabytes\n----\n";
+                    std::cout
+                        << "estimated dense size: "
+                        << dense_size_megabyte(rlpbwt.height, rlpbwt.width)
+                        << " megabytes\n----\n";
                 }
                 std::cout << "built/loaded in: " << time_build << " s\n";
                 if (query) {
@@ -871,13 +904,16 @@ int main(int argc, char **argv) {
                         std::cout << "extended\n";
                     }
                     START = clock();
-                    rlpbwt.match_tsv_conc_thr(query_input.c_str(), output.c_str(),
-                                              extend);
-                    auto time_query = (float) (clock() - START) / CLOCKS_PER_SEC;
+                    rlpbwt.match_tsv_conc_thr(query_input.c_str(),
+                                              output.c_str(), extend, verbose,
+                                              bcf);
+                    auto time_query = (float)(clock() - START) / CLOCKS_PER_SEC;
                     if (extend) {
-                        std::cout << "queried (panel) in " << time_query << " s\n";
+                        std::cout << "queried (panel) in " << time_query
+                                  << " s\n";
                     } else {
-                        std::cout << "queried (panel) in " << time_query << " s\n";
+                        std::cout << "queried (panel) in " << time_query
+                                  << " s\n";
                     }
                 }
             }

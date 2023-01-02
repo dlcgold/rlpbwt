@@ -5,24 +5,25 @@
 #ifndef RLPBWT_RLPBWT_NAIVE_MS_H
 #define RLPBWT_RLPBWT_NAIVE_MS_H
 
-#include <vector>
 #include <type_traits>
+#include <vector>
+
 #include "column_naive_ms.h"
 #include "exceptions.h"
-#include "panel_ra.h"
-#include "slp_panel_ra.h"
-#include "phi_support.h"
+#include "htslib/vcf.h"
 #include "ms.h"
 #include "ms_matches.h"
-
+#include "panel_ra.h"
+#include "phi_support.h"
+#include "slp_panel_ra.h"
 
 /**
  * @brief data structure for matching-statistics supported RLPBWT naive
  * @tparam ra_t type of panel (panel_ra or slp_panel_ra)
  */
-template<typename ra_t>
+template <typename ra_t>
 class rlpbwt_naive_ms {
-public:
+   public:
     /**
      * @brief bool to check if the RLPBWT support the use of thresholds
      */
@@ -34,8 +35,8 @@ public:
     bool is_extended{};
 
     /**
-    * @brief vector of matcing statistics supported naive columns
-    */
+     * @brief vector of matcing statistics supported naive columns
+     */
     std::vector<column_naive_ms> cols;
 
     /**
@@ -48,7 +49,8 @@ public:
      * @tparam type of panel (panel_ra or slp_panel_ra)
      */
     phi_support<ra_t> *phi;
-private:
+
+   private:
     /**
      * @brief compressed int vector for last prefix array
      */
@@ -61,9 +63,9 @@ private:
      * @param div current divergence array (as lcp array)
      * @return the new naive column
      */
-    column_naive_ms
-    build_column(std::string &column, std::vector<unsigned int> &pref,
-                 sdsl::int_vector<> &div) {
+    column_naive_ms build_column(std::string &column,
+                                 std::vector<unsigned int> &pref,
+                                 sdsl::int_vector<> &div) {
         unsigned int height = pref.size();
         // variable for "c" value
         unsigned int count0 = 0;
@@ -89,8 +91,8 @@ private:
         // temporary variable to compute thresholds
         unsigned int lcs = 0;
 
-        // initialize a vector of pair in order to build final sdsl int_vector for
-        // p and u/v
+        // initialize a vector of pair in order to build final sdsl int_vector
+        // for p and u/v
         std::vector<std::pair<unsigned int, unsigned int>> rows;
         std::vector<unsigned int> thr;
         // support vector to store prefix array samples
@@ -105,8 +107,8 @@ private:
         // temporary variable for thresholds
         unsigned int tmp_thr = 0;
 
-        // bools to check if we are at the beginning of a run and if we have to swap
-        // the counting of zeros and ones
+        // bools to check if we are at the beginning of a run and if we have to
+        // swap the counting of zeros and ones
         bool begrun = true;
         bool pushz = false;
         bool pusho = false;
@@ -120,8 +122,8 @@ private:
 
         // iteration over the entire column
         for (unsigned int i = 0; i < height; i++) {
-            // if we are at the beginning of a run we save previous temporary values
-            // for "u" and "v"
+            // if we are at the beginning of a run we save previous temporary
+            // values for "u" and "v"
             if (begrun) {
                 tmp_beg = pref[i];
                 u = count0tmp;
@@ -223,9 +225,8 @@ private:
      * @param pref current prefix array
      * @param div current divergence array (as lcp array)
      */
-    static void
-    update(std::string &column, std::vector<unsigned int> &pref,
-           sdsl::int_vector<> &div) {
+    static void update(std::string &column, std::vector<unsigned int> &pref,
+                       sdsl::int_vector<> &div) {
         unsigned int height = pref.size();
         std::vector<unsigned int> new_pref(height);
         sdsl::int_vector<> new_div(height);
@@ -233,7 +234,7 @@ private:
         unsigned int lcs = -1;
 
         for (unsigned int i = 0; i < height; i++) {
-            lcs = std::min(lcs, static_cast<unsigned int> (div[i]));
+            lcs = std::min(lcs, static_cast<unsigned int>(div[i]));
             if (column[pref[i]] == '0') {
                 new_pref[count0] = pref[i];
                 new_div[count0] = lcs + 1;
@@ -245,7 +246,7 @@ private:
         int count1 = 0;
         lcs = -1;
         for (unsigned int i = 0; i < height; i++) {
-            lcs = std::min(lcs, static_cast<unsigned int> (div[i]));
+            lcs = std::min(lcs, static_cast<unsigned int>(div[i]));
             if (column[pref[i]] == '1') {
                 new_pref[count0 + count1] = pref[i];
                 new_div[count0 + count1] = lcs + 1;
@@ -269,12 +270,11 @@ private:
      * @param verbose bool for extra print
      * @return the index computed with the lf-mapping
      */
-    unsigned int
-    lf(unsigned int col_index, unsigned int index, char symbol,
-       bool verbose = false) const {
+    unsigned int lf(unsigned int col_index, unsigned int index, char symbol,
+                    bool verbose = false) const {
         // get run
         unsigned int run_index = index_to_run(index, col_index);
-        //get offset
+        // get offset
         unsigned int offset = index - this->cols[col_index].p[run_index];
         // undoing the offsets when they are wrong/useless
         if ((symbol == '0' && get_next_char(this->cols[col_index].zero_first,
@@ -311,10 +311,10 @@ private:
      * @param col_index column index
      * @return run index
      */
-    unsigned int
-    index_to_run(unsigned int index, unsigned int col_index) const {
-        // if requested index is equal or greater than the p value of the last run
-        // return the index of the last run
+    unsigned int index_to_run(unsigned int index,
+                              unsigned int col_index) const {
+        // if requested index is equal or greater than the p value of the last
+        // run return the index of the last run
         if (index >=
             this->cols[col_index].p[this->cols[col_index].p.size() - 1]) {
             return this->cols[col_index].p.size() - 1;
@@ -325,11 +325,11 @@ private:
         unsigned int e = this->cols[col_index].p.size();
         unsigned int pos = (e - bi) / 2;
         while (pos != e && this->cols[col_index].p[pos] != index) {
-            if (index < (unsigned int) this->cols[col_index].p[pos]) {
+            if (index < (unsigned int)this->cols[col_index].p[pos]) {
                 e = pos;
             } else {
                 if (pos + 1 == e ||
-                    (unsigned int) this->cols[col_index].p[pos + 1] > index) {
+                    (unsigned int)this->cols[col_index].p[pos + 1] > index) {
                     break;
                 }
                 bi = pos + 1;
@@ -345,8 +345,8 @@ private:
      * @param index virtual index of the row of the original panel
      * @return a std::pair with u as first and v as second
      */
-    std::pair<unsigned int, unsigned int>
-    uvtrick(unsigned int col_index, unsigned int run_index) const {
+    std::pair<unsigned int, unsigned int> uvtrick(
+        unsigned int col_index, unsigned int run_index) const {
         unsigned int u;
         unsigned int v;
         // if run index is 0 u = v = 0
@@ -383,13 +383,10 @@ private:
             std::vector<unsigned int> haplos;
 
             // extract information from the current basic match
-            unsigned int start_row = std::get<0>(
-                    ms_matches.basic_matches[i]);
+            unsigned int start_row = std::get<0>(ms_matches.basic_matches[i]);
             haplos.emplace_back(start_row);
-            unsigned int curr_len = std::get<1>(
-                    ms_matches.basic_matches[i]);
-            unsigned int curr_col = std::get<2>(
-                    ms_matches.basic_matches[i]);
+            unsigned int curr_len = std::get<1>(ms_matches.basic_matches[i]);
+            unsigned int curr_col = std::get<2>(ms_matches.basic_matches[i]);
 
             // initialize boolean and temporary variables for go up/down in
             // search of matching rows
@@ -409,8 +406,7 @@ private:
                         break;
                     }
                     down_row = phi_res.value();
-                    if (lceBound(curr_col, start_row, down_row,
-                                 curr_len)) {
+                    if (lceBound(curr_col, start_row, down_row, curr_len)) {
                         haplos.emplace_back(down_row);
                         start_row = down_row;
                     } else {
@@ -472,7 +468,7 @@ private:
         }
     }
 
-/**
+    /**
      * @brief function to check if longest common extension between two rows is
      * equal or greater than a bound ending at a given column
      * @param col ending column column
@@ -484,7 +480,7 @@ private:
      * equal or greater than the bound
      * @attention this function is enabled iff the panel is an SLP
      */
-    template<typename U = ra_t>
+    template <typename U = ra_t>
     std::enable_if_t<sizeof(U) && (!std::is_same<ra_t, panel_ra>::value), bool>
     lceBound(unsigned int col, unsigned int curr, unsigned int other,
              unsigned int bound, bool verbose = false) {
@@ -492,10 +488,10 @@ private:
         if (col == 0) {
             return false;
         }
-        auto w_l = (unsigned long long int) this->panel->w;
+        auto w_l = (unsigned long long int)this->panel->w;
         // obtain the column in the reverse order (as the SLP is saved)
         unsigned long long int rev_col =
-                (w_l - (unsigned long long int) 1) - col;
+            (w_l - (unsigned long long int)1) - col;
         // obtain indices of the symbols required in the SLP (built from the
         // reverse matrix saved as a single line string)
         unsigned long long int pos_curr = rev_col + (w_l * curr);
@@ -505,13 +501,13 @@ private:
                       << pos_other << "\n";
         }
         // compute lce and return true if equal (or greater) than the bound
-//        auto lcp_pair_naive = lceToR_NaiveBounded(this->panel->panel,
-//                                                          pos_other,
-//                                                          pos_curr, bound);
+        //        auto lcp_pair_naive = lceToR_NaiveBounded(this->panel->panel,
+        //                                                          pos_other,
+        //                                                          pos_curr,
+        //                                                          bound);
         // TODO check the bound in no naive version, it doesn't work
-        auto lcp_pair = lceToRBounded(this->panel->panel,
-                                      pos_other,
-                                      pos_curr, bound);
+        auto lcp_pair =
+            lceToRBounded(this->panel->panel, pos_other, pos_curr, bound);
         // TODO if the bound works it should be lcp_pair == bound
         if (lcp_pair >= bound) {
             return true;
@@ -529,21 +525,20 @@ private:
      * @return the lce value and the other row index
      * @attention this function is enabled iff the panel is an SLP
      */
-    template<typename U = ra_t>
+    template <typename U = ra_t>
     std::enable_if_t<sizeof(U) && (!std::is_same<ra_t, panel_ra>::value),
-            std::pair<unsigned int, unsigned int>>
+                     std::pair<unsigned int, unsigned int>>
     lce(unsigned int col, unsigned int curr, unsigned int other,
         bool verbose = false) {
         // by design if we are at first column we don't compute any lce
         if (col == 0) {
             return std::make_pair(other, 0);
         }
-        auto w_l = (unsigned long long int) this->panel->w;
+        auto w_l = (unsigned long long int)this->panel->w;
         // obtain the column in the reverse order (as the SLP is saved)
         // the previous one in order to compute lce for MS
         unsigned long long int rev_col =
-                (w_l - (unsigned long long int) 1) - col +
-                (unsigned long long int) 1;
+            (w_l - (unsigned long long int)1) - col + (unsigned long long int)1;
         // obtain indices of the symbols required in the SLP (built from the
         // reverse matrix saved as a single line string)
         unsigned long long int pos_curr = rev_col + (w_l * curr);
@@ -576,9 +571,9 @@ private:
      * the other two
      * @attention this function is enabled iff the panel is an SLP
      */
-    template<typename U = ra_t>
+    template <typename U = ra_t>
     std::enable_if_t<sizeof(U) && (!std::is_same<ra_t, panel_ra>::value),
-            std::pair<unsigned int, unsigned int>>
+                     std::pair<unsigned int, unsigned int>>
     lce_pair(unsigned int col, unsigned int curr, unsigned int prev,
              unsigned int next, bool verbose = false) {
         // by design if we are at first column we don't compute any lce
@@ -586,12 +581,11 @@ private:
             return std::make_pair(next, 0);
         }
 
-        auto w_l = (unsigned long long int) this->panel->w;
+        auto w_l = (unsigned long long int)this->panel->w;
         // obtain the column in the reverse order (as the SLP is saved)
         // the previous one in order to compute lce for MS
         unsigned long long int rev_col =
-                (w_l - (unsigned long long int) 1) - col +
-                (unsigned long long int) 1;
+            (w_l - (unsigned long long int)1) - col + (unsigned long long int)1;
 
         // obtain indices of the symbols required in the SLP (built from the
         // reverse matrix saved as a single line string)
@@ -600,18 +594,15 @@ private:
         unsigned long long int pos_next = rev_col + (w_l * next);
         if (verbose) {
             std::cout << "at " << rev_col << ": " << pos_curr << ", "
-                      << pos_prev
-                      << ", " << pos_next << "\n";
+                      << pos_prev << ", " << pos_next << "\n";
         }
         // compute lce for both requested indices (eventually bounded with the
         // column index value)
-        auto lcp_prev = lceToR(this->panel->panel, pos_prev,
-                               pos_curr);
+        auto lcp_prev = lceToR(this->panel->panel, pos_prev, pos_curr);
         if (lcp_prev >= col) {
             lcp_prev = col;
         }
-        auto lcp_next = lceToR(this->panel->panel, pos_curr,
-                               pos_next);
+        auto lcp_next = lceToR(this->panel->panel, pos_curr, pos_next);
         if (lcp_next >= col) {
             lcp_next = col;
         }
@@ -624,10 +615,10 @@ private:
         }
     }
 
-public:
+   public:
     /**
-   * @brief height of the panel
-   */
+     * @brief height of the panel
+     */
     unsigned int width{};
 
     /**
@@ -659,83 +650,187 @@ public:
      */
     explicit rlpbwt_naive_ms(const char *filename, bool thr = false,
                              bool verbose = false,
-                             const char *slp_filename = "") {
-        std::ifstream input_matrix(filename);
-        if constexpr (!std::is_same_v<ra_t, panel_ra>) {
-            if (std::string(slp_filename).empty()) {
-                throw SlpNotFoundException{};
-            }
-        }
-        if constexpr (std::is_same_v<ra_t, panel_ra>) {
-            thr = true;
-        }
-        if (input_matrix.is_open()) {
-            this->is_thr_enabled = thr;
-            std::string header1;
-            std::string header2;
-            std::string line;
-            std::string garbage;
-            std::string new_column;
-
-            getline(input_matrix, header1);
-            getline(input_matrix, header2);
-            getline(input_matrix, line);
-
-            std::istringstream is(line);
-            is >> garbage >> garbage >> garbage >> garbage >> new_column;
-            unsigned int tmp_height = new_column.size();
-            std::cout << "h: " << tmp_height << "\n";
-            /*unsigned int tmp_width = std::count(
-                    std::istreambuf_iterator<char>(input_matrix),
-                    std::istreambuf_iterator<char>(), '\n');
-                    */
-            auto tmp_width = 1;
-            while (getline(input_matrix, line) && !line.empty()) {
-                std::istringstream is_col(line);
-                is_col >> garbage;
-                if (garbage == "TOTAL_SAMPLES:") {
-                    break;
+                             const char *slp_filename = "", bool vcf = false) {
+        if (!vcf) {
+            std::ifstream input_matrix(filename);
+            if constexpr (!std::is_same_v<ra_t, panel_ra>) {
+                if (std::string(slp_filename).empty()) {
+                    throw SlpNotFoundException{};
                 }
-                tmp_width++;
             }
-            std::cout << "w: " << tmp_width << "\n";
-            this->width = tmp_width;
-            this->height = tmp_height;
-            input_matrix.clear();
-            input_matrix.seekg(0, std::ios::beg);
-            this->cols = std::vector<column_naive_ms>(tmp_width + 1);
-            std::vector<unsigned int> pref(tmp_height);
-            sdsl::int_vector<> div(tmp_height);
-            this->last_pref.resize(tmp_height);
-            for (unsigned int i = 0; i < tmp_height; i++) {
+            if constexpr (std::is_same_v<ra_t, panel_ra>) {
+                thr = true;
+            }
+            if (input_matrix.is_open()) {
+                this->is_thr_enabled = thr;
+                std::string header1;
+                std::string header2;
+                std::string line;
+                std::string garbage;
+                std::string new_column;
+
+                getline(input_matrix, header1);
+                getline(input_matrix, header2);
+                getline(input_matrix, line);
+
+                std::istringstream is(line);
+                is >> garbage >> garbage >> garbage >> garbage >> new_column;
+                unsigned int tmp_height = new_column.size();
+                std::cout << "h: " << tmp_height << "\n";
+                /*unsigned int tmp_width = std::count(
+                        std::istreambuf_iterator<char>(input_matrix),
+                        std::istreambuf_iterator<char>(), '\n');
+                        */
+                auto tmp_width = 1;
+                while (getline(input_matrix, line) && !line.empty()) {
+                    std::istringstream is_col(line);
+                    is_col >> garbage;
+                    if (garbage == "TOTAL_SAMPLES:") {
+                        break;
+                    }
+                    tmp_width++;
+                }
+                std::cout << "w: " << tmp_width << "\n";
+                this->width = tmp_width;
+                this->height = tmp_height;
+                input_matrix.clear();
+                input_matrix.seekg(0, std::ios::beg);
+                this->cols = std::vector<column_naive_ms>(tmp_width + 1);
+                std::vector<unsigned int> pref(tmp_height);
+                sdsl::int_vector<> div(tmp_height);
+                this->last_pref.resize(tmp_height);
+                for (unsigned int i = 0; i < tmp_height; i++) {
+                    pref[i] = i;
+                    div[i] = 0;
+                }
+                if constexpr (std::is_same_v<ra_t, panel_ra>) {
+                    this->panel = new ra_t(tmp_height, tmp_width);
+                } else if constexpr (std::is_same_v<ra_t, slp_panel_ra>) {
+                    this->panel = new ra_t(slp_filename, tmp_height, tmp_width);
+                } else {
+                    throw WrongRaTypeException{};
+                }
+                unsigned int count = 0;
+                std::string last_col;
+                getline(input_matrix, line);
+                getline(input_matrix, line);
+                std::string last_column;
+                while (getline(input_matrix, line) && !line.empty()) {
+                    std::cout << count << "\r";
+                    std::istringstream is_col(line);
+                    is_col >> garbage;
+                    if (garbage == "TOTAL_SAMPLES:") {
+                        break;
+                    }
+                    is_col >> garbage >> garbage >> garbage >> new_column;
+                    if (verbose) {
+                        std::cout << "\nnew_column " << count << "\n";
+                        std::cout << new_column << "\n"
+                                  << this->cols[count]
+                                  << "\n-------------------------------\n";
+                    }
+                    auto col =
+                        rlpbwt_naive_ms::build_column(new_column, pref, div);
+                    if constexpr (std::is_same_v<ra_t, panel_ra>) {
+                        for (unsigned int k = 0; k < new_column.size(); k++) {
+                            if (new_column[k] != '0') {
+                                this->panel->panel[count][k] = true;
+                            }
+                        }
+                    }
+                    this->cols[count] = col;
+                    rlpbwt_naive_ms::update(new_column, pref, div);
+                    last_col = new_column;
+                    count++;
+                }
+                for (unsigned int i = 0; i < pref.size(); i++) {
+                    this->last_pref[i] = pref[i];
+                }
+
+                auto col = rlpbwt_naive_ms::build_column(last_col, pref, div);
+                this->cols[count] = col;
+                sdsl::util::bit_compress(this->last_pref);
+                this->is_extended = false;
+                input_matrix.close();
+            } else {
+                throw FileNotFoundException{};
+            }
+        } else {
+            if constexpr (!std::is_same_v<ra_t, panel_ra>) {
+                if (std::string(slp_filename).empty()) {
+                    throw SlpNotFoundException{};
+                }
+            }
+            if constexpr (std::is_same_v<ra_t, panel_ra>) {
+                thr = true;
+            }
+            htsFile *fp = hts_open(filename, "rb");
+            std::cout << "Reading VCF file...\n";
+            if (fp == NULL) {
+                throw FileNotFoundException{};
+            }
+            this->is_thr_enabled = thr;
+
+            bcf_hdr_t *hdr = bcf_hdr_read(fp);
+            bcf1_t *rec = bcf_init();
+            this->height = bcf_hdr_nsamples(hdr) * 2;
+            this->width = 0;
+            while (bcf_read(fp, hdr, rec) >= 0) {
+                this->width++;
+            }
+            std::cout << "h: " << this->height << "\n";
+            std::cout << "w: " << this->width << "\n";
+            // bcf_hdr_destroy(hdr);
+            hts_close(fp);
+            // bcf_destroy(rec);
+            fp = hts_open(filename, "rb");
+            hdr = bcf_hdr_read(fp);
+            rec = bcf_init();
+
+            this->cols = std::vector<column_naive_ms>(this->width + 1);
+            std::vector<unsigned int> pref(this->height);
+            sdsl::int_vector<> div(this->height);
+            this->last_pref.resize(this->height);
+            for (unsigned int i = 0; i < this->height; i++) {
                 pref[i] = i;
                 div[i] = 0;
             }
             if constexpr (std::is_same_v<ra_t, panel_ra>) {
-                this->panel = new ra_t(tmp_height, tmp_width);
+                this->panel = new ra_t(this->height, this->width);
             } else if constexpr (std::is_same_v<ra_t, slp_panel_ra>) {
-                this->panel = new ra_t(slp_filename, tmp_height, tmp_width);
+                this->panel = new ra_t(slp_filename, this->height, this->width);
             } else {
                 throw WrongRaTypeException{};
             }
             unsigned int count = 0;
             std::string last_col;
-            getline(input_matrix, line);
-            getline(input_matrix, line);
             std::string last_column;
-            while (getline(input_matrix, line) && !line.empty()) {
+            std::string new_column;
+            // iterate each vcf record
+            while (bcf_read(fp, hdr, rec) >= 0) {
                 std::cout << count << "\r";
-                std::istringstream is_col(line);
-                is_col >> garbage;
-                if (garbage == "TOTAL_SAMPLES:") {
-                    break;
+                new_column = "";
+                bcf_unpack(rec, BCF_UN_ALL);
+                // read SAMPLE
+                int32_t *gt_arr = NULL, ngt_arr = 0;
+                int i, j, ngt, nsmpl = bcf_hdr_nsamples(hdr);
+                ngt = bcf_get_genotypes(hdr, rec, &gt_arr, &ngt_arr);
+                int max_ploidy = ngt / nsmpl;
+                for (i = 0; i < nsmpl; i++) {
+                    int32_t *ptr = gt_arr + i * max_ploidy;
+                    for (j = 0; j < max_ploidy; j++) {
+                        // if true, the sample has smaller ploidy
+                        if (ptr[j] == bcf_int32_vector_end) break;
+
+                        // missing allele
+                        if (bcf_gt_is_missing(ptr[j])) exit(-1);
+
+                        // the VCF 0-based allele index
+                        int allele_index = bcf_gt_allele(ptr[j]);
+                        new_column += std::to_string(allele_index);
+                    }
                 }
-                is_col >> garbage >> garbage >> garbage >> new_column;
-                if (verbose) {
-                    std::cout << "\nnew_column " << count << "\n";
-                    std::cout << new_column << "\n" << this->cols[count]
-                              << "\n-------------------------------\n";
-                }
+                free(gt_arr);
                 auto col = rlpbwt_naive_ms::build_column(new_column, pref, div);
                 if constexpr (std::is_same_v<ra_t, panel_ra>) {
                     for (unsigned int k = 0; k < new_column.size(); k++) {
@@ -745,6 +840,7 @@ public:
                     }
                 }
                 this->cols[count] = col;
+
                 rlpbwt_naive_ms::update(new_column, pref, div);
                 last_col = new_column;
                 count++;
@@ -752,21 +848,21 @@ public:
             for (unsigned int i = 0; i < pref.size(); i++) {
                 this->last_pref[i] = pref[i];
             }
-
             auto col = rlpbwt_naive_ms::build_column(last_col, pref, div);
             this->cols[count] = col;
             sdsl::util::bit_compress(this->last_pref);
             this->is_extended = false;
-            input_matrix.close();
-        } else {
-            throw FileNotFoundException{};
+
+            bcf_hdr_destroy(hdr);
+            hts_close(fp);
+            bcf_destroy(rec);
         }
     }
 
     /**
-    * @brief function to extend the RLPBWT with the phi/phi_inv structure
-    * @param verbose bool for extra prints
-    */
+     * @brief function to extend the RLPBWT with the phi/phi_inv structure
+     * @param verbose bool for extra prints
+     */
     void extend(bool verbose = false) {
         if (!this->is_extended) {
             this->phi = new phi_support<ra_t>(this->cols, this->panel,
@@ -795,9 +891,9 @@ public:
      * @return matching statistics matches
      * @attention this function is enabled iff the panel is an SLP
      */
-    template<typename U = ra_t>
+    template <typename U = ra_t>
     std::enable_if_t<sizeof(U) && (!std::is_same<ra_t, panel_ra>::value),
-            ms_matches>
+                     ms_matches>
     match_lce(const std::string &query, bool extend_matches = false,
               bool verbose = false) {
         // compute the match iff |query| is equal to the width of the panel
@@ -812,7 +908,7 @@ public:
         }
 
         // initialize matching statistics
-        //ms ms(query.size());
+        // ms ms(query.size());
         unsigned int p = 0;
         unsigned int l = 0;
         unsigned int prep = 0;
@@ -821,24 +917,22 @@ public:
         // algorithm begin from the last row of the first column
         // so we obtain the prefix array value (from the samples), the run index
         // and the relative symbol
-        auto curr_pos = static_cast<unsigned int>(this->cols[0].sample_end[
-                this->cols[0].sample_end.size() - 1]);
+        auto curr_pos = static_cast<unsigned int>(
+            this->cols[0].sample_end[this->cols[0].sample_end.size() - 1]);
         auto curr_index = curr_pos;
         unsigned int curr_run = index_to_run(curr_index, 0);
         char symbol = get_next_char(this->cols[0].zero_first, curr_run);
-
 
         // initialize struct for matches
         ms_matches ms_matches;
 
         // iterate over every query's symbol/column index
         for (unsigned int i = 0; i < query.size(); i++) {
-            //std::cout << "processed " << i << "\r";
+            // std::cout << "processed " << i << "\r";
             if (verbose) {
                 std::cout << "at " << i << ": " << curr_run << "\n";
                 std::cout << curr_index << " " << curr_run << " " << curr_pos
-                          << " "
-                          << symbol << "\n";
+                          << " " << symbol << "\n";
             }
             // a lot of cases:
             // - if the pointer in the RLPBWT match the symbol in the query
@@ -854,7 +948,7 @@ public:
                     std::cout << "match:\n";
                 }
                 // report in matching statistics row/len vector
-                //ms.row[i] = curr_pos;
+                // ms.row[i] = curr_pos;
                 p = curr_pos;
                 /*if (i != 0 && ms.row[i - 1] == ms.row[i]) {
                     ms.len[i] = ms.len[i - 1] + 1;
@@ -871,13 +965,11 @@ public:
                 if (i != query.size() - 1) {
                     curr_index = lf(i, curr_index, query[i]);
                     curr_run = index_to_run(curr_index, i + 1);
-                    symbol = get_next_char(this->cols[i + 1].zero_first,
-                                           curr_run);
+                    symbol =
+                        get_next_char(this->cols[i + 1].zero_first, curr_run);
                     if (verbose) {
                         std::cout << "new: " << curr_index << " " << curr_run
-                                  << " "
-                                  << curr_pos << " "
-                                  << symbol << "\n";
+                                  << " " << curr_pos << " " << symbol << "\n";
                     }
                 }
             } else {
@@ -887,7 +979,7 @@ public:
                     }
                     // report in matching statistics row vector using panel
                     // height as sentinel
-                    //ms.row[i] = this->panel->h;
+                    // ms.row[i] = this->panel->h;
                     p = this->panel->h;
                     // report in matching statistics len vector
                     l = 0;
@@ -895,9 +987,9 @@ public:
                     // update index, run, symbol (as explained before) if we are
                     // not at the end
                     if (i != query.size() - 1) {
-                        curr_pos = static_cast<unsigned int>(this->cols[i +
-                                                                        1].sample_end[
-                                this->cols[i + 1].sample_end.size() - 1]);
+                        curr_pos = static_cast<unsigned int>(
+                            this->cols[i + 1].sample_end
+                                [this->cols[i + 1].sample_end.size() - 1]);
                         curr_index = this->panel->h - 1;
 
                         curr_run = index_to_run(curr_index, i + 1);
@@ -906,9 +998,7 @@ public:
 
                         if (verbose) {
                             std::cout << "update: " << curr_index << " "
-                                      << curr_pos
-                                      << " "
-                                      << symbol << "\n";
+                                      << curr_pos << " " << symbol << "\n";
                         }
                     }
                 } else {
@@ -917,8 +1007,8 @@ public:
                     if (curr_run == this->cols[i].sample_beg.size() - 1) {
                         // select symbol
                         curr_index = this->cols[i].p[curr_run] - 1;
-                        auto prev_pos = static_cast<unsigned int>(this->cols[i].sample_end[
-                                curr_run - 1]);
+                        auto prev_pos = static_cast<unsigned int>(
+                            this->cols[i].sample_end[curr_run - 1]);
                         if (verbose) {
                             std::cout << "end_run with " << curr_pos << ", "
                                       << prev_pos << "\n";
@@ -940,9 +1030,7 @@ public:
                         curr_pos = prev_pos;
                         if (verbose) {
                             std::cout << "update: " << curr_index << " "
-                                      << curr_pos
-                                      << " "
-                                      << symbol << "\n";
+                                      << curr_pos << " " << symbol << "\n";
                         }
                         // update index, run, symbol if we are not at the end
                         if (i != query.size() - 1) {
@@ -952,9 +1040,8 @@ public:
                                                    curr_run);
                             if (verbose) {
                                 std::cout << "new: " << curr_index << " "
-                                          << curr_run
-                                          << " "
-                                          << curr_pos << " " << symbol << "\n";
+                                          << curr_run << " " << curr_pos << " "
+                                          << symbol << "\n";
                             }
                         }
                     } else if (curr_run == 0) {
@@ -963,8 +1050,8 @@ public:
 
                         // select index
                         curr_index = this->cols[i].p[curr_run + 1];
-                        auto next_pos = static_cast<unsigned int>(this->cols[i].sample_beg[
-                                curr_run + 1]);
+                        auto next_pos = static_cast<unsigned int>(
+                            this->cols[i].sample_beg[curr_run + 1]);
                         if (verbose) {
                             std::cout << "first_run with " << curr_pos << ", "
                                       << next_pos << "\n";
@@ -986,9 +1073,7 @@ public:
                         curr_pos = next_pos;
                         if (verbose) {
                             std::cout << "update: " << curr_index << " "
-                                      << curr_pos
-                                      << " "
-                                      << symbol << "\n";
+                                      << curr_pos << " " << symbol << "\n";
                         }
                         // update index, run, symbol if we are not at the end
                         if (i != query.size() - 1) {
@@ -998,9 +1083,8 @@ public:
                                                    curr_run);
                             if (verbose) {
                                 std::cout << "new: " << curr_index << " "
-                                          << curr_run
-                                          << " "
-                                          << curr_pos << " " << symbol << "\n";
+                                          << curr_run << " " << curr_pos << " "
+                                          << symbol << "\n";
                             }
                         }
                     } else {
@@ -1009,19 +1093,18 @@ public:
 
                         // select the two indices of the previous/next correct
                         // symbol
-                        auto prev_pos = static_cast<unsigned int>(this->cols[i].sample_end[
-                                curr_run - 1]);
-                        auto next_pos = static_cast<unsigned int>(this->cols[i].sample_beg[
-                                curr_run + 1]);
+                        auto prev_pos = static_cast<unsigned int>(
+                            this->cols[i].sample_end[curr_run - 1]);
+                        auto next_pos = static_cast<unsigned int>(
+                            this->cols[i].sample_beg[curr_run + 1]);
                         if (verbose) {
-                            std::cout << "curr: " << curr_pos << ", prev: "
-                                      << prev_pos << ", next: " << next_pos
-                                      << " -> ";
+                            std::cout << "curr: " << curr_pos
+                                      << ", prev: " << prev_pos
+                                      << ", next: " << next_pos << " -> ";
                         }
                         // compute lce
                         auto lce = this->lce_pair(i, curr_pos, prev_pos,
-                                                  next_pos,
-                                                  false);
+                                                  next_pos, false);
                         if (verbose) {
                             std::cout << lce.first << ", " << lce.second
                                       << "\n";
@@ -1047,14 +1130,11 @@ public:
                                 curr_index = lf(i, curr_index, query[i]);
                                 curr_run = index_to_run(curr_index, i + 1);
                                 symbol = get_next_char(
-                                        this->cols[i + 1].zero_first,
-                                        curr_run);
+                                    this->cols[i + 1].zero_first, curr_run);
                                 if (verbose) {
                                     std::cout << "new: " << curr_index << " "
-                                              << curr_run
-                                              << " "
-                                              << curr_pos << " " << symbol
-                                              << "\n";
+                                              << curr_run << " " << curr_pos
+                                              << " " << symbol << "\n";
                                 }
                             }
                         } else {
@@ -1074,14 +1154,11 @@ public:
                                 curr_index = lf(i, curr_index, query[i]);
                                 curr_run = index_to_run(curr_index, i + 1);
                                 symbol = get_next_char(
-                                        this->cols[i + 1].zero_first,
-                                        curr_run);
+                                    this->cols[i + 1].zero_first, curr_run);
                                 if (verbose) {
                                     std::cout << "new: " << curr_index << " "
-                                              << curr_run
-                                              << " "
-                                              << curr_pos << " " << symbol
-                                              << "\n";
+                                              << curr_run << " " << curr_pos
+                                              << " " << symbol << "\n";
                                 }
                             }
                         }
@@ -1111,18 +1188,17 @@ public:
     }
 
     /**
-    * @brief function to compute matching statistics matches with a given query
-    * using thresholds
-    * @param query haplotype query as std::string
-    * @param extend_matches bool to check if extend matching statistics matches
-    * with rows
-    * @param verbose bool for extra prints
-    * @return matching statistics matches
-    * @attention use this function is enabled iff thresholds are calculated
-    */
-    ms_matches
-    match_thr(const std::string &query, bool extend_matches = false,
-              bool verbose = false) {
+     * @brief function to compute matching statistics matches with a given query
+     * using thresholds
+     * @param query haplotype query as std::string
+     * @param extend_matches bool to check if extend matching statistics matches
+     * with rows
+     * @param verbose bool for extra prints
+     * @return matching statistics matches
+     * @attention use this function is enabled iff thresholds are calculated
+     */
+    ms_matches match_thr(const std::string &query, bool extend_matches = false,
+                         bool verbose = false) {
         // TODO fix some bugs using panel_ra
         // if RLPBWT is built without thresholds throw relative exception
         if (!this->is_thr_enabled) {
@@ -1143,21 +1219,20 @@ public:
         // algorithm begin from the last row of the first column
         // so we obtain the prefix array value (from the samples), the run index
         // and the relative symbol
-        auto curr_pos = static_cast<unsigned int>(this->cols[0].sample_end[
-                this->cols[0].sample_end.size() - 1]);
+        auto curr_pos = static_cast<unsigned int>(
+            this->cols[0].sample_end[this->cols[0].sample_end.size() - 1]);
         auto curr_index = curr_pos;
         unsigned int curr_run = index_to_run(curr_index, 0);
         char symbol = get_next_char(this->cols[0].zero_first, curr_run);
         // iterate over every query's symbol/column index
         // iterate over every query's symbol/column index
         for (unsigned int i = 0; i < query.size(); i++) {
-            //std::cout << "processed " << i << "\r";
+            // std::cout << "processed " << i << "\r";
             if (verbose) {
                 std::cout << "at " << i << ": " << curr_run << " "
                           << this->cols[i].t[curr_run] << "\n";
                 std::cout << curr_index << " " << curr_run << " " << curr_pos
-                          << " "
-                          << symbol << "\n";
+                          << " " << symbol << "\n";
             }
             // a lot of cases:
             // - if the pointer in the RLPBWT match the symbol in the query
@@ -1178,13 +1253,11 @@ public:
                 if (i != query.size() - 1) {
                     curr_index = lf(i, curr_index, query[i]);
                     curr_run = index_to_run(curr_index, i + 1);
-                    symbol = get_next_char(this->cols[i + 1].zero_first,
-                                           curr_run);
+                    symbol =
+                        get_next_char(this->cols[i + 1].zero_first, curr_run);
                     if (verbose) {
                         std::cout << "new: " << curr_index << " " << curr_run
-                                  << " "
-                                  << curr_pos << " "
-                                  << symbol << "\n";
+                                  << " " << curr_pos << " " << symbol << "\n";
                     }
                 }
             } else {
@@ -1201,18 +1274,16 @@ public:
                     // update index, run, symbol (as explained before) if we are
                     // not at the end
                     if (i != query.size() - 1) {
-                        curr_pos = static_cast<unsigned int>(this->cols[i +
-                                                                        1].sample_end[
-                                this->cols[i + 1].sample_end.size() - 1]);
+                        curr_pos = static_cast<unsigned int>(
+                            this->cols[i + 1].sample_end
+                                [this->cols[i + 1].sample_end.size() - 1]);
                         curr_index = this->panel->h - 1;
                         curr_run = index_to_run(curr_index, i + 1);
                         symbol = get_next_char(this->cols[i + 1].zero_first,
                                                curr_run);
                         if (verbose) {
                             std::cout << "update: " << curr_index << " "
-                                      << curr_pos
-                                      << " "
-                                      << symbol << "\n";
+                                      << curr_pos << " " << symbol << "\n";
                         }
                     }
                 } else if (curr_run != 0 &&
@@ -1224,12 +1295,11 @@ public:
                         std::cout << "mismatch_up: ";
                     }
                     curr_index = this->cols[i].p[curr_run] - 1;
-                    curr_pos = static_cast<unsigned int>(this->cols[i].sample_end[
-                            curr_run - 1]);
+                    curr_pos = static_cast<unsigned int>(
+                        this->cols[i].sample_end[curr_run - 1]);
                     if (verbose) {
                         std::cout << "update: " << curr_index << " " << curr_pos
-                                  << " "
-                                  << symbol << "\n";
+                                  << " " << symbol << "\n";
                     }
                     // report in matching statistics row vector
                     ms.row[i] = curr_pos;
@@ -1241,9 +1311,8 @@ public:
                                                curr_run);
                         if (verbose) {
                             std::cout << "new: " << curr_index << " "
-                                      << curr_run
-                                      << " "
-                                      << curr_pos << " " << symbol << "\n";
+                                      << curr_run << " " << curr_pos << " "
+                                      << symbol << "\n";
                         }
                     }
                 } else {
@@ -1252,15 +1321,14 @@ public:
                         std::cout << "mismatch_down: ";
                     }
                     curr_index = this->cols[i].p[curr_run + 1];
-                    curr_pos = static_cast<unsigned int>(this->cols[i].sample_beg[
-                            curr_run + 1]);
+                    curr_pos = static_cast<unsigned int>(
+                        this->cols[i].sample_beg[curr_run + 1]);
 
                     // report in matching statistics row vector
                     ms.row[i] = curr_pos;
                     if (verbose) {
                         std::cout << "update: " << curr_index << " " << curr_pos
-                                  << " "
-                                  << symbol << "\n";
+                                  << " " << symbol << "\n";
                     }
                     // update index, run, symbol if we are not at the end
                     if (i != query.size() - 1) {
@@ -1270,18 +1338,17 @@ public:
                                                curr_run);
                         if (verbose) {
                             std::cout << "new: " << curr_index << " "
-                                      << curr_run
-                                      << " "
-                                      << curr_pos << " " << symbol << "\n";
+                                      << curr_run << " " << curr_pos << " "
+                                      << symbol << "\n";
                         }
                     }
                 }
             }
         }
-        
+
         // compute the len vector using random access on the panel, proceeding
         // from left to right
-	for (unsigned int i = 0; i < ms.len.size(); i++) {
+        for (unsigned int i = 0; i < ms.len.size(); i++) {
             if (ms.row[i] == this->panel->h) {
                 // if we have the sentinel in row vector than the length is 0
                 ms.len[i] = 0;
@@ -1289,11 +1356,11 @@ public:
                        ms.len[i - 1] != 0) {
                 ms.len[i] = ms.len[i - 1] + 1;
             } else {
-                int tmp_index = (int) i;
+                int tmp_index = (int)i;
                 unsigned int len = 0;
                 while (tmp_index >= 0 &&
-                       query[tmp_index] == this->panel->getElem(ms.row[i],
-                                                                tmp_index)) {
+                       query[tmp_index] ==
+                           this->panel->getElem(ms.row[i], tmp_index)) {
                     tmp_index--;
                     len++;
                 }
@@ -1327,17 +1394,16 @@ public:
         return ms_matches;
     }
 
-/**
- * @brief function to compute queries with lce from a tsv file and
- * output them on a file
- * @param filename queries file
- * @param out output file
- * @param extend_matches bool to extende mathc with rows values
- * @param verbose bool for extra prints
- */
-    template<typename U = ra_t>
-    std::enable_if_t<sizeof(U) && (!std::is_same<ra_t, panel_ra>::value),
-            void>
+    /**
+     * @brief function to compute queries with lce from a tsv file and
+     * output them on a file
+     * @param filename queries file
+     * @param out output file
+     * @param extend_matches bool to extende mathc with rows values
+     * @param verbose bool for extra prints
+     */
+    template <typename U = ra_t>
+    std::enable_if_t<sizeof(U) && (!std::is_same<ra_t, panel_ra>::value), void>
     match_tsv_lce(const char *filename, const char *out,
                   bool extend_matches = false, bool verbose = false) {
         std::ifstream input_matrix(filename);
@@ -1393,20 +1459,18 @@ public:
         }
     }
 
-/**
- * @brief function to compute queries with lce from a transposed tsv
- * file and output them on a file
- * @param filename queries file
- * @param out output file
- * @param extend_matches bool to extende mathc with rows values
- * @param verbose bool for extra prints
- */
-    template<typename U = ra_t>
-    std::enable_if_t<sizeof(U) && (!std::is_same<ra_t, panel_ra>::value),
-            void>
+    /**
+     * @brief function to compute queries with lce from a transposed tsv
+     * file and output them on a file
+     * @param filename queries file
+     * @param out output file
+     * @param extend_matches bool to extende mathc with rows values
+     * @param verbose bool for extra prints
+     */
+    template <typename U = ra_t>
+    std::enable_if_t<sizeof(U) && (!std::is_same<ra_t, panel_ra>::value), void>
     match_tsv_tr_lce(const char *filename, const char *out,
-                     bool extend_matches = false,
-                     bool verbose = false) {
+                     bool extend_matches = false, bool verbose = false) {
         std::ifstream input_matrix(filename);
         std::ofstream out_match(out);
         if (input_matrix.is_open()) {
@@ -1434,10 +1498,10 @@ public:
                     if (verbose) {
                         std::cout << i << ": \n";
                     }
-                    for (auto &j: queries_panel) {
+                    for (auto &j : queries_panel) {
                         query.push_back(j[i]);
                     }
-                    //std::cout << i << "\n";
+                    // std::cout << i << "\n";
                     /*if (i == 167) {
                         verbose = true;
                     }*/
@@ -1474,33 +1538,156 @@ public:
         }
     }
 
-    template<typename U = ra_t>
-    std::enable_if_t<sizeof(U) && (!std::is_same<ra_t, panel_ra>::value),
-            void>
+    template <typename U = ra_t>
+    std::enable_if_t<sizeof(U) && (!std::is_same<ra_t, panel_ra>::value), void>
     match_tsv_conc_lce(const char *filename, const char *out,
-                       bool extend_matches = false,
-                       bool verbose = false) {
-        std::ifstream input_matrix(filename);
-        std::ofstream out_match(out);
-        if (input_matrix.is_open()) {
-            std::string header1;
-            std::string header2;
-            std::string line;
-            std::string garbage;
-            std::string new_column;
-            getline(input_matrix, line);
-            getline(input_matrix, line);
-            std::vector<std::string> queries_panel;
-            while (getline(input_matrix, line) && !line.empty()) {
-                std::istringstream is_col(line);
-                is_col >> garbage;
-                if (garbage == "TOTAL_SAMPLES:") {
-                    break;
+                       bool extend_matches = false, bool verbose = false,
+                       bool vcf = false) {
+        if (!vcf) {
+            std::ifstream input_matrix(filename);
+            std::ofstream out_match(out);
+            if (input_matrix.is_open()) {
+                std::string header1;
+                std::string header2;
+                std::string line;
+                std::string garbage;
+                std::string new_column;
+                getline(input_matrix, line);
+                getline(input_matrix, line);
+                std::vector<std::string> queries_panel;
+                while (getline(input_matrix, line) && !line.empty()) {
+                    std::istringstream is_col(line);
+                    is_col >> garbage;
+                    if (garbage == "TOTAL_SAMPLES:") {
+                        break;
+                    }
+                    is_col >> garbage >> garbage >> garbage >> new_column;
+                    queries_panel.push_back(new_column);
                 }
-                is_col >> garbage >> garbage >> garbage >> new_column;
+                input_matrix.close();
+                std::string query;
+                std::vector<std::string> queries;
+                if (out_match.is_open()) {
+                    for (unsigned int i = 0; i < queries_panel[0].size(); i++) {
+                        if (verbose) {
+                            std::cout << i << ": \n";
+                        }
+                        for (auto &j : queries_panel) {
+                            query.push_back(j[i]);
+                        }
+                        queries.push_back(query);
+                        query.clear();
+                    }
+
+                    auto n_queries = queries.size();
+                    std::vector<ms_matches> matches_vec(n_queries);
+#pragma omp parallel for default(none) \
+    shared(queries, matches_vec, n_queries, extend_matches, verbose)
+                    for (unsigned int i = 0; i < n_queries; i++) {
+                        // std::cout << i << "\n";
+                        matches_vec[i] = this->match_lce(
+                            queries[i], extend_matches, verbose);
+                    }
+
+                    if (extend_matches) {
+                        for (unsigned int i = 0; i < queries.size(); i++) {
+                            if (!matches_vec[i].haplos.empty()) {
+                                for (unsigned int j = 0;
+                                     j < matches_vec[i].basic_matches.size();
+                                     j++) {
+                                    auto len = std::get<1>(
+                                        matches_vec[i].basic_matches[j]);
+                                    auto end = std::get<2>(
+                                        matches_vec[i].basic_matches[j]);
+                                    for (unsigned int k = 0;
+                                         k < matches_vec[i].haplos[j].size();
+                                         k++) {
+                                        out_match << "MATCH\t" << i << "\t"
+                                                  << matches_vec[i].haplos[j][k]
+                                                  << "\t" << end - (len - 1)
+                                                  << "\t" << end << "\t" << len
+                                                  << "\n";
+                                    }
+                                }
+                            }
+                        }
+                    } else {
+                        for (unsigned int i = 0; i < queries.size(); i++) {
+                            for (unsigned int j = 0;
+                                 j < matches_vec[i].basic_matches.size(); j++) {
+                                auto len = std::get<1>(
+                                    matches_vec[i].basic_matches[j]);
+                                auto pos = std::get<0>(
+                                    matches_vec[i].basic_matches[j]);
+                                auto end = std::get<2>(
+                                    matches_vec[i].basic_matches[j]);
+                                out_match << "MATCH\t" << i << "\t" << pos
+                                          << "\t" << end - (len - 1) << "\t"
+                                          << end << "\t" << len << "\n";
+                            }
+                        }
+                        /*for (unsigned int i = 0; i < queries.size(); i++) {
+                            if (verbose) {
+                                std::cout << i << ": ";
+                            }
+                            out_match << i << ": ";
+
+                            if (verbose) {
+                                std::cout << matches_vec[i];
+                            }
+                            out_match << matches_vec[i];
+
+                            if (verbose) {
+                                std::cout << "\n";
+                            }
+                            out_match << "\n";
+                        }*/
+                    }
+                    out_match.close();
+                } else {
+                    throw FileNotFoundException{};
+                }
+
+            } else {
+                throw FileNotFoundException{};
+            }
+        } else {
+            std::ofstream out_match(out);
+            htsFile *fp = hts_open(filename, "rb");
+            std::cout << "Reading VCF file...\n";
+
+            bcf_hdr_t *hdr = bcf_hdr_read(fp);
+            bcf1_t *rec = bcf_init();
+            std::vector<std::string> queries_panel;
+            std::string new_column;
+            while (bcf_read(fp, hdr, rec) >= 0) {
+                new_column = "";
+                bcf_unpack(rec, BCF_UN_ALL);
+                // read SAMPLE
+                int32_t *gt_arr = NULL, ngt_arr = 0;
+                int i, j, ngt, nsmpl = bcf_hdr_nsamples(hdr);
+                ngt = bcf_get_genotypes(hdr, rec, &gt_arr, &ngt_arr);
+                int max_ploidy = ngt / nsmpl;
+                for (i = 0; i < nsmpl; i++) {
+                    int32_t *ptr = gt_arr + i * max_ploidy;
+                    for (j = 0; j < max_ploidy; j++) {
+                        // if true, the sample has smaller ploidy
+                        if (ptr[j] == bcf_int32_vector_end) break;
+
+                        // missing allele
+                        if (bcf_gt_is_missing(ptr[j])) exit(-1);
+
+                        // the VCF 0-based allele index
+                        int allele_index = bcf_gt_allele(ptr[j]);
+                        new_column += std::to_string(allele_index);
+                    }
+                }
+                free(gt_arr);
                 queries_panel.push_back(new_column);
             }
-            input_matrix.close();
+            bcf_hdr_destroy(hdr);
+            hts_close(fp);
+            bcf_destroy(rec);
             std::string query;
             std::vector<std::string> queries;
             if (out_match.is_open()) {
@@ -1508,7 +1695,7 @@ public:
                     if (verbose) {
                         std::cout << i << ": \n";
                     }
-                    for (auto &j: queries_panel) {
+                    for (auto &j : queries_panel) {
                         query.push_back(j[i]);
                     }
                     queries.push_back(query);
@@ -1517,11 +1704,11 @@ public:
 
                 auto n_queries = queries.size();
                 std::vector<ms_matches> matches_vec(n_queries);
-#pragma omp parallel for default(none) shared(queries, matches_vec, n_queries, extend_matches, verbose)
+#pragma omp parallel for default(none) \
+    shared(queries, matches_vec, n_queries, extend_matches, verbose)
                 for (unsigned int i = 0; i < n_queries; i++) {
-                    //std::cout << i << "\n";
-                    matches_vec[i] = this->match_lce(queries[i], extend_matches,
-                                                     verbose);
+                    matches_vec[i] =
+                        this->match_thr(queries[i], extend_matches, verbose);
                 }
 
                 if (extend_matches) {
@@ -1530,16 +1717,15 @@ public:
                             for (unsigned int j = 0;
                                  j < matches_vec[i].basic_matches.size(); j++) {
                                 auto len = std::get<1>(
-                                        matches_vec[i].basic_matches[j]);
+                                    matches_vec[i].basic_matches[j]);
                                 auto end = std::get<2>(
-                                        matches_vec[i].basic_matches[j]);
+                                    matches_vec[i].basic_matches[j]);
                                 for (unsigned int k = 0;
                                      k < matches_vec[i].haplos[j].size(); k++) {
-                                    out_match << "MATCH\t" << i << "\t" <<
-                                              matches_vec[i].haplos[j][k]
-                                              << "\t"
-                                              << end - (len - 1) << "\t" << end
-                                              << "\t" << len << "\n";
+                                    out_match << "MATCH\t" << i << "\t"
+                                              << matches_vec[i].haplos[j][k]
+                                              << "\t" << end - (len - 1) << "\t"
+                                              << end << "\t" << len << "\n";
                                 }
                             }
                         }
@@ -1548,57 +1734,35 @@ public:
                     for (unsigned int i = 0; i < queries.size(); i++) {
                         for (unsigned int j = 0;
                              j < matches_vec[i].basic_matches.size(); j++) {
-                            auto len = std::get<1>(
-                                    matches_vec[i].basic_matches[j]);
-                            auto pos = std::get<0>(
-                                    matches_vec[i].basic_matches[j]);
-                            auto end = std::get<2>(
-                                    matches_vec[i].basic_matches[j]);
+                            auto len =
+                                std::get<1>(matches_vec[i].basic_matches[j]);
+                            auto pos =
+                                std::get<0>(matches_vec[i].basic_matches[j]);
+                            auto end =
+                                std::get<2>(matches_vec[i].basic_matches[j]);
                             out_match << "MATCH\t" << i << "\t" << pos << "\t"
-                                      << end - (len - 1) << "\t" << end
-                                      << "\t" << len << "\n";
-
-
+                                      << end - (len - 1) << "\t" << end << "\t"
+                                      << len << "\n";
                         }
                     }
-                    /*for (unsigned int i = 0; i < queries.size(); i++) {
-                        if (verbose) {
-                            std::cout << i << ": ";
-                        }
-                        out_match << i << ": ";
-
-                        if (verbose) {
-                            std::cout << matches_vec[i];
-                        }
-                        out_match << matches_vec[i];
-
-                        if (verbose) {
-                            std::cout << "\n";
-                        }
-                        out_match << "\n";
-                    }*/
                 }
                 out_match.close();
             } else {
                 throw FileNotFoundException{};
             }
-
-        } else {
-            throw FileNotFoundException{};
         }
     }
 
-/**
- * @brief function to compute queries with thresholds  from a tsv file and
- * output them on a file
- * @param filename queries file
- * @param out output file
- * @param extend_matches bool to extende mathc with rows values
- * @param verbose bool for extra prints
- */
-    void
-    match_tsv_thr(const char *filename, const char *out,
-                  bool extend_matches = false, bool verbose = false) {
+    /**
+     * @brief function to compute queries with thresholds  from a tsv file and
+     * output them on a file
+     * @param filename queries file
+     * @param out output file
+     * @param extend_matches bool to extende mathc with rows values
+     * @param verbose bool for extra prints
+     */
+    void match_tsv_thr(const char *filename, const char *out,
+                       bool extend_matches = false, bool verbose = false) {
         std::ifstream input_matrix(filename);
         std::ofstream out_match(out);
         if (input_matrix.is_open()) {
@@ -1652,18 +1816,16 @@ public:
         }
     }
 
-/**
- * @brief function to compute queries with thresholds from a transposed tsv
- * file and output them on a file
- * @param filename queries file
- * @param out output file
- * @param extend_matches bool to extende mathc with rows values
- * @param verbose bool for extra prints
- */
-    void
-    match_tsv_tr_thr(const char *filename, const char *out,
-                     bool extend_matches = false,
-                     bool verbose = false) {
+    /**
+     * @brief function to compute queries with thresholds from a transposed tsv
+     * file and output them on a file
+     * @param filename queries file
+     * @param out output file
+     * @param extend_matches bool to extende mathc with rows values
+     * @param verbose bool for extra prints
+     */
+    void match_tsv_tr_thr(const char *filename, const char *out,
+                          bool extend_matches = false, bool verbose = false) {
         std::ifstream input_matrix(filename);
         std::ofstream out_match(out);
         if (input_matrix.is_open()) {
@@ -1688,7 +1850,7 @@ public:
             std::string query;
             if (out_match.is_open()) {
                 for (unsigned int i = 0; i < queries_panel[0].size(); i++) {
-                    for (auto &j: queries_panel) {
+                    for (auto &j : queries_panel) {
                         query.push_back(j[i]);
                     }
                     /*if (i == 167) {
@@ -1729,31 +1891,146 @@ public:
         }
     }
 
-    void
-    match_tsv_conc_thr(const char *filename, const char *out,
-                       bool extend_matches = false,
-                       bool verbose = false) {
-        std::ifstream input_matrix(filename);
-        std::ofstream out_match(out);
-        if (input_matrix.is_open()) {
-            std::string header1;
-            std::string header2;
-            std::string line;
-            std::string garbage;
-            std::string new_column;
-            getline(input_matrix, line);
-            getline(input_matrix, line);
-            std::vector<std::string> queries_panel;
-            while (getline(input_matrix, line) && !line.empty()) {
-                std::istringstream is_col(line);
-                is_col >> garbage;
-                if (garbage == "TOTAL_SAMPLES:") {
-                    break;
+    /**
+     * @brief function to compute queries with thresholds from a transposed tsv or vcf
+     * file and output them on a file
+     * @param filename queries file
+     * @param out output file
+     * @param extend_matches bool to extende mathc with rows values
+     * @param verbose bool for extra prints
+     * @param vcf bool to indicate if the file is a vcf
+     */
+    void match_tsv_conc_thr(const char *filename, const char *out,
+                            bool extend_matches = false, bool verbose = false,
+                            bool vcf = false) {
+        if (!vcf) {
+            std::ifstream input_matrix(filename);
+            std::ofstream out_match(out);
+            if (input_matrix.is_open()) {
+                std::string header1;
+                std::string header2;
+                std::string line;
+                std::string garbage;
+                std::string new_column;
+                getline(input_matrix, line);
+                getline(input_matrix, line);
+                std::vector<std::string> queries_panel;
+                while (getline(input_matrix, line) && !line.empty()) {
+                    std::istringstream is_col(line);
+                    is_col >> garbage;
+                    if (garbage == "TOTAL_SAMPLES:") {
+                        break;
+                    }
+                    is_col >> garbage >> garbage >> garbage >> new_column;
+                    queries_panel.push_back(new_column);
                 }
-                is_col >> garbage >> garbage >> garbage >> new_column;
+                input_matrix.close();
+                std::string query;
+                std::vector<std::string> queries;
+                if (out_match.is_open()) {
+                    for (unsigned int i = 0; i < queries_panel[0].size(); i++) {
+                        if (verbose) {
+                            std::cout << i << ": \n";
+                        }
+                        for (auto &j : queries_panel) {
+                            query.push_back(j[i]);
+                        }
+                        queries.push_back(query);
+                        query.clear();
+                    }
+
+                    auto n_queries = queries.size();
+                    std::vector<ms_matches> matches_vec(n_queries);
+#pragma omp parallel for default(none) \
+    shared(queries, matches_vec, n_queries, extend_matches, verbose)
+                    for (unsigned int i = 0; i < n_queries; i++) {
+                        // std::cout << i << "\n";
+                        matches_vec[i] = this->match_thr(
+                            queries[i], extend_matches, verbose);
+                    }
+                    if (extend_matches) {
+                        for (unsigned int i = 0; i < queries.size(); i++) {
+                            if (!matches_vec[i].haplos.empty()) {
+                                for (unsigned int j = 0;
+                                     j < matches_vec[i].basic_matches.size();
+                                     j++) {
+                                    auto len = std::get<1>(
+                                        matches_vec[i].basic_matches[j]);
+                                    auto end = std::get<2>(
+                                        matches_vec[i].basic_matches[j]);
+                                    for (unsigned int k = 0;
+                                         k < matches_vec[i].haplos[j].size();
+                                         k++) {
+                                        out_match << "MATCH\t" << i << "\t"
+                                                  << matches_vec[i].haplos[j][k]
+                                                  << "\t" << end - (len - 1)
+                                                  << "\t" << end << "\t" << len
+                                                  << "\n";
+                                    }
+                                }
+                            }
+                        }
+                    } else {
+                        for (unsigned int i = 0; i < queries.size(); i++) {
+                            for (unsigned int j = 0;
+                                 j < matches_vec[i].basic_matches.size(); j++) {
+                                auto len = std::get<1>(
+                                    matches_vec[i].basic_matches[j]);
+                                auto pos = std::get<0>(
+                                    matches_vec[i].basic_matches[j]);
+                                auto end = std::get<2>(
+                                    matches_vec[i].basic_matches[j]);
+                                out_match << "MATCH\t" << i << "\t" << pos
+                                          << "\t" << end - (len - 1) << "\t"
+                                          << end << "\t" << len << "\n";
+                            }
+                        }
+                    }
+                    out_match.close();
+                } else {
+                    throw FileNotFoundException{};
+                }
+
+            } else {
+                throw FileNotFoundException{};
+            }
+        } else {
+            std::ofstream out_match(out);
+            htsFile *fp = hts_open(filename, "rb");
+            std::cout << "Reading VCF file...\n";
+
+            bcf_hdr_t *hdr = bcf_hdr_read(fp);
+            bcf1_t *rec = bcf_init();
+            std::vector<std::string> queries_panel;
+            std::string new_column;
+            while (bcf_read(fp, hdr, rec) >= 0) {
+                new_column = "";
+                bcf_unpack(rec, BCF_UN_ALL);
+                // read SAMPLE
+                int32_t *gt_arr = NULL, ngt_arr = 0;
+                int i, j, ngt, nsmpl = bcf_hdr_nsamples(hdr);
+                ngt = bcf_get_genotypes(hdr, rec, &gt_arr, &ngt_arr);
+                int max_ploidy = ngt / nsmpl;
+                for (i = 0; i < nsmpl; i++) {
+                    int32_t *ptr = gt_arr + i * max_ploidy;
+                    for (j = 0; j < max_ploidy; j++) {
+                        // if true, the sample has smaller ploidy
+                        if (ptr[j] == bcf_int32_vector_end) break;
+
+                        // missing allele
+                        if (bcf_gt_is_missing(ptr[j])) exit(-1);
+
+                        // the VCF 0-based allele index
+                        int allele_index = bcf_gt_allele(ptr[j]);
+                        new_column += std::to_string(allele_index);
+                    }
+                }
+                free(gt_arr);
                 queries_panel.push_back(new_column);
             }
-            input_matrix.close();
+            bcf_hdr_destroy(hdr);
+            hts_close(fp);
+            bcf_destroy(rec);
             std::string query;
             std::vector<std::string> queries;
             if (out_match.is_open()) {
@@ -1761,7 +2038,7 @@ public:
                     if (verbose) {
                         std::cout << i << ": \n";
                     }
-                    for (auto &j: queries_panel) {
+                    for (auto &j : queries_panel) {
                         query.push_back(j[i]);
                     }
                     queries.push_back(query);
@@ -1770,28 +2047,28 @@ public:
 
                 auto n_queries = queries.size();
                 std::vector<ms_matches> matches_vec(n_queries);
-#pragma omp parallel for default(none) shared(queries, matches_vec, n_queries, extend_matches, verbose)
+#pragma omp parallel for default(none) \
+    shared(queries, matches_vec, n_queries, extend_matches, verbose)
                 for (unsigned int i = 0; i < n_queries; i++) {
-                    //std::cout << i << "\n";
-                    matches_vec[i] = this->match_thr(queries[i], extend_matches,
-                                                     verbose);
+                    matches_vec[i] =
+                        this->match_thr(queries[i], extend_matches, verbose);
                 }
+
                 if (extend_matches) {
                     for (unsigned int i = 0; i < queries.size(); i++) {
                         if (!matches_vec[i].haplos.empty()) {
                             for (unsigned int j = 0;
                                  j < matches_vec[i].basic_matches.size(); j++) {
                                 auto len = std::get<1>(
-                                        matches_vec[i].basic_matches[j]);
+                                    matches_vec[i].basic_matches[j]);
                                 auto end = std::get<2>(
-                                        matches_vec[i].basic_matches[j]);
+                                    matches_vec[i].basic_matches[j]);
                                 for (unsigned int k = 0;
                                      k < matches_vec[i].haplos[j].size(); k++) {
-                                    out_match << "MATCH\t" << i << "\t" <<
-                                              matches_vec[i].haplos[j][k]
-                                              << "\t"
-                                              << end - (len - 1) << "\t" << end
-                                              << "\t" << len << "\n";
+                                    out_match << "MATCH\t" << i << "\t"
+                                              << matches_vec[i].haplos[j][k]
+                                              << "\t" << end - (len - 1) << "\t"
+                                              << end << "\t" << len << "\n";
                                 }
                             }
                         }
@@ -1800,46 +2077,24 @@ public:
                     for (unsigned int i = 0; i < queries.size(); i++) {
                         for (unsigned int j = 0;
                              j < matches_vec[i].basic_matches.size(); j++) {
-                            auto len = std::get<1>(
-                                    matches_vec[i].basic_matches[j]);
-                            auto pos = std::get<0>(
-                                    matches_vec[i].basic_matches[j]);
-                            auto end = std::get<2>(
-                                    matches_vec[i].basic_matches[j]);
+                            auto len =
+                                std::get<1>(matches_vec[i].basic_matches[j]);
+                            auto pos =
+                                std::get<0>(matches_vec[i].basic_matches[j]);
+                            auto end =
+                                std::get<2>(matches_vec[i].basic_matches[j]);
                             out_match << "MATCH\t" << i << "\t" << pos << "\t"
-                                      << end - (len - 1) << "\t" << end
-                                      << "\t" << len << "\n";
-
-
+                                      << end - (len - 1) << "\t" << end << "\t"
+                                      << len << "\n";
                         }
                     }
-//                    for (unsigned int i = 0; i < queries.size(); i++) {
-//                        if (verbose) {
-//                            std::cout << i << ": ";
-//                        }
-//                        out_match << i << ": ";
-//
-//                        if (verbose) {
-//                            std::cout << matches_vec[i];
-//                        }
-//                        out_match << matches_vec[i];
-//
-//                        if (verbose) {
-//                            std::cout << "\n";
-//                        }
-//                        out_match << "\n";
-//                    }
                 }
                 out_match.close();
             } else {
                 throw FileNotFoundException{};
             }
-
-        } else {
-            throw FileNotFoundException{};
         }
     }
-
 
     /**
      * function to get the total number of runs in the RLPBWT
@@ -1856,7 +2111,7 @@ public:
     /**
      * function to print in runs.txt the number of run in every
      * column
-    */
+     */
     void get_run_col() {
         unsigned int count_run = 0;
         std::ofstream myfile;
@@ -1877,9 +2132,9 @@ public:
     }
 
     /**
-    * function to get the total number of phi/phi_inv element() in the RLPBWT
-    * @return total number of run
-    */
+     * function to get the total number of phi/phi_inv element() in the RLPBWT
+     * @return total number of run
+     */
     std::pair<unsigned int, unsigned int> get_phi_number() {
         if (this->phi) {
             unsigned int count_phi = 0;
@@ -1895,11 +2150,11 @@ public:
     }
 
     /**
- * @brief function to obtain size in bytes of the matching statistics
- * supported RLPBWT
- * @param verbose bool for extra prints
- * @return size in bytes
-*/
+     * @brief function to obtain size in bytes of the matching statistics
+     * supported RLPBWT
+     * @param verbose bool for extra prints
+     * @return size in bytes
+     */
     unsigned long long size_in_bytes(bool verbose = false) {
         unsigned long long size = 0;
         unsigned long long size_run = 0;
@@ -1926,8 +2181,8 @@ public:
             std::cout << "uv: " << size_uv << " bytes\n";
             std::cout << "samples: " << size_samples << " bytes\n";
             std::cout
-                    << "rlpbwt (with also c values and other support variables): "
-                    << size << " bytes\n";
+                << "rlpbwt (with also c values and other support variables): "
+                << size << " bytes\n";
         }
         size += (sizeof(bool) * 2);
         size += (sizeof(unsigned int) * 2);
@@ -1935,21 +2190,20 @@ public:
         if (this->is_extended) {
             auto size_phi = this->phi->size_in_bytes(verbose);
             size += size_phi;
-            //std::cout << "phi support: " << size_phi << " bytes\n";
+            // std::cout << "phi support: " << size_phi << " bytes\n";
         }
         return size;
     }
 
-
-/**
- * @brief function to obtain size in megabytes of the matching statistics
- * supported RLPBWT
- * @param verbose bool for extra prints
- * @return size in megabytes
-*/
+    /**
+     * @brief function to obtain size in megabytes of the matching statistics
+     * supported RLPBWT
+     * @param verbose bool for extra prints
+     * @return size in megabytes
+     */
     double size_in_mega_bytes(bool verbose = true) {
         double size = 0;
-        double to_mega = ((double) 1 / (double) 1024) / (double) 1024;
+        double to_mega = ((double)1 / (double)1024) / (double)1024;
         double size_run = 0;
         double size_thr = 0;
         double size_uv = 0;
@@ -1974,8 +2228,8 @@ public:
             std::cout << "uv: " << size_uv << " megabytes\n";
             std::cout << "samples: " << size_samples << " megabytes\n";
             std::cout
-                    << "rlpbwt (with also c values and other support variables): "
-                    << size << " megabytes\n";
+                << "rlpbwt (with also c values and other support variables): "
+                << size << " megabytes\n";
         }
         size += (sizeof(bool) * 2 * to_mega);
         size += (sizeof(unsigned int) * 2 * to_mega);
@@ -1983,30 +2237,28 @@ public:
         if (this->is_extended) {
             auto size_phi = this->phi->size_in_mega_bytes(verbose);
             size += size_phi;
-            //std::cout << "phi support: " << size_phi << " megabytes\n";
+            // std::cout << "phi support: " << size_phi << " megabytes\n";
         }
         return size;
     }
 
     /**
- * @brief function to serialize the matching statistics supported RLPBWT
- * @param out std::ostream object to stream the serialization
- * @return size of the serialization
- */
+     * @brief function to serialize the matching statistics supported RLPBWT
+     * @param out std::ostream object to stream the serialization
+     * @return size of the serialization
+     */
     size_t serialize(std::ostream &out, sdsl::structure_tree_node *v = nullptr,
                      const std::string &name = "") {
-        sdsl::structure_tree_node *child =
-                sdsl::structure_tree::add_child(v, name,
-                                                sdsl::util::class_name(
-                                                        *this));
+        sdsl::structure_tree_node *child = sdsl::structure_tree::add_child(
+            v, name, sdsl::util::class_name(*this));
         size_t written_bytes = 0;
-        out.write((char *) &this->width, sizeof(this->width));
+        out.write((char *)&this->width, sizeof(this->width));
         written_bytes += sizeof(this->width);
-        out.write((char *) &this->height, sizeof(this->height));
+        out.write((char *)&this->height, sizeof(this->height));
         written_bytes += sizeof(this->height);
-        out.write((char *) &this->is_thr_enabled, sizeof(this->is_thr_enabled));
+        out.write((char *)&this->is_thr_enabled, sizeof(this->is_thr_enabled));
         written_bytes += sizeof(this->is_thr_enabled);
-        out.write((char *) &this->is_extended, sizeof(this->is_extended));
+        out.write((char *)&this->is_extended, sizeof(this->is_extended));
         written_bytes += sizeof(this->is_extended);
 
         written_bytes += this->panel->serialize(out, child, "panel");
@@ -2022,16 +2274,16 @@ public:
         return written_bytes;
     }
 
-/**
- * @brief function to load the matching statistics supported RLPBWT object
- * @param in std::istream object from which load the matching statistics
- * supported RLPBWT structure object
- */
+    /**
+     * @brief function to load the matching statistics supported RLPBWT object
+     * @param in std::istream object from which load the matching statistics
+     * supported RLPBWT structure object
+     */
     void load(std::istream &in, const char *slp_filename = "") {
-        in.read((char *) &this->width, sizeof(this->width));
-        in.read((char *) &this->height, sizeof(this->height));
-        in.read((char *) &this->is_thr_enabled, sizeof(this->is_thr_enabled));
-        in.read((char *) &this->is_extended, sizeof(this->is_extended));
+        in.read((char *)&this->width, sizeof(this->width));
+        in.read((char *)&this->height, sizeof(this->height));
+        in.read((char *)&this->is_thr_enabled, sizeof(this->is_thr_enabled));
+        in.read((char *)&this->is_extended, sizeof(this->is_extended));
         this->cols = std::vector<column_naive_ms>(this->width + 1);
         if constexpr (!std::is_same_v<ra_t, panel_ra>) {
             if (std::string(slp_filename).empty()) {
@@ -2060,4 +2312,4 @@ public:
     }
 };
 
-#endif //RLPBWT_RLPBWT_NAIVE_MS_H
+#endif  // RLPBWT_RLPBWT_NAIVE_MS_H
