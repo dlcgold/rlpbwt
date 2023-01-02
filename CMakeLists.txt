@@ -45,7 +45,7 @@ if (${BUILD_TESTS})
             "${SUX_SOURCE_DIR}/function"
             "${SUX_SOURCE_DIR}/support")
 
-    target_link_libraries(rlpbwt_test sdsl divsufsort divsufsort64 -lgtest
+    target_link_libraries(rlpbwt_test sdsl divsufsort divsufsort64 -lgtest -lhts
             ${OpenMP_CXX_LIBRARIES})
 
     add_test(NAME rlpbwt_test COMMAND rlpbwt_test)
@@ -74,5 +74,5 @@ else ()
             "${SUX_SOURCE_DIR}/function"
             "${SUX_SOURCE_DIR}/support"
             )
-    target_link_libraries(rlpbwt sdsl divsufsort divsufsort64 ${OpenMP_CXX_LIBRARIES})
+    target_link_libraries(rlpbwt sdsl divsufsort divsufsort64 ${OpenMP_CXX_LIBRARIES} -lhts)
 endif ()
