@@ -46,6 +46,7 @@ Options:
   -t, --thresholds	 enable thresholds (slp/panel mode only)
   -e, --extend	 extend matches (slp/panel mode only)
   -r, --raw	use compressed intvectors instead of sparse bitvectors
+  -b, --bcf	use vcf/bcf as file format (slp/panel mode only, requires htslib)
   -v, --verbose	 extra prints
   -V, --fverbose	 extra prints for functions (cautions)
   -h, --help	 show this help message and exit
