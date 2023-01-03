@@ -5,7 +5,6 @@ set(CMAKE_CXX_STANDARD 17)
 find_package(OpenMP)
 add_compile_options(-Wall -Wextra -pedantic -Ofast ${OpenMP_CXX_FLAGS})
 
-
 # Configure thirdparty
 # ------------------------------------------------------------------------------
 set(CMAKE_INSTALL_INCLUDEDIR "include")
@@ -45,7 +44,7 @@ if (${BUILD_TESTS})
             "${SUX_SOURCE_DIR}/function"
             "${SUX_SOURCE_DIR}/support")
 
-    target_link_libraries(rlpbwt_test sdsl divsufsort divsufsort64 -lgtest -lhts
+    target_link_libraries(rlpbwt_test sdsl divsufsort divsufsort64 htslib -lgtest -lz
             ${OpenMP_CXX_LIBRARIES})
 
     add_test(NAME rlpbwt_test COMMAND rlpbwt_test)
@@ -74,5 +73,7 @@ else ()
             "${SUX_SOURCE_DIR}/function"
             "${SUX_SOURCE_DIR}/support"
             )
-    target_link_libraries(rlpbwt sdsl divsufsort divsufsort64 ${OpenMP_CXX_LIBRARIES} -lhts)
+    #target_link_libraries(rlpbwt sdsl divsufsort divsufsort64 ${OpenMP_CXX_LIBRARIES} -lhts)
+    target_link_libraries(rlpbwt sdsl divsufsort divsufsort64 htslib -lz ${OpenMP_CXX_LIBRARIES})
+
 endif ()

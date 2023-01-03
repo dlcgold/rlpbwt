@@ -1,5 +1,7 @@
 # Thirdparty libraries
 include(FetchContent)
+include(ExternalProject)
+
 
 # Log directory for external content builds
 make_directory(${CMAKE_CURRENT_BINARY_DIR}/logs)
@@ -114,3 +116,49 @@ if(NOT shaped_slp_POPULATED)
     set(SUX_SOURCE_DIR ${shaped_slp_SOURCE_DIR}/external/sux/sux)
 endif()
   
+
+## HTSLIB
+
+#add HTSlib
+FetchContent_Declare(
+        htslib
+        GIT_REPOSITORY https://github.com/samtools/htslib
+)
+FetchContent_GetProperties(htslib)
+if(NOT htslib_POPULATED)
+    set(disable_flags --disable-gcs --disable-s3 --disable-plugins --disable-lzma 
+        --disable-bz2 --disable-libcurl --disable-libdeflate)  
+    
+
+    FetchContent_Populate(htslib)
+    message("HTSLIB_SRC: ${htslib_SOURCE_DIR}")
+    message("HTSLIB_BIN: ${htslib_BINARY_DIR}")
+    execute_process(COMMAND autoreconf -i
+            RESULT_VARIABLE result
+            WORKING_DIRECTORY ${htslib_SOURCE_DIR})
+    if (result)
+        message(FATAL_ERROR "autoreconf step for htslib failed: ${result}")
+    endif ()
+    execute_process(COMMAND ./configure --prefix=${CMAKE_CURRENT_BINARY_DIR} ${disable_flags}
+            WORKING_DIRECTORY ${htslib_SOURCE_DIR})
+    if (result)
+        message(FATAL_ERROR "configure step for htslib failed: ${result}")
+    endif ()
+    execute_process(COMMAND make lib-static
+            RESULT_VARIABLE result
+            WORKING_DIRECTORY ${htslib_SOURCE_DIR})
+    if (result)
+        message(FATAL_ERROR "make step for htslib failed: ${result}")
+    endif ()
+    execute_process(COMMAND make install prefix=${CMAKE_CURRENT_BINARY_DIR}
+                RESULT_VARIABLE result
+                WORKING_DIRECTORY ${htslib_SOURCE_DIR})
+    if (result)
+        message(FATAL_ERROR "install step for htslib failed: ${result}")    
+    endif()
+    set(htslib_SRC ${CMAKE_CURRENT_BINARY_DIR}/include)
+    set(htslib_LIB ${CMAKE_CURRENT_BINARY_DIR}/lib/libhts.a)
+endif()
+add_library(htslib STATIC IMPORTED GLOBAL)
+set_property(TARGET htslib PROPERTY IMPORTED_LOCATION ${htslib_LIB})
+target_include_directories(htslib INTERFACE ${htslib_SRC})
