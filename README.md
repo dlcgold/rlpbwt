@@ -1,5 +1,6 @@
 # rlpbwt
 
+Other run-length encoded PBWT implementations cab be foudn at [koeppl/pbwt](https://github.com/koeppl/pbwt).
 ## Type of RLPBWT
 
 In this repository we have various  possible versions of RLPBWT:
